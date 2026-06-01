@@ -1,0 +1,73 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-schema:
+    name: Validate examples against schema
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install jsonschema
+        run: pip install jsonschema
+
+      - name: Validate .nomos examples against artifact schema
+        run: |
+          python - <<'EOF'
+          import json
+          import sys
+          import pathlib
+          import jsonschema
+
+          schema_path = pathlib.Path("schema/artifact.schema.json")
+          schema = json.loads(schema_path.read_text())
+
+          # Inline the rule schema so $ref resolves without a registry
+          rule_schema_path = pathlib.Path("schema/rule.schema.json")
+          rule_schema = json.loads(rule_schema_path.read_text())
+
+          resolver = jsonschema.RefResolver(
+              base_uri=schema.get("$id", ""),
+              referrer=schema,
+              store={rule_schema["$id"]: rule_schema},
+          )
+
+          examples = sorted(pathlib.Path("examples").glob("*.nomos"))
+          if not examples:
+              print("No .nomos examples found — nothing to validate.")
+              sys.exit(0)
+
+          errors = []
+          for path in examples:
+              artifact = json.loads(path.read_text())
+              try:
+                  jsonschema.validate(artifact, schema, resolver=resolver)
+                  print(f"  OK  {path}")
+              except jsonschema.ValidationError as e:
+                  errors.append((path, e.message))
+                  print(f"FAIL  {path}: {e.message}")
+
+          if errors:
+              print(f"\n{len(errors)} validation error(s).")
+              sys.exit(1)
+          else:
+              print(f"\nAll {len(examples)} example(s) valid.")
+          EOF
+
+      - name: Verify example seals (structure check, no key required)
+        run: |
+          for f in examples/*.nomos; do
+            echo "Checking $f ..."
+            python verify/verify.py "$f"
+          done

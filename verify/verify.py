@@ -10,7 +10,7 @@ Usage:
     python verify.py <artifact.nomos>  # seal structure check only (no sig verification)
 
 Requirements:
-    pip install cryptography
+    Python 3.8+ standard library only — no external packages needed.
 """
 
 import argparse

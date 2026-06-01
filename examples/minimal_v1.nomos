@@ -1,0 +1,58 @@
+{
+  "artifact_id": "minimal_v1",
+  "version": "1.0.0",
+  "spec_version": "NOMOS-SPEC-001",
+  "confidence": "DECLARED",
+  "conflict_resolution": "first_match",
+  "domain": {
+    "name": "Minimal Example Policy",
+    "organization": "Example Organisation",
+    "effective_date": "2026-01-01"
+  },
+  "rules": [
+    {
+      "id": "rule_001",
+      "text": "Approved users may access the system.",
+      "condition": {
+        "op": "eq",
+        "field": "user_status",
+        "value": "approved"
+      },
+      "action": "ALLOW",
+      "priority": 10,
+      "source": "policy",
+      "confidence": 0.99
+    },
+    {
+      "id": "rule_002",
+      "text": "Suspended users are denied access.",
+      "condition": {
+        "op": "eq",
+        "field": "user_status",
+        "value": "suspended"
+      },
+      "action": "DENY",
+      "priority": 20,
+      "source": "policy",
+      "confidence": 0.99
+    }
+  ],
+  "contradiction_report": {
+    "contradiction_count": 0,
+    "contradictions": []
+  },
+  "readiness": {
+    "lis": 0.95,
+    "drs": null,
+    "res": 0.05,
+    "gms": 0.6,
+    "ari": 0.72,
+    "autonomy_band": "autonomous"
+  },
+  "seal": {
+    "algorithm": "HMAC-SHA256",
+    "ts": "2026-01-15T12:00:00.000Z",
+    "hash": "2583efc6e37995b705c897ebedc1c1230d05b53efc6db93f619e7b074f6e357a",
+    "sig": "00ea9055a14d4d12a4fe530efb1e58a45853020be187541b0eb5596573cf5fa2"
+  }
+}

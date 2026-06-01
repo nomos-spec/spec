@@ -1,0 +1,25 @@
+{
+  "name": "@nomos/spec",
+  "version": "1.0.0",
+  "description": "NOMOS Protocol specification and reference verifier",
+  "license": "CC-BY-4.0",
+  "scripts": {
+    "verify": "tsx verify/verify.ts",
+    "verify:all": "for f in examples/*.nomos; do npx tsx verify/verify.ts \"$f\"; done"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nomos-spec/spec.git"
+  },
+  "homepage": "https://nomosprotocol.com/spec",
+  "bugs": {
+    "url": "https://github.com/nomos-spec/spec/issues"
+  }
+}

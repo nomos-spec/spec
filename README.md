@@ -1,5 +1,9 @@
 # NOMOS Protocol — Open Specification
 
+[![Spec](https://img.shields.io/badge/spec-NOMOS--SPEC--001-blue)](spec/NOMOS-SPEC-001.md)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![Validate](https://github.com/nomos-spec/spec/actions/workflows/validate.yml/badge.svg)](https://github.com/nomos-spec/spec/actions/workflows/validate.yml)
+
 The **NOMOS Protocol** defines an open, vendor-neutral format for packaging governance policies as sealed, machine-executable artifacts.
 
 A `.nomos` file is a signed JSON document containing extracted policy rules, confidence metadata, and a cryptographic seal. Any compliant runtime can load a `.nomos` artifact and evaluate decisions against it — deterministically, without calling an AI model at runtime.
