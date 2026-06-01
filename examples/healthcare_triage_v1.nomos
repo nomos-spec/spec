@@ -1,0 +1,191 @@
+{
+  "artifact_id": "healthcare_triage_v1",
+  "version": "1.0.0",
+  "spec_version": "NOMOS-SPEC-001",
+  "confidence": "CERTIFIED",
+  "conflict_resolution": "collect_and_resolve",
+  "domain": {
+    "name": "Emergency Department Triage Protocol",
+    "organization": "Regional Health Network",
+    "effective_date": "2026-01-01",
+    "jurisdiction": "NHS England",
+    "tags": [
+      "healthcare",
+      "triage",
+      "emergency",
+      "clinical"
+    ]
+  },
+  "rules": [
+    {
+      "id": "triage_001",
+      "text": "Patients presenting with chest pain and SpO2 below 94% require immediate (P1) response.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "eq",
+          "field": "presenting_complaint",
+          "value": "chest_pain"
+        },
+        "right": {
+          "op": "lt",
+          "field": "spo2_percent",
+          "value": 94
+        }
+      },
+      "action": "ESCALATE",
+      "priority": 100,
+      "source": "policy",
+      "confidence": 0.99,
+      "metadata": {
+        "section": "4.1 Immediate Priority (P1)",
+        "page": 12,
+        "tags": [
+          "P1",
+          "cardiac",
+          "respiratory"
+        ]
+      }
+    },
+    {
+      "id": "triage_002",
+      "text": "Patients with a NEWS2 score of 7 or above must be escalated to the rapid response team.",
+      "condition": {
+        "op": "gte",
+        "field": "news2_score",
+        "value": 7
+      },
+      "action": "ESCALATE",
+      "priority": 90,
+      "source": "policy",
+      "confidence": 0.97,
+      "metadata": {
+        "section": "4.2 Urgent Priority (P2) — NEWS2 escalation",
+        "page": 14,
+        "tags": [
+          "NEWS2",
+          "rapid-response"
+        ]
+      }
+    },
+    {
+      "id": "triage_003",
+      "text": "Ambulatory patients with NEWS2 below 3 and no red-flag symptoms may proceed to standard assessment.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "and",
+          "left": {
+            "op": "lt",
+            "field": "news2_score",
+            "value": 3
+          },
+          "right": {
+            "op": "eq",
+            "field": "ambulatory",
+            "value": true
+          }
+        },
+        "right": {
+          "op": "not",
+          "left": {
+            "op": "eq",
+            "field": "red_flag",
+            "value": true
+          }
+        }
+      },
+      "action": "ALLOW",
+      "priority": 10,
+      "source": "behavioral",
+      "confidence": 0.88,
+      "metadata": {
+        "section": "4.4 Standard Assessment",
+        "page": 18,
+        "tags": [
+          "standard",
+          "ambulatory"
+        ]
+      }
+    },
+    {
+      "id": "triage_004",
+      "text": "Paediatric patients under 2 years presenting with fever above 38.5°C require clinician review.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "lt",
+          "field": "patient_age_years",
+          "value": 2
+        },
+        "right": {
+          "op": "gt",
+          "field": "temperature_celsius",
+          "value": 38.5
+        }
+      },
+      "action": "ESCALATE",
+      "priority": 80,
+      "source": "policy",
+      "confidence": 0.96,
+      "metadata": {
+        "section": "6.1 Paediatric Triage",
+        "page": 24,
+        "tags": [
+          "paediatric",
+          "fever"
+        ]
+      }
+    },
+    {
+      "id": "triage_005",
+      "text": "Patients with documented penicillin allergy must not be prescribed amoxicillin.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "in",
+          "field": "allergies",
+          "value": [
+            "penicillin"
+          ]
+        },
+        "right": {
+          "op": "eq",
+          "field": "prescribed_drug",
+          "value": "amoxicillin"
+        }
+      },
+      "action": "DENY",
+      "priority": 95,
+      "source": "policy",
+      "confidence": 0.99,
+      "metadata": {
+        "section": "8.3 Allergy Contraindications",
+        "page": 31,
+        "tags": [
+          "allergy",
+          "contraindication",
+          "safety"
+        ]
+      }
+    }
+  ],
+  "contradiction_report": {
+    "contradiction_count": 0,
+    "contradictions": []
+  },
+  "readiness": {
+    "lis": 0.91,
+    "drs": 0.84,
+    "res": 0.21,
+    "gms": 0.88,
+    "ari": 0.79,
+    "autonomy_band": "autonomous"
+  },
+  "seal": {
+    "algorithm": "HMAC-SHA256",
+    "ts": "2026-01-15T11:00:00.000Z",
+    "hash": "6c1c97ad265de39d4bc47120203e2c06679e94d205cab04611ca8703086d1735",
+    "sig": "13e841d9f41a22e828f7527537b9dbec925dbfb124e3e46562a5eac3b0aba711"
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "artifact_id": "lending_policy_v1",
+  "version": "1.0.0",
+  "spec_version": "NOMOS-SPEC-001",
+  "confidence": "DECLARED",
+  "conflict_resolution": "collect_and_resolve",
+  "domain": {
+    "name": "Public Lending Policy",
+    "organization": "City Library System",
+    "effective_date": "2026-01-01",
+    "jurisdiction": "State of California",
+    "tags": [
+      "library",
+      "lending",
+      "public-sector"
+    ]
+  },
+  "rules": [
+    {
+      "id": "rule_001",
+      "text": "Patrons aged 18 or older with a good account standing may borrow standard items.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "gte",
+          "field": "patron_age",
+          "value": 18
+        },
+        "right": {
+          "op": "eq",
+          "field": "account_standing",
+          "value": "good"
+        }
+      },
+      "action": "ALLOW",
+      "priority": 10,
+      "source": "policy",
+      "confidence": 0.96,
+      "metadata": {
+        "section": "2.1 Borrowing Eligibility",
+        "page": 4,
+        "tags": [
+          "eligibility",
+          "age"
+        ]
+      }
+    },
+    {
+      "id": "rule_002",
+      "text": "Reference materials and periodicals may not be borrowed; in-library use only.",
+      "condition": {
+        "op": "in",
+        "field": "item_type",
+        "value": [
+          "reference",
+          "periodical"
+        ]
+      },
+      "action": "DENY",
+      "priority": 20,
+      "source": "policy",
+      "confidence": 0.99,
+      "metadata": {
+        "section": "3.4 Non-circulating Collections",
+        "page": 9,
+        "tags": [
+          "collections",
+          "in-library"
+        ]
+      }
+    },
+    {
+      "id": "rule_003",
+      "text": "Patrons with outstanding fines exceeding $10 may not borrow additional items.",
+      "condition": {
+        "op": "gt",
+        "field": "outstanding_fines_usd",
+        "value": 10
+      },
+      "action": "DENY",
+      "priority": 30,
+      "source": "policy",
+      "confidence": 0.94,
+      "metadata": {
+        "section": "5.2 Fine Collection Policy",
+        "page": 14,
+        "tags": [
+          "fines",
+          "eligibility"
+        ]
+      }
+    },
+    {
+      "id": "rule_004",
+      "text": "Requests for interlibrary loans require supervisor review.",
+      "condition": {
+        "op": "eq",
+        "field": "request_type",
+        "value": "interlibrary_loan"
+      },
+      "action": "ESCALATE",
+      "priority": 5,
+      "source": "policy",
+      "confidence": 0.91,
+      "metadata": {
+        "section": "6.1 Interlibrary Loans",
+        "page": 17,
+        "tags": [
+          "interlibrary",
+          "escalation"
+        ]
+      }
+    },
+    {
+      "id": "rule_005",
+      "text": "Minors under 13 require a parent or guardian co-signature on the library card.",
+      "condition": {
+        "op": "lt",
+        "field": "patron_age",
+        "value": 13
+      },
+      "action": "ESCALATE",
+      "priority": 25,
+      "source": "policy",
+      "confidence": 0.98,
+      "metadata": {
+        "section": "2.3 Minor Patron Accounts",
+        "page": 5,
+        "tags": [
+          "minors",
+          "guardian",
+          "escalation"
+        ]
+      }
+    }
+  ],
+  "contradiction_report": {
+    "contradiction_count": 0,
+    "contradictions": []
+  },
+  "readiness": {
+    "lis": 0.88,
+    "drs": null,
+    "res": 0.12,
+    "gms": 0.7,
+    "ari": 0.74,
+    "autonomy_band": "autonomous"
+  },
+  "seal": {
+    "algorithm": "HMAC-SHA256",
+    "ts": "2026-01-15T10:30:00.000Z",
+    "hash": "68187ec58aa99bde4f11ca9499e95e027dc63730e0c17214b15496b0d165e621",
+    "sig": "e4f79aa316c3a172271ca6214fc64004e670139a4e2f0f0b4bb22687f4f50305"
+  }
+}

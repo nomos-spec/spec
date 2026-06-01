@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/artifact.schema.json",
+  "title": "NOMOS Artifact",
+  "description": "A sealed .nomos governance artifact conforming to NOMOS-SPEC-001",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "version",
+    "spec_version",
+    "confidence",
+    "domain",
+    "rules",
+    "contradiction_report",
+    "readiness",
+    "seal"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artifact_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]{1,128}$",
+      "description": "URL-safe identifier, unique within an organisation"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version (MAJOR.MINOR.PATCH)"
+    },
+    "spec_version": {
+      "type": "string",
+      "const": "NOMOS-SPEC-001",
+      "description": "Protocol specification version this artifact conforms to"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["DECLARED", "CERTIFIED"],
+      "description": "DECLARED = policy-only; CERTIFIED = triangulated against behavioral data"
+    },
+    "conflict_resolution": {
+      "type": "string",
+      "enum": ["first_match", "collect_and_resolve", "highest_priority"],
+      "default": "first_match",
+      "description": "How conflicting matching rules are resolved during execution"
+    },
+    "domain": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "organization": { "type": "string" },
+        "effective_date": { "type": "string", "format": "date" },
+        "jurisdiction": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": { "$ref": "rule.schema.json" },
+      "description": "Ordered array of governance rules"
+    },
+    "contradiction_report": {
+      "type": "object",
+      "required": ["contradiction_count", "contradictions"],
+      "additionalProperties": false,
+      "properties": {
+        "contradiction_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contradictions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "rule_ids", "description", "severity"],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "threshold_conflict",
+                  "role_conflict",
+                  "ghost_term",
+                  "rule_collision",
+                  "layer_divergence"
+                ]
+              },
+              "rule_ids": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "description": { "type": "string" },
+              "severity": {
+                "type": "string",
+                "enum": ["low", "medium", "high"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "required": ["lis", "res", "gms", "ari", "autonomy_band"],
+      "additionalProperties": false,
+      "properties": {
+        "lis": { "type": "number", "minimum": 0, "maximum": 1 },
+        "drs": {
+          "oneOf": [
+            { "type": "number", "minimum": 0, "maximum": 1 },
+            { "type": "null" }
+          ],
+          "description": "null for DECLARED artifacts; float for CERTIFIED"
+        },
+        "res": { "type": "number", "minimum": 0, "maximum": 1 },
+        "gms": { "type": "number", "minimum": 0, "maximum": 1 },
+        "ari": { "type": "number", "minimum": 0, "maximum": 1 },
+        "autonomy_band": {
+          "type": "string",
+          "enum": ["autonomous", "bounded", "human_governed"]
+        }
+      }
+    },
+    "seal": {
+      "type": "object",
+      "required": ["algorithm", "ts", "hash", "sig"],
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "const": "HMAC-SHA256"
+        },
+        "ts": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 UTC timestamp of sealing"
+        },
+        "hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Lowercase hex SHA-256 of the canonical artifact payload (excluding seal)"
+        },
+        "sig": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Lowercase hex HMAC-SHA256(SEAL_KEY, hash)"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/rule.schema.json",
+  "title": "NOMOS Rule",
+  "description": "A single declarative governance rule within a .nomos artifact",
+  "type": "object",
+  "required": ["id", "text", "condition", "action", "priority", "source"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique rule identifier within this artifact"
+    },
+    "text": {
+      "type": "string",
+      "description": "Natural-language description of the rule, derived from the source policy"
+    },
+    "condition": {
+      "$ref": "#/$defs/conditionNode",
+      "description": "Condition AST evaluated against the execution context"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["ALLOW", "DENY", "ESCALATE"],
+      "description": "Verdict emitted when condition evaluates to true"
+    },
+    "priority": {
+      "type": "integer",
+      "description": "Higher value = evaluated first. Used by first_match and highest_priority resolution modes"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["policy", "behavioral", "inferred"],
+      "description": "How the rule was derived: from policy text, from behavioral patterns, or inferred from gaps"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Extraction confidence for this individual rule"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "section": { "type": "string" },
+        "page": { "type": "integer", "minimum": 1 },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "last_modified": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "conditionNode": {
+      "oneOf": [
+        { "$ref": "#/$defs/leafNode" },
+        { "$ref": "#/$defs/andNode" },
+        { "$ref": "#/$defs/orNode" },
+        { "$ref": "#/$defs/notNode" }
+      ]
+    },
+    "leafNode": {
+      "type": "object",
+      "required": ["op", "field"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": ["eq", "neq", "gt", "gte", "lt", "lte", "in", "nin", "exists", "regex"]
+        },
+        "field": {
+          "type": "string",
+          "description": "Dot-separated path into the execution context (e.g. applicant.credit_score)"
+        },
+        "value": {
+          "description": "Scalar or array value to compare against. Not required for 'exists' operator."
+        }
+      }
+    },
+    "andNode": {
+      "type": "object",
+      "required": ["op", "left", "right"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "type": "string", "const": "and" },
+        "left": { "$ref": "#/$defs/conditionNode" },
+        "right": { "$ref": "#/$defs/conditionNode" }
+      }
+    },
+    "orNode": {
+      "type": "object",
+      "required": ["op", "left", "right"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "type": "string", "const": "or" },
+        "left": { "$ref": "#/$defs/conditionNode" },
+        "right": { "$ref": "#/$defs/conditionNode" }
+      }
+    },
+    "notNode": {
+      "type": "object",
+      "required": ["op", "left"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "type": "string", "const": "not" },
+        "left": { "$ref": "#/$defs/conditionNode" }
+      }
+    }
+  }
+}
