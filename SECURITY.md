@@ -15,7 +15,7 @@ verifier implementation, or an example artifact, please report it responsibly.
 
 ### How to report
 
-Email: **security@nomosprotocol.com**
+Email: **allan@nomosprotocol.com**
 
 Include in your report:
 - A description of the vulnerability
