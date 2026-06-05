@@ -32,4 +32,40 @@ Initial public release of the NOMOS Protocol specification.
 
 ---
 
-*Upcoming: NOMOS-SPEC-002 will address array indexing in field paths, data contract declarations, and performance limits for condition AST depth.*
+## [NOMOS-SPEC-002] — 2026-06-05 (Draft)
+
+Multi-agent governance extension. Adds caller-identity verification to the
+NOMOS execution model. NOMOS-SPEC-001 artifacts remain valid without
+modification — the `agents` field is optional and defaults to permissive mode.
+
+### Added
+
+- **`agents` manifest** — top-level optional field mapping agent identifiers
+  to `AgentDefinition` objects; included in seal hash
+- **`AgentDefinition`** — `permissions` (allow list), `cannot_call` (deny
+  list), `audit_level` override, plus reserved fields `authority`,
+  `output_contract`, and `constraints` for future versions
+- **Runtime guard** — six-phase algorithm executed before rule evaluation:
+  manifest presence → agent registration → deny list → allow list →
+  constraints (reserved) → audit level
+- **Phase 3 hard-block** — deny list violations block in both advisory and
+  enforce mode; cannot be downgraded
+- **Permissive mode** — artifacts with no agents manifest pass through the
+  guard untouched; every call tagged `guard_mode: "permissive"` in audit trail
+- **Advisory / enforce modes** — advisory (default) escalates violations
+  without blocking; enforce mode terminates on any violation
+- **Guard audit events** — `guard_permissive`, `guard_unknown_agent`,
+  `guard_deny_list_hit`, `guard_permission_denied`, `guard_audit_insufficient`,
+  `guard_pass`; emitted at all audit levels including `minimal`
+- **Audit level semantics** — `minimal`, `standard`, `forensic` field sets
+  defined; per-agent override of global logging level
+- **Conformance checklist** — MUST/SHOULD requirements for SPEC-002 runtimes
+- **`spec/NOMOS-SPEC-002.md`** — full specification document
+
+### Reserved (defined, not evaluated in this version)
+
+- `authority` — multi-agent authority override evaluation
+- `output_contract` — downstream field validation before propagation
+- `constraints` — input constraint DSL (syntax undefined)
+
+---
