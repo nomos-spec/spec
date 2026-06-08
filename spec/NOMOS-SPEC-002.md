@@ -1,6 +1,6 @@
 # NOMOS-SPEC-002: Multi-Agent Governance Extension
 
-**Status:** Draft  
+**Status:** Active  
 **Version:** 1.1.0  
 **Extends:** NOMOS-SPEC-001 v1.0.0  
 **Published:** 2026-06-05  
@@ -177,7 +177,9 @@ Each value in the `agents` map MUST conform to the following schema:
     "required_fields": [ "<field>", ... ],
     "schema": { }
   },
-  "constraints":  { "<key>": <number|boolean|string> },
+  "constraints":  [
+    { "field": "<field-path>", "operator": "lt|lte|gt|gte|eq|neq", "value": <number|boolean|string> }
+  ],
   "audit_level":  "minimal" | "standard" | "forensic"
 }
 ```
@@ -221,11 +223,50 @@ Declares the fields this agent MUST include in its output before the runtime
 passes it downstream. **Not evaluated by the runtime in this version.** Stored
 and exposed for tooling use only.
 
-### 5.6 `constraints` (OPTIONAL, RESERVED)
+### 5.6 `constraints` (OPTIONAL)
 
-Numeric, boolean, or string constraints on input fields. **Not evaluated by
-the runtime in this version.** The constraint DSL is undefined. Stored and
-exposed for tooling use only.
+An array of `SpecAgentConstraint` objects evaluated by the runtime guard
+(Phase 5) against the incoming request payload before any rule fires.
+
+Each constraint has three fields:
+
+| Field | Type | Notes |
+|---|---|---|
+| `field` | string | Path to the input field to check (e.g. `"risk_score"`) |
+| `operator` | string | One of `lt`, `lte`, `gt`, `gte`, `eq`, `neq` |
+| `value` | number \| boolean \| string | Threshold or target value |
+
+Operator semantics:
+
+| Operator | Meaning | Types |
+|---|---|---|
+| `lt` | input strictly less than value | number |
+| `lte` | input less than or equal to value | number |
+| `gt` | input strictly greater than value | number |
+| `gte` | input greater than or equal to value | number |
+| `eq` | input equals value | number, boolean, string |
+| `neq` | input does not equal value | number, boolean, string |
+
+Constraints are evaluated independently. Constraints are ANDed — if any
+constraint is violated, Phase 5 emits `guard_constraint_violated` and returns.
+
+**Missing fields are skipped.** If `request.input_data[c.field]` is absent,
+the constraint does not fire. This is intentional: partial-schema callers are
+not rejected. Runtimes that require field presence SHOULD use `output_contract`
+on the upstream agent.
+
+**Type mismatch is skipped.** Numeric operators (`lt`, `lte`, `gt`, `gte`)
+only fire when both `inputValue` and `c.value` are numbers. A string-encoded
+number (e.g. `"0.7"`) does not satisfy a numeric constraint. Callers MUST
+send numeric values for numeric fields.
+
+```json
+"constraints": [
+  { "field": "risk_score",   "operator": "lt",  "value": 0.6 },
+  { "field": "review_tier",  "operator": "eq",  "value": "standard" },
+  { "field": "is_retry",     "operator": "neq", "value": true }
+]
+```
 
 ### 5.7 `audit_level` (OPTIONAL)
 
@@ -285,9 +326,20 @@ PROCEDURE NomosGuard(artifact, request):
     RETURN BLOCK(phase=4, reason="permission_not_granted")
     // Advisory: proceed with advisory tag. Enforce: BLOCK.
 
-  // Phase 5 — Numeric constraints (RESERVED)
-  // Runtimes MUST skip this phase in this version.
-  PASS
+  // Phase 5 — Structured constraints
+  FOR EACH constraint c IN agent_def.constraints:
+    input_val = request.input_data[c.field]
+    IF input_val IS UNDEFINED: CONTINUE  // missing field → skip
+    violated = EVALUATE(input_val, c.operator, c.value)
+    IF violated:
+      EMIT guard_event(type="guard_constraint_violated",
+                       agent=request.agent_id,
+                       field=c.field,
+                       operator=c.operator,
+                       expected=c.value,
+                       actual=input_val)
+      RETURN BLOCK(phase=5, reason="constraint_violated")
+      // Advisory: ESCALATE. Enforce: BLOCK.
 
   // Phase 6 — Audit level
   required_level = agent_def.audit_level ?? "standard"
@@ -315,6 +367,7 @@ events use the `guard_` type prefix.
 | `guard_unknown_agent` | 2 | `agent_id` not in manifest |
 | `guard_deny_list_hit` | 3 | Action in `cannot_call` |
 | `guard_permission_denied` | 4 | Action not in `permissions` |
+| `guard_constraint_violated` | 5 | Input field fails a `constraints` check |
 | `guard_audit_insufficient` | 6 | Call does not meet audit level |
 | `guard_pass` | — | All phases passed |
 
@@ -399,7 +452,6 @@ this version. Implementations:
 |---|---|
 | `authority` | Multi-agent authority override evaluation |
 | `output_contract` | Downstream field validation before propagation |
-| `constraints` | Input constraint DSL evaluation |
 
 ---
 
@@ -433,13 +485,13 @@ conformance requirements AND:
 - Emit all guard event types defined in §6.3
 - Include guard events in the audit trail at all audit levels
 - Tag permissive-mode executions with `guard_mode: "permissive"`
-- Store and expose `authority`, `output_contract`, and `constraints` without
-  modification
-- Skip Phase 5 (constraints evaluation)
+- Store and expose `authority` and `output_contract` without modification
+- Evaluate `constraints` in Phase 5 per §5.6
+- Emit `guard_constraint_violated` on any constraint failure
 - Include the `agents` field in seal hash computation
 
 **MUST NOT:**
-- Gate execution on `authority`, `output_contract`, or `constraints` values
+- Gate execution on `authority` or `output_contract` values
 - Suppress guard audit events
 - Allow `agent_id` omission to bypass Phase 2 in enforce mode
 
