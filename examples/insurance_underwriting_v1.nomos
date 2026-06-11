@@ -1,0 +1,152 @@
+{
+  "artifact_id": "insurance_underwriting_v1",
+  "version": "1.0.0",
+  "spec_version": "NOMOS-SPEC-001",
+  "confidence": "DECLARED",
+  "conflict_resolution": "collect_and_resolve",
+  "domain": {
+    "name": "Property Insurance Underwriting",
+    "organization": "Example Mutual Insurance",
+    "effective_date": "2026-01-01",
+    "jurisdiction": "generic",
+    "tags": ["insurance", "underwriting", "property"]
+  },
+  "data_contract": {
+    "required_fields": ["property_type", "construction_year", "claim_count_5yr", "coverage_amount_usd", "flood_zone"],
+    "field_types": {
+      "property_type": "string",
+      "construction_year": "number",
+      "claim_count_5yr": "number",
+      "coverage_amount_usd": "number",
+      "flood_zone": "string"
+    }
+  },
+  "rules": [
+    {
+      "id": "R1",
+      "text": "Properties in FEMA flood zone A or V require underwriter review regardless of other factors — catastrophic loss exposure.",
+      "condition": {
+        "op": "in",
+        "field": "flood_zone",
+        "value": ["A", "AE", "AH", "AO", "AR", "V", "VE"]
+      },
+      "action": "ESCALATE",
+      "priority": 100,
+      "source": "policy",
+      "confidence": 0.99,
+      "metadata": {
+        "section": "4.1 Catastrophic Risk Zones",
+        "page": 12,
+        "tags": ["flood", "escalation", "catastrophic"]
+      }
+    },
+    {
+      "id": "R2",
+      "text": "Properties built before 1950 require structural assessment before binding — unknown asbestos and wiring standards.",
+      "condition": {
+        "op": "lt",
+        "field": "construction_year",
+        "value": 1950
+      },
+      "action": "ESCALATE",
+      "priority": 90,
+      "source": "policy",
+      "confidence": 0.95,
+      "metadata": {
+        "section": "3.2 Aged Property",
+        "page": 8,
+        "tags": ["construction", "age", "assessment"]
+      }
+    },
+    {
+      "id": "R3",
+      "text": "Three or more claims in the past five years indicates elevated risk — deny coverage renewal.",
+      "condition": {
+        "op": "gte",
+        "field": "claim_count_5yr",
+        "value": 3
+      },
+      "action": "DENY",
+      "priority": 85,
+      "source": "policy",
+      "confidence": 0.92,
+      "metadata": {
+        "section": "5.3 Claim History",
+        "page": 17,
+        "tags": ["claims", "denial", "risk"]
+      }
+    },
+    {
+      "id": "R4",
+      "text": "Coverage requests above $2M require senior underwriter dual approval.",
+      "condition": {
+        "op": "gt",
+        "field": "coverage_amount_usd",
+        "value": 2000000
+      },
+      "action": "ESCALATE",
+      "priority": 80,
+      "source": "policy",
+      "confidence": 0.97,
+      "metadata": {
+        "section": "6.1 High-Value Limits",
+        "page": 20,
+        "tags": ["high-value", "dual-approval"]
+      }
+    },
+    {
+      "id": "R5",
+      "text": "Mobile homes and manufactured housing are ineligible for standard property coverage.",
+      "condition": {
+        "op": "in",
+        "field": "property_type",
+        "value": ["mobile_home", "manufactured_housing", "modular_home"]
+      },
+      "action": "DENY",
+      "priority": 75,
+      "source": "policy",
+      "confidence": 0.99,
+      "metadata": {
+        "section": "2.1 Eligible Property Types",
+        "page": 4,
+        "tags": ["property-type", "eligibility"]
+      }
+    },
+    {
+      "id": "R6",
+      "text": "Standard residential property meeting all other criteria is approved.",
+      "condition": {
+        "op": "in",
+        "field": "property_type",
+        "value": ["single_family", "condo", "townhouse", "multi_family_2_4"]
+      },
+      "action": "ALLOW",
+      "priority": 10,
+      "source": "policy",
+      "confidence": 0.94,
+      "metadata": {
+        "section": "2.2 Standard Approval",
+        "page": 5,
+        "tags": ["approval", "residential"]
+      }
+    }
+  ],
+  "contradiction_report": {
+    "contradiction_count": 0,
+    "contradictions": []
+  },
+  "readiness": {
+    "lis": 0.87,
+    "drs": null,
+    "res": 0.22,
+    "gms": 0.72,
+    "ari": 0.70,
+    "autonomy_band": "autonomous"
+  },
+  "seal": {
+    "algorithm": "HMAC-SHA256",
+    "ts": "2026-06-11T10:00:00.000Z",
+    "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+    "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+  }
+}

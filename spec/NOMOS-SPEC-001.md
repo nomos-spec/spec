@@ -27,6 +27,7 @@ The goals are reproducibility (identical inputs produce identical outputs), audi
 8. Sealing Procedure
 9. Conformance
 10. Security Considerations
+11. Error Catalog
 
 ---
 
@@ -80,7 +81,19 @@ A URL-safe string uniquely identifying this artifact within an organisation. Imp
 
 ### 3.2 `version`
 
-Semantic version (`MAJOR.MINOR.PATCH`). Incrementing `MAJOR` signals backward-incompatible rule changes. Implementations MUST NOT treat two artifacts with different `version` values as equivalent even if `artifact_id` matches.
+Semantic version (`MAJOR.MINOR.PATCH`). Implementations MUST NOT treat two artifacts with different `version` values as equivalent even if `artifact_id` matches.
+
+**When to increment:**
+
+| Increment | Trigger |
+|-----------|---------|
+| `MAJOR` | Any change to rule conditions, actions, or `conflict_resolution` that alters the verdict for any previously valid input. Adding a rule that can `DENY` a previously `ALLOW`ed context is a MAJOR change. |
+| `MINOR` | Adding rules that can only escalate or allow inputs that previously received the default `ALLOW` verdict (no matching rule). |
+| `PATCH` | Metadata-only changes — `domain.tags`, `rule.text`, `rule.metadata` — that do not alter evaluation. |
+
+**In-flight executions:** A runtime MAY serve multiple versions of the same `artifact_id` simultaneously. Callers SHOULD pin to a specific `version` in production. A runtime MUST NOT silently upgrade a pinned request to a newer version.
+
+**Re-sealing:** Any change that affects verdict output REQUIRES a new `version` and a new `seal`. Re-sealing without a version increment is not conformant.
 
 ### 3.3 `spec_version`
 
@@ -144,6 +157,25 @@ ARI (AI Readiness Index) scores produced during compilation. All score fields ar
 ### 3.8 `seal`
 
 See §8 for the sealing procedure.
+
+### 3.9 `data_contract` (optional)
+
+Declares the minimum context fields the artifact requires to evaluate correctly. A runtime MUST check that all `required_fields` are present in the execution request context **before** beginning rule evaluation. If any are missing, the runtime MUST return a `data_contract_violation` error (§11) rather than evaluating with incomplete inputs.
+
+```json
+{
+  "data_contract": {
+    "required_fields": ["credit_score", "amount", "employment_type"],
+    "field_types": {
+      "credit_score": "number",
+      "amount":       "number",
+      "employment_type": "string"
+    }
+  }
+}
+```
+
+`required_fields` is the normative constraint. `field_types` is OPTIONAL documentation — runtimes SHOULD NOT perform type coercion on incoming context values.
 
 ```json
 {
@@ -328,6 +360,23 @@ If a required field is absent from `context` and the condition cannot be evaluat
 
 A runtime MUST NOT default missing numeric fields to `0` or string fields to `""`.
 
+### 6.5 Idempotency
+
+`request_id` is the idempotency key for an execution. If a runtime receives a request with a `request_id` it has already processed within the deduplication window (RECOMMENDED: 5 minutes), it MUST return the original cached verdict without creating a new audit trail entry.
+
+The cached response MUST include a `"cached": true` field at the top level and the original `audit_hash`. The audit trail entry count MUST NOT increment for a cache hit.
+
+```json
+{
+  "verdict":    "ALLOW",
+  "audit_hash": "sha256:b7c12e34...",
+  "cached":     true,
+  "request_id": "<the original uuid>"
+}
+```
+
+A runtime MUST use `request_id` as the idempotency key. Using caller IP address or payload hash as the primary deduplication mechanism is NOT conformant. If `request_id` is omitted by the caller, the runtime SHOULD generate one and include it in the response — the execution is treated as non-idempotent.
+
 ---
 
 ## 7. Audit Trail
@@ -469,6 +518,43 @@ A producer is **conformant** if it:
 **Audit trail integrity** — The hash-chain audit trail is append-only. Runtimes MUST NOT expose a deletion endpoint for audit entries. Backup and replication of the audit store is REQUIRED for production deployments.
 
 **Confidence tier downgrade** — Altering the `confidence` field without re-sealing constitutes misrepresentation of the artifact's provenance. Runtimes MUST preserve the `confidence` field verbatim from the sealed artifact. Valid values are `DECLARED`, `VALIDATED`, and `CERTIFIED`.
+
+---
+
+## 11. Error Catalog
+
+All errors produced by a conformant runtime MUST use the machine-readable codes listed below. HTTP status codes apply to REST transport bindings; non-HTTP runtimes SHOULD map these to an equivalent error channel.
+
+| Code | HTTP | Origin | Trigger | Recovery |
+|------|------|--------|---------|----------|
+| `spec_version_unsupported` | 400 | §3.3 | `spec_version` is not recognised by this runtime | Upgrade the runtime or use a supported spec version |
+| `seal_verification_failed` | 400 | §8.1 | Payload hash or HMAC does not match the `seal` block | Artifact may be tampered; do not execute; re-seal from source |
+| `artifact_not_found` | 404 | §6.2 | `artifact_id` + `version` combination not in registry | Confirm the artifact has been sealed and registered |
+| `data_contract_violation` | 422 | §3.9 | One or more `required_fields` absent from execution context | Add the missing fields before retrying |
+| `confidence_tier_invalid` | 400 | §5 | `confidence` value is not one of `DECLARED`, `VALIDATED`, `CERTIFIED` | Fix the producer; re-seal with a valid confidence value |
+| `duplicate_request_id` | 409 | §6.5 | `request_id` already processed within the dedup window | Use a fresh UUIDv4; retrieve cached response from original call |
+| `chain_corruption` | 500 | §7.2 | Audit chain hash verification fails at one or more entries | Halt writes; alert operator; restore from verified backup |
+| `unsupported_operator` | — | §4.2 | Condition node `op` is not in the operator table | Not an error response — runtime MUST return `ESCALATE` with `reason: "unsupported_operator"` |
+| `unknown_agent` | — | SPEC-002 §3 | `agent_id` not in the artifact's `agents` manifest | Advisory mode: ESCALATE. Enforce mode: hard block |
+| `deny_list_violation` | 403 | SPEC-002 §4 | Agent `agent_id` is in `cannot_call` for this action | Hard block in both advisory and enforce mode |
+
+### 11.1 Error response format
+
+All error responses MUST follow this envelope:
+
+```json
+{
+  "error": {
+    "code":    "data_contract_violation",
+    "message": "Required context field 'credit_score' is missing",
+    "hint":    "Supply all required_fields defined in this artifact's data_contract.",
+    "doc_url": "https://nomosprotocol.com/spec#data-contract-violation"
+  },
+  "request_id": "<uuid>"
+}
+```
+
+`code` is REQUIRED. `message` and `hint` are RECOMMENDED. `doc_url` is OPTIONAL. Runtimes MUST NOT return different codes for the same error condition across calls.
 
 ---
 

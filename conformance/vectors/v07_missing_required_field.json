@@ -1,0 +1,46 @@
+{
+  "id": "v07",
+  "category": "missing_context",
+  "description": "data_contract declares required fields; context is missing one — expect data_contract_violation error",
+  "artifact": {
+    "artifact_id": "vec_v07",
+    "version": "1.0.0",
+    "spec_version": "NOMOS-SPEC-001",
+    "confidence": "DECLARED",
+    "conflict_resolution": "first_match",
+    "domain": { "name": "Vector Test v07" },
+    "data_contract": {
+      "required_fields": ["credit_score", "amount"],
+      "field_types": {
+        "credit_score": "number",
+        "amount": "number"
+      }
+    },
+    "rules": [
+      {
+        "id": "R1",
+        "text": "High credit scores are approved.",
+        "condition": { "op": "gte", "field": "credit_score", "value": 700 },
+        "action": "ALLOW",
+        "priority": 10,
+        "source": "policy",
+        "confidence": 1.0
+      }
+    ],
+    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
+    "readiness": { "lis": 1.0, "drs": null, "res": 0.0, "gms": 1.0, "ari": 0.85, "autonomy_band": "autonomous" },
+    "seal": {
+      "algorithm": "HMAC-SHA256",
+      "ts": "2026-06-11T00:00:00.000Z",
+      "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    }
+  },
+  "context": { "credit_score": 720 },
+  "expected": {
+    "verdict": null,
+    "error": "data_contract_violation",
+    "missing_fields": ["amount"],
+    "note": "'amount' is declared in required_fields but absent from context. Runtime must reject before evaluation."
+  }
+}

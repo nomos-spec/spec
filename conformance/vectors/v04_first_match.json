@@ -1,0 +1,48 @@
+{
+  "id": "v04",
+  "category": "conflict_resolution",
+  "description": "Two rules both match; first_match mode — higher priority rule (R1) wins",
+  "artifact": {
+    "artifact_id": "vec_v04",
+    "version": "1.0.0",
+    "spec_version": "NOMOS-SPEC-001",
+    "confidence": "DECLARED",
+    "conflict_resolution": "first_match",
+    "domain": { "name": "Vector Test v04" },
+    "rules": [
+      {
+        "id": "R1",
+        "text": "High-value transactions are denied (priority 20 — evaluated first).",
+        "condition": { "op": "gt", "field": "amount", "value": 5000 },
+        "action": "DENY",
+        "priority": 20,
+        "source": "policy",
+        "confidence": 1.0
+      },
+      {
+        "id": "R2",
+        "text": "All transactions from approved users are allowed (priority 10 — evaluated second).",
+        "condition": { "op": "eq", "field": "user_status", "value": "approved" },
+        "action": "ALLOW",
+        "priority": 10,
+        "source": "policy",
+        "confidence": 1.0
+      }
+    ],
+    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
+    "readiness": { "lis": 0.9, "drs": null, "res": 0.05, "gms": 1.0, "ari": 0.80, "autonomy_band": "autonomous" },
+    "seal": {
+      "algorithm": "HMAC-SHA256",
+      "ts": "2026-06-11T00:00:00.000Z",
+      "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    }
+  },
+  "context": { "amount": 8000, "user_status": "approved" },
+  "expected": {
+    "verdict": "DENY",
+    "matched_rule_id": "R1",
+    "error": null,
+    "note": "Both R1 and R2 match, but first_match stops at the highest-priority match (R1, priority 20)."
+  }
+}

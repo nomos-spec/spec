@@ -1,0 +1,38 @@
+{
+  "id": "v10",
+  "category": "seal_security",
+  "description": "Payload was modified after sealing — seal hash is all-zeros (tampered). Runtime MUST refuse execution.",
+  "artifact": {
+    "artifact_id": "vec_v10",
+    "version": "1.0.0",
+    "spec_version": "NOMOS-SPEC-001",
+    "confidence": "DECLARED",
+    "conflict_resolution": "first_match",
+    "domain": { "name": "Vector Test v10 — TAMPERED" },
+    "rules": [
+      {
+        "id": "R1",
+        "text": "This rule was injected after sealing.",
+        "condition": { "op": "eq", "field": "user_status", "value": "approved" },
+        "action": "ALLOW",
+        "priority": 10,
+        "source": "policy",
+        "confidence": 1.0
+      }
+    ],
+    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
+    "readiness": { "lis": 1.0, "drs": null, "res": 0.0, "gms": 1.0, "ari": 0.85, "autonomy_band": "autonomous" },
+    "seal": {
+      "algorithm": "HMAC-SHA256",
+      "ts": "2026-06-11T00:00:00.000Z",
+      "hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "sig":  "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "context": { "user_status": "approved" },
+  "expected": {
+    "verdict": null,
+    "error": "seal_verification_failed",
+    "note": "All-zero hash/sig is the canonical tampered-seal pattern. Runtime MUST refuse execution per §8.1."
+  }
+}

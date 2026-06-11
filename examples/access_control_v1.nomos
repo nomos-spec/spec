@@ -1,0 +1,192 @@
+{
+  "artifact_id": "access_control_v1",
+  "version": "1.0.0",
+  "spec_version": "NOMOS-SPEC-001",
+  "confidence": "DECLARED",
+  "conflict_resolution": "highest_priority",
+  "domain": {
+    "name": "Zero-Trust Access Control",
+    "organization": "Example Enterprise IT",
+    "effective_date": "2026-01-01",
+    "jurisdiction": "generic",
+    "tags": ["iam", "access-control", "zero-trust", "security"]
+  },
+  "data_contract": {
+    "required_fields": ["role", "resource_classification", "network_zone", "mfa_verified", "device_compliant"],
+    "field_types": {
+      "role": "string",
+      "resource_classification": "string",
+      "network_zone": "string",
+      "mfa_verified": "boolean",
+      "device_compliant": "boolean"
+    }
+  },
+  "rules": [
+    {
+      "id": "R1",
+      "text": "Emergency break-glass access by security-ops is always escalated for live audit — even to restricted resources.",
+      "condition": {
+        "op": "eq",
+        "field": "role",
+        "value": "security_ops_breakglass"
+      },
+      "action": "ESCALATE",
+      "priority": 200,
+      "source": "policy",
+      "confidence": 1.0,
+      "metadata": {
+        "section": "7.1 Break-Glass Procedure",
+        "page": 24,
+        "tags": ["break-glass", "emergency", "audit"]
+      }
+    },
+    {
+      "id": "R2",
+      "text": "Access to top-secret resources is denied from outside the corporate network regardless of role.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "eq",
+          "field": "resource_classification",
+          "value": "top_secret"
+        },
+        "right": {
+          "op": "neq",
+          "field": "network_zone",
+          "value": "corporate_lan"
+        }
+      },
+      "action": "DENY",
+      "priority": 150,
+      "source": "policy",
+      "confidence": 0.99,
+      "metadata": {
+        "section": "4.2 Network Zone Restrictions",
+        "page": 14,
+        "tags": ["top-secret", "network", "denial"]
+      }
+    },
+    {
+      "id": "R3",
+      "text": "Non-compliant devices are denied access to anything above public classification.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "eq",
+          "field": "device_compliant",
+          "value": false
+        },
+        "right": {
+          "op": "nin",
+          "field": "resource_classification",
+          "value": ["public", "unclassified"]
+        }
+      },
+      "action": "DENY",
+      "priority": 140,
+      "source": "policy",
+      "confidence": 0.97,
+      "metadata": {
+        "section": "3.1 Device Compliance",
+        "page": 9,
+        "tags": ["device", "compliance", "denial"]
+      }
+    },
+    {
+      "id": "R4",
+      "text": "Confidential resources require MFA verification.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "in",
+          "field": "resource_classification",
+          "value": ["confidential", "restricted", "top_secret"]
+        },
+        "right": {
+          "op": "eq",
+          "field": "mfa_verified",
+          "value": false
+        }
+      },
+      "action": "DENY",
+      "priority": 130,
+      "source": "policy",
+      "confidence": 0.99,
+      "metadata": {
+        "section": "2.3 MFA Requirements",
+        "page": 7,
+        "tags": ["mfa", "confidential"]
+      }
+    },
+    {
+      "id": "R5",
+      "text": "Roles with read-only access to restricted data require manager approval for write operations.",
+      "condition": {
+        "op": "in",
+        "field": "role",
+        "value": ["analyst", "auditor", "external_contractor"]
+      },
+      "action": "ESCALATE",
+      "priority": 80,
+      "source": "policy",
+      "confidence": 0.92,
+      "metadata": {
+        "section": "5.3 Role-Based Escalation",
+        "page": 18,
+        "tags": ["rbac", "escalation"]
+      }
+    },
+    {
+      "id": "R6",
+      "text": "Admin and engineer roles with MFA on compliant devices are granted access.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "in",
+          "field": "role",
+          "value": ["admin", "engineer", "senior_engineer", "platform_team"]
+        },
+        "right": {
+          "op": "and",
+          "left": {
+            "op": "eq",
+            "field": "mfa_verified",
+            "value": true
+          },
+          "right": {
+            "op": "eq",
+            "field": "device_compliant",
+            "value": true
+          }
+        }
+      },
+      "action": "ALLOW",
+      "priority": 50,
+      "source": "policy",
+      "confidence": 0.96,
+      "metadata": {
+        "section": "5.1 Standard Access",
+        "page": 16,
+        "tags": ["rbac", "allow"]
+      }
+    }
+  ],
+  "contradiction_report": {
+    "contradiction_count": 0,
+    "contradictions": []
+  },
+  "readiness": {
+    "lis": 0.91,
+    "drs": null,
+    "res": 0.35,
+    "gms": 0.82,
+    "ari": 0.70,
+    "autonomy_band": "autonomous"
+  },
+  "seal": {
+    "algorithm": "HMAC-SHA256",
+    "ts": "2026-06-11T10:00:00.000Z",
+    "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+    "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+  }
+}

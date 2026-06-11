@@ -1,0 +1,195 @@
+{
+  "artifact_id": "credit_scoring_v1",
+  "version": "2.1.0",
+  "spec_version": "NOMOS-SPEC-001",
+  "confidence": "CERTIFIED",
+  "conflict_resolution": "collect_and_resolve",
+  "domain": {
+    "name": "Consumer Credit Scoring Decision",
+    "organization": "Example Digital Bank",
+    "effective_date": "2026-01-01",
+    "jurisdiction": "generic",
+    "tags": ["credit", "banking", "fintech", "consumer"]
+  },
+  "data_contract": {
+    "required_fields": [
+      "credit_score", "annual_income_usd", "existing_debt_usd",
+      "employment_status", "months_at_employer", "bankruptcy_history"
+    ],
+    "field_types": {
+      "credit_score": "number",
+      "annual_income_usd": "number",
+      "existing_debt_usd": "number",
+      "employment_status": "string",
+      "months_at_employer": "number",
+      "bankruptcy_history": "boolean"
+    }
+  },
+  "rules": [
+    {
+      "id": "R1",
+      "text": "Active or undischarged bankruptcy is an absolute bar to credit.",
+      "condition": {
+        "op": "eq",
+        "field": "bankruptcy_history",
+        "value": true
+      },
+      "action": "DENY",
+      "priority": 200,
+      "source": "policy",
+      "confidence": 1.0,
+      "metadata": {
+        "section": "2.1 Hard Exclusions",
+        "page": 3,
+        "tags": ["bankruptcy", "hard-denial"]
+      }
+    },
+    {
+      "id": "R2",
+      "text": "Credit score below 580 falls below minimum underwriting threshold.",
+      "condition": {
+        "op": "lt",
+        "field": "credit_score",
+        "value": 580
+      },
+      "action": "DENY",
+      "priority": 180,
+      "source": "policy",
+      "confidence": 0.99,
+      "metadata": {
+        "section": "2.2 Score Floor",
+        "page": 4,
+        "tags": ["credit-score", "hard-denial"]
+      }
+    },
+    {
+      "id": "R3",
+      "text": "Debt-to-income ratio exceeding 50% indicates insufficient repayment capacity.",
+      "condition": {
+        "op": "gt",
+        "field": "existing_debt_usd",
+        "value": 0
+      },
+      "action": "ESCALATE",
+      "priority": 150,
+      "source": "behavioral",
+      "confidence": 0.87,
+      "metadata": {
+        "section": "3.1 Debt Service Capacity",
+        "page": 7,
+        "tags": ["dti", "escalation"]
+      }
+    },
+    {
+      "id": "R4",
+      "text": "Applicants with near-prime scores (580–649) require manual underwriting review.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "gte",
+          "field": "credit_score",
+          "value": 580
+        },
+        "right": {
+          "op": "lt",
+          "field": "credit_score",
+          "value": 650
+        }
+      },
+      "action": "ESCALATE",
+      "priority": 140,
+      "source": "policy",
+      "confidence": 0.94,
+      "metadata": {
+        "section": "3.2 Near-Prime Band",
+        "page": 8,
+        "tags": ["near-prime", "manual-review"]
+      }
+    },
+    {
+      "id": "R5",
+      "text": "Employment gaps or self-employed applicants with less than 24 months tenure require income verification.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "in",
+          "field": "employment_status",
+          "value": ["self_employed", "contract", "part_time", "unemployed"]
+        },
+        "right": {
+          "op": "lt",
+          "field": "months_at_employer",
+          "value": 24
+        }
+      },
+      "action": "ESCALATE",
+      "priority": 120,
+      "source": "policy",
+      "confidence": 0.91,
+      "metadata": {
+        "section": "3.3 Employment Stability",
+        "page": 9,
+        "tags": ["employment", "income-verification"]
+      }
+    },
+    {
+      "id": "R6",
+      "text": "Prime applicants (score ≥ 700) with stable employment and annual income above $50k are auto-approved.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "gte",
+          "field": "credit_score",
+          "value": 700
+        },
+        "right": {
+          "op": "and",
+          "left": {
+            "op": "in",
+            "field": "employment_status",
+            "value": ["full_time", "government", "military"]
+          },
+          "right": {
+            "op": "gte",
+            "field": "annual_income_usd",
+            "value": 50000
+          }
+        }
+      },
+      "action": "ALLOW",
+      "priority": 50,
+      "source": "policy",
+      "confidence": 0.96,
+      "metadata": {
+        "section": "4.1 Auto-Approval Criteria",
+        "page": 12,
+        "tags": ["prime", "auto-approval"]
+      }
+    }
+  ],
+  "contradiction_report": {
+    "contradiction_count": 1,
+    "contradictions": [
+      {
+        "type": "layer_divergence",
+        "rule_ids": ["R3"],
+        "description": "R3 escalates all applicants with any existing debt — behavioral data shows 72% of approved customers carry some existing debt, making R3 overly broad. Consider threshold-based condition.",
+        "severity": "medium"
+      }
+    ]
+  },
+  "readiness": {
+    "lis": 0.82,
+    "drs": 0.79,
+    "res": 0.25,
+    "gms": 0.88,
+    "ari": 0.74,
+    "autonomy_band": "autonomous"
+  },
+  "seal": {
+    "algorithm": "HMAC-SHA256",
+    "ts": "2026-06-11T10:00:00.000Z",
+    "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+    "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+  }
+}

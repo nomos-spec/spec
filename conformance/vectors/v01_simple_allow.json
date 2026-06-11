@@ -1,0 +1,38 @@
+{
+  "id": "v01",
+  "category": "verdict_correctness",
+  "description": "Single eq rule matches context value — expect ALLOW",
+  "artifact": {
+    "artifact_id": "vec_v01",
+    "version": "1.0.0",
+    "spec_version": "NOMOS-SPEC-001",
+    "confidence": "DECLARED",
+    "conflict_resolution": "first_match",
+    "domain": { "name": "Vector Test v01" },
+    "rules": [
+      {
+        "id": "R1",
+        "text": "Approved users are allowed.",
+        "condition": { "op": "eq", "field": "user_status", "value": "approved" },
+        "action": "ALLOW",
+        "priority": 10,
+        "source": "policy",
+        "confidence": 1.0
+      }
+    ],
+    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
+    "readiness": { "lis": 1.0, "drs": null, "res": 0.0, "gms": 1.0, "ari": 0.85, "autonomy_band": "autonomous" },
+    "seal": {
+      "algorithm": "HMAC-SHA256",
+      "ts": "2026-06-11T00:00:00.000Z",
+      "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    }
+  },
+  "context": { "user_status": "approved" },
+  "expected": {
+    "verdict": "ALLOW",
+    "matched_rule_id": "R1",
+    "error": null
+  }
+}

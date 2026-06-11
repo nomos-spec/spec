@@ -1,0 +1,39 @@
+{
+  "id": "v08",
+  "category": "missing_context",
+  "description": "Rule uses an operator not in §4.2 — runtime MUST return ESCALATE (not an error)",
+  "artifact": {
+    "artifact_id": "vec_v08",
+    "version": "1.0.0",
+    "spec_version": "NOMOS-SPEC-001",
+    "confidence": "DECLARED",
+    "conflict_resolution": "first_match",
+    "domain": { "name": "Vector Test v08" },
+    "rules": [
+      {
+        "id": "R1",
+        "text": "Fuzzy match on applicant name — uses non-standard operator.",
+        "condition": { "op": "fuzzy_match", "field": "applicant_name", "value": "john" },
+        "action": "ALLOW",
+        "priority": 10,
+        "source": "policy",
+        "confidence": 0.7
+      }
+    ],
+    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
+    "readiness": { "lis": 0.6, "drs": null, "res": 0.2, "gms": 0.7, "ari": 0.55, "autonomy_band": "bounded" },
+    "seal": {
+      "algorithm": "HMAC-SHA256",
+      "ts": "2026-06-11T00:00:00.000Z",
+      "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    }
+  },
+  "context": { "applicant_name": "John Smith" },
+  "expected": {
+    "verdict": "ESCALATE",
+    "reason": "unsupported_operator",
+    "error": null,
+    "note": "Runtime MUST NOT fail silently. Per §4.2 it MUST return ESCALATE with reason unsupported_operator."
+  }
+}

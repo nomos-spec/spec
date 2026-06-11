@@ -1,0 +1,169 @@
+{
+  "artifact_id": "content_moderation_v1",
+  "version": "1.0.0",
+  "spec_version": "NOMOS-SPEC-001",
+  "confidence": "DECLARED",
+  "conflict_resolution": "first_match",
+  "domain": {
+    "name": "User-Generated Content Moderation",
+    "organization": "Example Platform Inc.",
+    "effective_date": "2026-01-01",
+    "jurisdiction": "generic",
+    "tags": ["trust-safety", "content", "moderation", "platform"]
+  },
+  "data_contract": {
+    "required_fields": ["content_category", "account_age_days", "prior_violations", "is_verified_creator"],
+    "field_types": {
+      "content_category": "string",
+      "account_age_days": "number",
+      "prior_violations": "number",
+      "is_verified_creator": "boolean"
+    }
+  },
+  "rules": [
+    {
+      "id": "R1",
+      "text": "Content in prohibited categories is removed immediately — no appeal path.",
+      "condition": {
+        "op": "in",
+        "field": "content_category",
+        "value": ["csam", "terrorism_incitement", "weapons_trafficking", "human_trafficking"]
+      },
+      "action": "DENY",
+      "priority": 200,
+      "source": "policy",
+      "confidence": 1.0,
+      "metadata": {
+        "section": "1.1 Absolute Prohibitions",
+        "page": 2,
+        "tags": ["prohibited", "removal", "legal"]
+      }
+    },
+    {
+      "id": "R2",
+      "text": "Accounts with 3 or more prior policy violations are placed in strict review for all content.",
+      "condition": {
+        "op": "gte",
+        "field": "prior_violations",
+        "value": 3
+      },
+      "action": "ESCALATE",
+      "priority": 150,
+      "source": "policy",
+      "confidence": 0.97,
+      "metadata": {
+        "section": "5.2 Repeat Violators",
+        "page": 18,
+        "tags": ["violations", "escalation", "repeat"]
+      }
+    },
+    {
+      "id": "R3",
+      "text": "Content flagged as potentially harmful — not in absolute prohibition list — requires human review.",
+      "condition": {
+        "op": "in",
+        "field": "content_category",
+        "value": ["violence_graphic", "hate_speech_possible", "self_harm_adjacent", "misinformation_possible"]
+      },
+      "action": "ESCALATE",
+      "priority": 120,
+      "source": "policy",
+      "confidence": 0.90,
+      "metadata": {
+        "section": "2.1 Sensitive Categories",
+        "page": 6,
+        "tags": ["sensitive", "review"]
+      }
+    },
+    {
+      "id": "R4",
+      "text": "New accounts (under 30 days old) posting adult-only content require age verification check.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "lt",
+          "field": "account_age_days",
+          "value": 30
+        },
+        "right": {
+          "op": "eq",
+          "field": "content_category",
+          "value": "adult_legal"
+        }
+      },
+      "action": "ESCALATE",
+      "priority": 100,
+      "source": "policy",
+      "confidence": 0.93,
+      "metadata": {
+        "section": "3.4 Age-Restricted Content",
+        "page": 11,
+        "tags": ["age-verification", "new-account"]
+      }
+    },
+    {
+      "id": "R5",
+      "text": "Verified creators publishing standard content not in any sensitive category are auto-approved.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "eq",
+          "field": "is_verified_creator",
+          "value": true
+        },
+        "right": {
+          "op": "nin",
+          "field": "content_category",
+          "value": ["csam", "terrorism_incitement", "weapons_trafficking", "human_trafficking",
+                    "violence_graphic", "hate_speech_possible", "self_harm_adjacent",
+                    "misinformation_possible", "adult_legal"]
+        }
+      },
+      "action": "ALLOW",
+      "priority": 50,
+      "source": "policy",
+      "confidence": 0.95,
+      "metadata": {
+        "section": "4.1 Verified Creator Fast-Track",
+        "page": 13,
+        "tags": ["verified", "auto-approve"]
+      }
+    },
+    {
+      "id": "R6",
+      "text": "Standard content from accounts in good standing with no prior violations is allowed.",
+      "condition": {
+        "op": "eq",
+        "field": "prior_violations",
+        "value": 0
+      },
+      "action": "ALLOW",
+      "priority": 10,
+      "source": "policy",
+      "confidence": 0.88,
+      "metadata": {
+        "section": "4.2 Standard Approval",
+        "page": 14,
+        "tags": ["standard", "approval"]
+      }
+    }
+  ],
+  "contradiction_report": {
+    "contradiction_count": 0,
+    "contradictions": []
+  },
+  "readiness": {
+    "lis": 0.85,
+    "drs": null,
+    "res": 0.30,
+    "gms": 0.75,
+    "ari": 0.66,
+    "autonomy_band": "autonomous"
+  },
+  "seal": {
+    "algorithm": "HMAC-SHA256",
+    "ts": "2026-06-11T10:00:00.000Z",
+    "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+    "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+  }
+}

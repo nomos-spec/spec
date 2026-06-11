@@ -1,0 +1,58 @@
+{
+  "id": "v05",
+  "category": "conflict_resolution",
+  "description": "collect_and_resolve: DENY + ALLOW both match — DENY wins (DENY > ESCALATE > ALLOW)",
+  "artifact": {
+    "artifact_id": "vec_v05",
+    "version": "1.0.0",
+    "spec_version": "NOMOS-SPEC-001",
+    "confidence": "DECLARED",
+    "conflict_resolution": "collect_and_resolve",
+    "domain": { "name": "Vector Test v05" },
+    "rules": [
+      {
+        "id": "R1",
+        "text": "Sanctioned regions are denied.",
+        "condition": { "op": "eq", "field": "country_code", "value": "XX" },
+        "action": "DENY",
+        "priority": 10,
+        "source": "policy",
+        "confidence": 1.0
+      },
+      {
+        "id": "R2",
+        "text": "Verified KYC customers are allowed.",
+        "condition": { "op": "eq", "field": "kyc_verified", "value": true },
+        "action": "ALLOW",
+        "priority": 10,
+        "source": "policy",
+        "confidence": 1.0
+      }
+    ],
+    "contradiction_report": {
+      "contradiction_count": 1,
+      "contradictions": [
+        {
+          "type": "rule_collision",
+          "rule_ids": ["R1", "R2"],
+          "description": "Sanctioned-country denial conflicts with KYC approval for customers in country XX who pass KYC.",
+          "severity": "high"
+        }
+      ]
+    },
+    "readiness": { "lis": 0.75, "drs": null, "res": 0.2, "gms": 0.8, "ari": 0.62, "autonomy_band": "autonomous" },
+    "seal": {
+      "algorithm": "HMAC-SHA256",
+      "ts": "2026-06-11T00:00:00.000Z",
+      "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    }
+  },
+  "context": { "country_code": "XX", "kyc_verified": true },
+  "expected": {
+    "verdict": "DENY",
+    "matched_rule_ids": ["R1", "R2"],
+    "error": null,
+    "note": "Both rules match. collect_and_resolve applies DENY > ESCALATE > ALLOW, so DENY wins."
+  }
+}

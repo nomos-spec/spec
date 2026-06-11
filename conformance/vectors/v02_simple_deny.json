@@ -1,0 +1,38 @@
+{
+  "id": "v02",
+  "category": "verdict_correctness",
+  "description": "gt rule matches — expect DENY",
+  "artifact": {
+    "artifact_id": "vec_v02",
+    "version": "1.0.0",
+    "spec_version": "NOMOS-SPEC-001",
+    "confidence": "DECLARED",
+    "conflict_resolution": "first_match",
+    "domain": { "name": "Vector Test v02" },
+    "rules": [
+      {
+        "id": "R1",
+        "text": "Amounts over 10000 are denied.",
+        "condition": { "op": "gt", "field": "amount", "value": 10000 },
+        "action": "DENY",
+        "priority": 10,
+        "source": "policy",
+        "confidence": 1.0
+      }
+    ],
+    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
+    "readiness": { "lis": 1.0, "drs": null, "res": 0.0, "gms": 1.0, "ari": 0.85, "autonomy_band": "autonomous" },
+    "seal": {
+      "algorithm": "HMAC-SHA256",
+      "ts": "2026-06-11T00:00:00.000Z",
+      "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    }
+  },
+  "context": { "amount": 15000 },
+  "expected": {
+    "verdict": "DENY",
+    "matched_rule_id": "R1",
+    "error": null
+  }
+}

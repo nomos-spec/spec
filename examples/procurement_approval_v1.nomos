@@ -1,0 +1,159 @@
+{
+  "artifact_id": "procurement_approval_v1",
+  "version": "1.0.0",
+  "spec_version": "NOMOS-SPEC-001",
+  "confidence": "DECLARED",
+  "conflict_resolution": "first_match",
+  "domain": {
+    "name": "B2B Procurement Approval",
+    "organization": "Example Corporation",
+    "effective_date": "2026-01-01",
+    "jurisdiction": "generic",
+    "tags": ["procurement", "purchasing", "finance", "approval"]
+  },
+  "data_contract": {
+    "required_fields": ["amount_usd", "vendor_approved", "category", "budget_remaining_usd"],
+    "field_types": {
+      "amount_usd": "number",
+      "vendor_approved": "boolean",
+      "category": "string",
+      "budget_remaining_usd": "number"
+    }
+  },
+  "rules": [
+    {
+      "id": "R1",
+      "text": "IT security or legal categories always require VP sign-off regardless of amount.",
+      "condition": {
+        "op": "in",
+        "field": "category",
+        "value": ["it_security", "legal_services", "data_privacy"]
+      },
+      "action": "ESCALATE",
+      "priority": 100,
+      "source": "policy",
+      "confidence": 0.98,
+      "metadata": {
+        "section": "3.1 Sensitive Categories",
+        "page": 7,
+        "tags": ["category", "vp-approval"]
+      }
+    },
+    {
+      "id": "R2",
+      "text": "Purchases exceeding $100k require CFO and CEO dual approval.",
+      "condition": {
+        "op": "gt",
+        "field": "amount_usd",
+        "value": 100000
+      },
+      "action": "ESCALATE",
+      "priority": 95,
+      "source": "policy",
+      "confidence": 0.99,
+      "metadata": {
+        "section": "4.3 Executive Approval Thresholds",
+        "page": 11,
+        "tags": ["high-value", "executive", "dual-approval"]
+      }
+    },
+    {
+      "id": "R3",
+      "text": "Purchases from non-approved vendors are blocked.",
+      "condition": {
+        "op": "eq",
+        "field": "vendor_approved",
+        "value": false
+      },
+      "action": "DENY",
+      "priority": 90,
+      "source": "policy",
+      "confidence": 0.99,
+      "metadata": {
+        "section": "2.1 Vendor Registry",
+        "page": 4,
+        "tags": ["vendor", "denial"]
+      }
+    },
+    {
+      "id": "R4",
+      "text": "Purchases exceeding $10k require department head approval.",
+      "condition": {
+        "op": "gt",
+        "field": "amount_usd",
+        "value": 10000
+      },
+      "action": "ESCALATE",
+      "priority": 70,
+      "source": "policy",
+      "confidence": 0.97,
+      "metadata": {
+        "section": "4.1 Department Head Threshold",
+        "page": 10,
+        "tags": ["manager-approval", "threshold"]
+      }
+    },
+    {
+      "id": "R5",
+      "text": "Purchases that exceed remaining budget require finance review.",
+      "condition": {
+        "op": "gt",
+        "field": "amount_usd",
+        "value": 0
+      },
+      "action": "ESCALATE",
+      "priority": 50,
+      "source": "behavioral",
+      "confidence": 0.85,
+      "metadata": {
+        "section": "5.2 Budget Adherence",
+        "page": 14,
+        "tags": ["budget", "finance"]
+      }
+    },
+    {
+      "id": "R6",
+      "text": "Purchases under $10k from approved vendors within budget are auto-approved.",
+      "condition": {
+        "op": "and",
+        "left": {
+          "op": "lte",
+          "field": "amount_usd",
+          "value": 10000
+        },
+        "right": {
+          "op": "eq",
+          "field": "vendor_approved",
+          "value": true
+        }
+      },
+      "action": "ALLOW",
+      "priority": 10,
+      "source": "policy",
+      "confidence": 0.96,
+      "metadata": {
+        "section": "4.0 Auto-Approval",
+        "page": 9,
+        "tags": ["auto-approval", "low-value"]
+      }
+    }
+  ],
+  "contradiction_report": {
+    "contradiction_count": 0,
+    "contradictions": []
+  },
+  "readiness": {
+    "lis": 0.90,
+    "drs": null,
+    "res": 0.15,
+    "gms": 0.80,
+    "ari": 0.76,
+    "autonomy_band": "autonomous"
+  },
+  "seal": {
+    "algorithm": "HMAC-SHA256",
+    "ts": "2026-06-11T10:00:00.000Z",
+    "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+    "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+  }
+}

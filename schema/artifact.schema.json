@@ -125,6 +125,26 @@
         }
       }
     },
+    "data_contract": {
+      "type": "object",
+      "description": "Declares the minimum context fields required for evaluation (§3.9). Absence of any required_field triggers a data_contract_violation error.",
+      "additionalProperties": false,
+      "properties": {
+        "required_fields": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Context field paths that MUST be present in every execution request"
+        },
+        "field_types": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["string", "number", "boolean", "array", "object"]
+          },
+          "description": "Optional type hints per field — informational only; runtimes MUST NOT coerce values"
+        }
+      }
+    },
     "seal": {
       "type": "object",
       "required": ["algorithm", "ts", "hash", "sig"],

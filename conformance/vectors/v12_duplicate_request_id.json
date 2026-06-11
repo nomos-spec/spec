@@ -1,0 +1,48 @@
+{
+  "id": "v12",
+  "category": "seal_security",
+  "description": "Same request_id sent twice — second call must return cached verdict with cached:true and no new audit entry",
+  "artifact": {
+    "artifact_id": "vec_v12",
+    "version": "1.0.0",
+    "spec_version": "NOMOS-SPEC-001",
+    "confidence": "DECLARED",
+    "conflict_resolution": "first_match",
+    "domain": { "name": "Vector Test v12" },
+    "rules": [
+      {
+        "id": "R1",
+        "text": "Approved users are allowed.",
+        "condition": { "op": "eq", "field": "user_status", "value": "approved" },
+        "action": "ALLOW",
+        "priority": 10,
+        "source": "policy",
+        "confidence": 1.0
+      }
+    ],
+    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
+    "readiness": { "lis": 1.0, "drs": null, "res": 0.0, "gms": 1.0, "ari": 0.85, "autonomy_band": "autonomous" },
+    "seal": {
+      "algorithm": "HMAC-SHA256",
+      "ts": "2026-06-11T00:00:00.000Z",
+      "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    }
+  },
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "context": { "user_status": "approved" },
+  "expected": {
+    "first_call": {
+      "verdict": "ALLOW",
+      "cached": false,
+      "audit_entry_created": true
+    },
+    "second_call": {
+      "verdict": "ALLOW",
+      "cached": true,
+      "audit_entry_created": false
+    },
+    "error": null,
+    "note": "Per §6.5 the runtime MUST return cached:true on the second call and MUST NOT create a second audit trail entry."
+  }
+}

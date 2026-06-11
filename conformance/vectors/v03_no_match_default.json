@@ -1,0 +1,39 @@
+{
+  "id": "v03",
+  "category": "verdict_correctness",
+  "description": "No rule matches — runtime default is ALLOW (no-match = allow)",
+  "artifact": {
+    "artifact_id": "vec_v03",
+    "version": "1.0.0",
+    "spec_version": "NOMOS-SPEC-001",
+    "confidence": "DECLARED",
+    "conflict_resolution": "first_match",
+    "domain": { "name": "Vector Test v03" },
+    "rules": [
+      {
+        "id": "R1",
+        "text": "Suspended users are denied.",
+        "condition": { "op": "eq", "field": "user_status", "value": "suspended" },
+        "action": "DENY",
+        "priority": 10,
+        "source": "policy",
+        "confidence": 1.0
+      }
+    ],
+    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
+    "readiness": { "lis": 1.0, "drs": null, "res": 0.0, "gms": 1.0, "ari": 0.85, "autonomy_band": "autonomous" },
+    "seal": {
+      "algorithm": "HMAC-SHA256",
+      "ts": "2026-06-11T00:00:00.000Z",
+      "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    }
+  },
+  "context": { "user_status": "active" },
+  "expected": {
+    "verdict": "ALLOW",
+    "matched_rule_id": null,
+    "error": null,
+    "note": "Context does not match any rule. Default verdict is ALLOW."
+  }
+}

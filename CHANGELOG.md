@@ -7,6 +7,45 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Repository] — 2026-06-11
+
+World-class gap closure: error catalog, data contract formalization, conformance test vectors, artifact versioning semantics, idempotency guarantee, five new domain examples, and deprecation policy.
+
+### Added (NOMOS-SPEC-001)
+
+- **§3.2 Version lifecycle** — normative rules for when to increment MAJOR / MINOR / PATCH; in-flight execution behaviour; re-sealing requirements
+- **§3.9 `data_contract`** — formal definition of the optional `data_contract` field (previously implemented in the runtime but absent from the spec); `required_fields` is the normative constraint; `field_types` is informational
+- **§6.5 Idempotency** — `request_id` is the idempotency key; duplicate within dedup window returns `cached: true` without a new audit entry; `request_id` as primary key is now normative
+- **§11 Error Catalog** — comprehensive table of all machine-readable error codes (`spec_version_unsupported`, `seal_verification_failed`, `artifact_not_found`, `data_contract_violation`, `confidence_tier_invalid`, `duplicate_request_id`, `chain_corruption`, `unsupported_operator`, `unknown_agent`, `deny_list_violation`); standard error response envelope (`code`, `message`, `hint`, `doc_url`, `request_id`)
+
+### Added (schemas)
+
+- **`schema/artifact.schema.json`** — `data_contract` optional object with `required_fields: string[]` and `field_types: object`
+
+### Added (conformance)
+
+- **`conformance/vectors/`** — 12 deterministic test vectors for SDK authors:
+  - v01–v03: verdict correctness (`eq` allow, `gt` deny, no-match default)
+  - v04–v06: conflict resolution (`first_match`, `collect_and_resolve`, `highest_priority`)
+  - v07–v09: missing context / escalation (`data_contract_violation`, unknown operator, AND branch partial)
+  - v10–v12: seal security (tampered payload, unknown spec_version, duplicate `request_id`)
+- **`conformance/vectors/README.md`** — vector format spec and usage guide
+- **`conformance/run.ts`** — extended to run vector suite; 22 total tests (10 structural + 12 vectors)
+
+### Added (examples)
+
+- **`examples/insurance_underwriting_v1.nomos`** — property insurance; `in`, `gte`, `collect_and_resolve`; 6 rules; includes `data_contract`
+- **`examples/procurement_approval_v1.nomos`** — B2B procurement; monetary thresholds, multi-level escalation, `first_match`; 6 rules
+- **`examples/content_moderation_v1.nomos`** — trust & safety; `in`, `nin`, `and`; repeat-violator escalation; 6 rules
+- **`examples/access_control_v1.nomos`** — IAM / zero-trust; `in` for role arrays, `highest_priority`; nested AND conditions; 6 rules
+- **`examples/credit_scoring_v1.nomos`** — consumer credit; `CERTIFIED` confidence; `data_contract`; intentional contradiction in `contradiction_report`; 6 rules
+
+### Added (governance)
+
+- **`DEPRECATION.md`** — formal deprecation policy: 3-year minimum support window, 12-month notice before End of Life, per-stakeholder guidance, artifact migration steps
+
+---
+
 ## [NOMOS-SPEC-001] — 2026-01-15
 
 Initial public release of the NOMOS Protocol specification.
