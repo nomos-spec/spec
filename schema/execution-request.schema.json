@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/execution-request.schema.json",
+  "title": "NOMOS Execution Request",
+  "description": "Request body for POST /api/v1/verify — evaluates a decision context against a sealed artifact",
+  "type": "object",
+  "required": ["artifact_id", "context"],
+  "additionalProperties": false,
+  "properties": {
+    "artifact_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]{1,128}$",
+      "description": "ID of the sealed artifact to evaluate against"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Artifact version to use. Omit to use the latest sealed version."
+    },
+    "decision": {
+      "type": "string",
+      "description": "Optional human-readable label for the decision being requested (e.g. 'approve_loan'). Does not affect rule evaluation."
+    },
+    "context": {
+      "type": "object",
+      "description": "Key-value map of input fields evaluated against rule conditions. Keys MUST match field paths referenced in the artifact's rule conditions.",
+      "additionalProperties": true
+    },
+    "agent_id": {
+      "type": "string",
+      "description": "Identifier of the agent submitting this request. Required when the artifact contains an agents manifest (NOMOS-SPEC-002). MUST match a registered agent_id or the request will be rejected."
+    },
+    "request_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUIDv4 identifying this request. Used for idempotency and replay-attack prevention. Runtimes SHOULD reject duplicate request_id values within a 5-minute window."
+    }
+  },
+  "examples": [
+    {
+      "artifact_id": "pub_lending_v1",
+      "decision": "approve_loan",
+      "context": {
+        "amount": 15000,
+        "credit_score": 720,
+        "income_to_repayment_ratio": 3.2
+      },
+      "request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    }
+  ]
+}

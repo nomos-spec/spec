@@ -1,0 +1,31 @@
+{
+  "artifact_id": "conformance_unknown_spec_v1",
+  "version": "1.0.0",
+  "spec_version": "NOMOS-SPEC-999",
+  "confidence": "DECLARED",
+  "conflict_resolution": "first_match",
+  "domain": {
+    "name": "Unknown Spec Version Test",
+    "organization": "NOMOS Conformance Suite",
+    "effective_date": "2026-01-01"
+  },
+  "rules": [],
+  "contradiction_report": {
+    "contradiction_count": 0,
+    "contradictions": []
+  },
+  "readiness": {
+    "lis": 0.9,
+    "drs": null,
+    "res": 0.1,
+    "gms": 0.5,
+    "ari": 0.65,
+    "autonomy_band": "bounded"
+  },
+  "seal": {
+    "algorithm": "HMAC-SHA256",
+    "ts": "2026-06-11T10:00:00.000Z",
+    "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sig": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+}

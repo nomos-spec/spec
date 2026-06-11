@@ -1,0 +1,45 @@
+{
+  "artifact_id": "conformance_validated_v1",
+  "version": "1.0.0",
+  "spec_version": "NOMOS-SPEC-001",
+  "confidence": "VALIDATED",
+  "conflict_resolution": "first_match",
+  "domain": {
+    "name": "Conformance Test Policy (VALIDATED)",
+    "organization": "NOMOS Conformance Suite",
+    "effective_date": "2026-01-01"
+  },
+  "rules": [
+    {
+      "id": "rule_001",
+      "text": "Approved users may access the system.",
+      "condition": {
+        "op": "eq",
+        "field": "user_status",
+        "value": "approved"
+      },
+      "action": "ALLOW",
+      "priority": 10,
+      "source": "policy",
+      "confidence": 0.99
+    }
+  ],
+  "contradiction_report": {
+    "contradiction_count": 0,
+    "contradictions": []
+  },
+  "readiness": {
+    "lis": 0.92,
+    "drs": 0.78,
+    "res": 0.08,
+    "gms": 0.65,
+    "ari": 0.74,
+    "autonomy_band": "autonomous"
+  },
+  "seal": {
+    "algorithm": "HMAC-SHA256",
+    "ts": "2026-06-11T10:00:00.000Z",
+    "hash": "3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b",
+    "sig": "1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
+  }
+}

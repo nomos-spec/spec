@@ -29,13 +29,13 @@
     },
     "spec_version": {
       "type": "string",
-      "const": "NOMOS-SPEC-001",
+      "enum": ["NOMOS-SPEC-001", "NOMOS-SPEC-002"],
       "description": "Protocol specification version this artifact conforms to"
     },
     "confidence": {
       "type": "string",
-      "enum": ["DECLARED", "CERTIFIED"],
-      "description": "DECLARED = policy-only; CERTIFIED = triangulated against behavioral data"
+      "enum": ["DECLARED", "VALIDATED", "CERTIFIED"],
+      "description": "DECLARED = policy-only; VALIDATED = confirmed against behavioral data, contradiction detection passed; CERTIFIED = full triangulation and gap analysis passed"
     },
     "conflict_resolution": {
       "type": "string",
@@ -114,7 +114,7 @@
             { "type": "number", "minimum": 0, "maximum": 1 },
             { "type": "null" }
           ],
-          "description": "null for DECLARED artifacts; float for CERTIFIED"
+          "description": "null for DECLARED artifacts; float for VALIDATED and CERTIFIED"
         },
         "res": { "type": "number", "minimum": 0, "maximum": 1 },
         "gms": { "type": "number", "minimum": 0, "maximum": 1 },

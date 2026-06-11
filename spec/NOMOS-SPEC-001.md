@@ -255,15 +255,23 @@ Rules derived exclusively from uploaded policy documents. No behavioral data was
 - The artifact carries reduced statistical confidence.
 - Suitable for new deployments where historical decision data does not yet exist.
 
-### 5.2 CERTIFIED
+### 5.2 VALIDATED
 
-Rules triangulated against behavioral decision logs. Statistical validation passed.
+Rules derived from policy documents and confirmed against behavioral decision logs. Statistical triangulation was performed but full gap analysis was not required or was inconclusive.
+
+- `drs` in `readiness` MUST be a float in [0, 1].
+- The artifact has passed contradiction detection.
+- Suitable for production deployments where behavioral data is available but the dataset does not yet meet the threshold for `CERTIFIED`.
+
+### 5.3 CERTIFIED
+
+Rules triangulated against behavioral decision logs with full gap analysis. Statistical validation passed.
 
 - `drs` in `readiness` MUST be a float in [0, 1].
 - The artifact has passed contradiction detection and gap analysis.
 - Suitable for production deployments requiring regulator-grade auditability.
 
-A runtime MAY surface the confidence tier in its API response. A runtime MUST NOT downgrade a `CERTIFIED` artifact to `DECLARED` or vice versa without re-sealing.
+A runtime MAY surface the confidence tier in its API response. A runtime MUST NOT change the `confidence` field of a sealed artifact without re-sealing.
 
 ---
 
@@ -445,7 +453,7 @@ A producer is **conformant** if it:
 
 1. Generates artifacts that validate against `schema/artifact.schema.json`.
 2. Seals artifacts using the procedure in §8.
-3. Sets `confidence` to `DECLARED` when no behavioral data was used, and `CERTIFIED` only after statistical triangulation.
+3. Sets `confidence` to `DECLARED` when no behavioral data was used; `VALIDATED` when behavioral data was used and contradiction detection passed; `CERTIFIED` only after full statistical triangulation and gap analysis.
 4. Populates `contradiction_report` with any detected conflicts before sealing.
 
 ---
@@ -460,7 +468,7 @@ A producer is **conformant** if it:
 
 **Audit trail integrity** — The hash-chain audit trail is append-only. Runtimes MUST NOT expose a deletion endpoint for audit entries. Backup and replication of the audit store is REQUIRED for production deployments.
 
-**Confidence tier downgrade** — Displaying a `CERTIFIED` artifact as `DECLARED` (or vice versa) constitutes misrepresentation of the artifact's provenance. Runtimes MUST preserve the `confidence` field verbatim from the sealed artifact.
+**Confidence tier downgrade** — Altering the `confidence` field without re-sealing constitutes misrepresentation of the artifact's provenance. Runtimes MUST preserve the `confidence` field verbatim from the sealed artifact. Valid values are `DECLARED`, `VALIDATED`, and `CERTIFIED`.
 
 ---
 

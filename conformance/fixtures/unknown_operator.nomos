@@ -1,0 +1,45 @@
+{
+  "artifact_id": "conformance_unknown_op_v1",
+  "version": "1.0.0",
+  "spec_version": "NOMOS-SPEC-001",
+  "confidence": "DECLARED",
+  "conflict_resolution": "first_match",
+  "domain": {
+    "name": "Unknown Operator Test",
+    "organization": "NOMOS Conformance Suite",
+    "effective_date": "2026-01-01"
+  },
+  "rules": [
+    {
+      "id": "rule_001",
+      "text": "Rule using an operator not defined in SPEC-001 §4.2.",
+      "condition": {
+        "op": "fuzzy_match",
+        "field": "user_status",
+        "value": "approv"
+      },
+      "action": "ALLOW",
+      "priority": 10,
+      "source": "policy",
+      "confidence": 0.5
+    }
+  ],
+  "contradiction_report": {
+    "contradiction_count": 0,
+    "contradictions": []
+  },
+  "readiness": {
+    "lis": 0.6,
+    "drs": null,
+    "res": 0.2,
+    "gms": 0.5,
+    "ari": 0.55,
+    "autonomy_band": "bounded"
+  },
+  "seal": {
+    "algorithm": "HMAC-SHA256",
+    "ts": "2026-06-11T10:00:00.000Z",
+    "hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "sig": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  }
+}

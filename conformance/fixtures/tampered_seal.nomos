@@ -1,0 +1,45 @@
+{
+  "artifact_id": "conformance_tampered_v1",
+  "version": "1.0.0",
+  "spec_version": "NOMOS-SPEC-001",
+  "confidence": "DECLARED",
+  "conflict_resolution": "first_match",
+  "domain": {
+    "name": "Tampered Seal Test",
+    "organization": "NOMOS Conformance Suite",
+    "effective_date": "2026-01-01"
+  },
+  "rules": [
+    {
+      "id": "rule_001",
+      "text": "This rule was injected after sealing.",
+      "condition": {
+        "op": "eq",
+        "field": "user_status",
+        "value": "approved"
+      },
+      "action": "ALLOW",
+      "priority": 10,
+      "source": "policy",
+      "confidence": 0.99
+    }
+  ],
+  "contradiction_report": {
+    "contradiction_count": 0,
+    "contradictions": []
+  },
+  "readiness": {
+    "lis": 0.95,
+    "drs": null,
+    "res": 0.05,
+    "gms": 0.6,
+    "ari": 0.72,
+    "autonomy_band": "autonomous"
+  },
+  "seal": {
+    "algorithm": "HMAC-SHA256",
+    "ts": "2026-06-11T10:00:00.000Z",
+    "hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "sig": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}
