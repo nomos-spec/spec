@@ -1,6 +1,7 @@
 {
   "name": "@nomos/runtime",
   "version": "1.0.0",
+  "private": true,
   "description": "Portable NOMOS governance runtime — load a .nomos artifact and evaluate decisions anywhere",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
