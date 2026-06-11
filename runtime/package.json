@@ -1,0 +1,32 @@
+{
+  "name": "@nomos/runtime",
+  "version": "1.0.0",
+  "description": "Portable NOMOS governance runtime — load a .nomos artifact and evaluate decisions anywhere",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "npx tsx src/index.test.ts"
+  },
+  "keywords": ["nomos", "governance", "ai-agents", "policy", "runtime"],
+  "license": "Apache-2.0",
+  "homepage": "https://nomosprotocol.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nomos-spec/spec.git",
+    "directory": "runtime"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
