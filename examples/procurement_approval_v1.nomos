@@ -153,7 +153,7 @@
   "seal": {
     "algorithm": "HMAC-SHA256",
     "ts": "2026-06-11T10:00:00.000Z",
-    "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-    "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    "hash": "64d9e62c46d8e67ddd02731c5203322ae9165b9c21a4e5e0481e92be70f1a08a",
+    "sig":  "64d9e62c46d8e67ddd02731c5203322ae9165b9c21a4e5e0481e92be70f1a08a"
   }
 }
