@@ -42,6 +42,31 @@ Think of a `.nomos` file the way you think of a `.pdf` file — except instead o
 
 ## Quickstart
 
+### TypeScript SDK (fastest path)
+
+```bash
+npm install nomos-sdk
+```
+
+```typescript
+import { Nomos } from 'nomos-sdk';
+
+const nomos = new Nomos('nms_live_...');
+
+const result = await nomos.decisions.verify({
+  artifact_id:      'loan_approval_v1',
+  decision_context: { credit_score: 720, loan_amount: 50_000 },
+});
+
+result.allowed            // true | false
+result.verdict            // 'auto_approved' | 'auto_rejected' | 'escalated'
+result.audit_record       // SHA-256 — store for compliance
+```
+
+Zero dependencies. Auto-retry. Full TypeScript types. Node ≥18.
+
+---
+
 ### Install the CLI
 
 ```bash
@@ -111,10 +136,13 @@ python verify/verify.py examples/lending_policy_v1.nomos \
 
 ## Confidence Tiers
 
-| Tier | Meaning |
-|------|---------|
-| `DECLARED` | Rules extracted from policy documents only |
-| `CERTIFIED` | Rules triangulated against behavioral decision logs; statistical validation passed |
+| Tier | ARI gate | Meaning |
+|------|----------|---------|
+| `DECLARED` | none | Rules extracted from policy documents only — no behavioral data required |
+| `VALIDATED` | none | Rules triangulated against behavioral decision logs |
+| `CERTIFIED` | none | Statistical validation passed; contradiction-free |
+| `PROVEN` | ≥ 0.60 | ARI ≥ 60 confirmed; eligible for Exchange listing |
+| `SOVEREIGN` | ≥ 0.75 | Highest tier; ARI ≥ 75, admin-verified, autonomous band confirmed |
 
 ---
 
@@ -205,3 +233,7 @@ The NOMOS Protocol specification and schemas are released under [CC BY 4.0](http
 - Hosted runtime: [nomosprotocol.com](https://nomosprotocol.com)
 - Protocol Spec: [nomosprotocol.com/spec](https://nomosprotocol.com/spec)
 - API Reference: [nomosprotocol.com/docs](https://nomosprotocol.com/docs)
+- TypeScript SDK: [nomos-sdk on npm](https://www.npmjs.com/package/nomos-sdk)
+- Studio: [nomosprotocol.com/studio](https://nomosprotocol.com/studio)
+- Exchange: [nomosprotocol.com/exchange](https://nomosprotocol.com/exchange)
+- MCP Server: [smithery.ai/servers/allan/nomos](https://smithery.ai/servers/allan/nomos)
