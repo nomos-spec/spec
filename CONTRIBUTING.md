@@ -55,4 +55,4 @@ on the spec, not the person. Harassment of any kind is not tolerated.
 
 ## Questions?
 
-Open a Discussion on GitHub or email hello@nomosprotocol.com.
+Open a Discussion on GitHub or email allan@nomosprotocol.com.
