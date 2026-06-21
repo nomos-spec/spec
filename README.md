@@ -45,11 +45,11 @@ Think of a `.nomos` file the way you think of a `.pdf` file — except instead o
 ### TypeScript SDK (fastest path)
 
 ```bash
-npm install nomos-sdk
+npm install @nomosprotocol/sdk
 ```
 
 ```typescript
-import { Nomos } from 'nomos-sdk';
+import { Nomos } from '@nomosprotocol/sdk';
 
 const nomos = new Nomos('nms_live_...');
 
@@ -233,7 +233,7 @@ The NOMOS Protocol specification and schemas are released under [CC BY 4.0](http
 - Hosted runtime: [nomosprotocol.com](https://nomosprotocol.com)
 - Protocol Spec: [nomosprotocol.com/spec](https://nomosprotocol.com/spec)
 - API Reference: [nomosprotocol.com/docs](https://nomosprotocol.com/docs)
-- TypeScript SDK: [nomos-sdk on npm](https://www.npmjs.com/package/nomos-sdk)
+- TypeScript SDK: [@nomosprotocol/sdk on npm](https://www.npmjs.com/package/@nomosprotocol/sdk)
 - Studio: [nomosprotocol.com/studio](https://nomosprotocol.com/studio)
 - Exchange: [nomosprotocol.com/exchange](https://nomosprotocol.com/exchange)
 - MCP Server: [smithery.ai/servers/allan/nomos](https://smithery.ai/servers/allan/nomos)
