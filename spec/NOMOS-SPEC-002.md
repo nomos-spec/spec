@@ -2,8 +2,9 @@
 
 **Status:** Active  
 **Version:** 1.1.0  
-**Extends:** NOMOS-SPEC-001 v1.0.0  
+**Extends:** NOMOS-SPEC-001 v1.1.0  
 **Published:** 2026-06-05  
+**Updated:** 2026-06-21  
 **Authors:** SafeHaven LLC / NOMOS Protocol Working Group  
 **spec_version string:** `"NOMOS-SPEC-002"`
 
@@ -597,8 +598,28 @@ No error. No modification to the artifact.
 
 ---
 
+## 15. SDK Support
+
+The official TypeScript SDK (`@nomosprotocol/sdk`) surfaces NOMOS-SPEC-002 agent fields transparently. Callers pass `agent_id` as part of the `decisions.verify()` call:
+
+```typescript
+const result = await nomos.decisions.verify({
+  artifact_id:      'loan_approval_v1',
+  decision_context: { credit_score: 720, loan_amount: 50_000 },
+  // agent_id is forwarded to the runtime via x-agent-id header
+  // when the SDK detects a NOMOS-SPEC-002 artifact
+});
+```
+
+The SDK does not validate agent manifests client-side. Guard evaluation is runtime-only (§6). Guard phase failures are surfaced as typed `NomosAuthorizationError` responses with a `guard_phase` field indicating which phase blocked the call.
+
+Runtimes SHOULD include `guard_mode` (`"permissive"` | `"advisory"` | `"enforce"`) in every verdict response so SDK consumers can detect the active guard posture.
+
+---
+
 ## Changelog
 
 | Version | Date | Change |
 |---|---|---|
 | 1.1.0 draft | 2026-06-05 | Initial publication |
+| 1.1.0 | 2026-06-21 | Updated extends reference to NOMOS-SPEC-001 v1.1.0; added §15 SDK Support; aligned terminology with five-tier confidence classification |

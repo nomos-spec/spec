@@ -1,8 +1,9 @@
 # NOMOS-SPEC-001: Governance Artifact Protocol
 
 **Status:** Active  
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Published:** 2026-01-15  
+**Updated:** 2026-06-21  
 **Authors:** SafeHaven LLC / NOMOS Protocol Working Group  
 
 ---
@@ -12,6 +13,8 @@
 NOMOS-SPEC-001 defines a portable, vendor-neutral format for packaging organisational governance policies as sealed, machine-executable artifacts (`.nomos` files). The specification covers artifact structure, the rule expression language, confidence classification, the cryptographic sealing procedure, the execution model, the audit trail schema, and conformance requirements for compliant runtimes.
 
 The goals are reproducibility (identical inputs produce identical outputs), auditability (every decision is traceable to a sealed rule), and interoperability (any compliant runtime can execute any conformant artifact without access to the original policy documents).
+
+Sealed artifacts may be distributed and verified independently of the producing platform. The official TypeScript SDK (`@nomosprotocol/sdk`) and the NOMOS Exchange provide reference implementations of the distribution and execution layers described in this specification.
 
 ---
 
@@ -28,6 +31,7 @@ The goals are reproducibility (identical inputs produce identical outputs), audi
 9. Conformance
 10. Security Considerations
 11. Error Catalog
+12. SDK & Distribution
 
 ---
 
@@ -45,7 +49,7 @@ All examples use JSON. String values MUST be UTF-8 encoded. All timestamps MUST 
 
 **Rule** — A single declarative governance statement: a condition tree + an action.
 
-**Confidence tier** — A classification indicating how the rules were derived (`DECLARED` or `CERTIFIED`).
+**Confidence tier** — A classification indicating how the rules were derived and validated. Valid values: `DECLARED`, `VALIDATED`, `CERTIFIED`, `PROVEN`, `SOVEREIGN`.
 
 **Seal** — A cryptographic block appended to a frozen artifact, binding all fields to a specific key and timestamp.
 
@@ -66,7 +70,7 @@ A `.nomos` file is a UTF-8 JSON document. The top-level object MUST contain the 
   "artifact_id":   "<string>",
   "version":       "<semver>",
   "spec_version":  "NOMOS-SPEC-001",
-  "confidence":    "DECLARED | CERTIFIED",
+  "confidence":    "DECLARED | VALIDATED | CERTIFIED | PROVEN | SOVEREIGN",
   "domain":        { ... },
   "rules":         [ ... ],
   "contradiction_report": { ... },
@@ -279,6 +283,8 @@ The `conflict_resolution` field at the artifact root (OPTIONAL, default `first_m
 
 ## 5. Confidence Classification
 
+Confidence tiers are assigned during compilation and sealed into the artifact. They reflect both how rules were derived (policy-only vs. behavioral triangulation) and whether the artifact meets quantitative ARI thresholds for distribution on the NOMOS Exchange.
+
 ### 5.1 DECLARED
 
 Rules derived exclusively from uploaded policy documents. No behavioral data was used.
@@ -286,6 +292,7 @@ Rules derived exclusively from uploaded policy documents. No behavioral data was
 - `drs` in `readiness` MUST be `null`.
 - The artifact carries reduced statistical confidence.
 - Suitable for new deployments where historical decision data does not yet exist.
+- Not eligible for publication to the NOMOS Exchange.
 
 ### 5.2 VALIDATED
 
@@ -302,6 +309,35 @@ Rules triangulated against behavioral decision logs with full gap analysis. Stat
 - `drs` in `readiness` MUST be a float in [0, 1].
 - The artifact has passed contradiction detection and gap analysis.
 - Suitable for production deployments requiring regulator-grade auditability.
+
+### 5.4 PROVEN
+
+`CERTIFIED` artifacts that additionally meet a minimum ARI threshold.
+
+- All `CERTIFIED` requirements apply.
+- `readiness.ari` MUST be ≥ 0.60.
+- `readiness.autonomy_band` MUST be `autonomous`.
+- Eligible for publication to the NOMOS Exchange.
+- Distribution platforms MUST enforce the ARI gate before accepting a `PROVEN` artifact and MUST reject with a `confidence_gate_failed` error if the condition is not met.
+
+### 5.5 SOVEREIGN
+
+The highest confidence tier. Reserved for artifacts with demonstrated statistical reliability above the autonomous threshold.
+
+- All `PROVEN` requirements apply.
+- `readiness.ari` MUST be ≥ 0.75.
+- Eligible for publication to the NOMOS Exchange with priority placement.
+- Distribution platforms MUST require administrator review before activating a `SOVEREIGN` artifact listing.
+
+**Summary table:**
+
+| Tier | Behavioral data | ARI gate | Exchange eligible |
+|---|---|---|---|
+| `DECLARED` | No | None | No |
+| `VALIDATED` | Yes | None | No |
+| `CERTIFIED` | Yes (full) | None | No |
+| `PROVEN` | Yes (full) | ≥ 0.60 | Yes |
+| `SOVEREIGN` | Yes (full) | ≥ 0.75 | Yes (admin review) |
 
 A runtime MAY surface the confidence tier in its API response. A runtime MUST NOT change the `confidence` field of a sealed artifact without re-sealing.
 
@@ -502,8 +538,15 @@ A producer is **conformant** if it:
 
 1. Generates artifacts that validate against `schema/artifact.schema.json`.
 2. Seals artifacts using the procedure in §8.
-3. Sets `confidence` to `DECLARED` when no behavioral data was used; `VALIDATED` when behavioral data was used and contradiction detection passed; `CERTIFIED` only after full statistical triangulation and gap analysis.
+3. Assigns `confidence` per the following rules (in order of precedence):
+   - `SOVEREIGN`: behavioral data used, full gap analysis passed, ARI ≥ 0.75.
+   - `PROVEN`: behavioral data used, full gap analysis passed, ARI ≥ 0.60.
+   - `CERTIFIED`: behavioral data used, full gap analysis passed, ARI < 0.60.
+   - `VALIDATED`: behavioral data used, contradiction detection passed, gap analysis not completed or inconclusive.
+   - `DECLARED`: no behavioral data used.
 4. Populates `contradiction_report` with any detected conflicts before sealing.
+5. Does NOT assign `PROVEN` or `SOVEREIGN` if ARI conditions are not met, and MUST produce a producer error rather than silently downgrading.
+6. Does NOT publish a `DECLARED` or `VALIDATED` artifact to any distribution platform that enforces the Exchange eligibility gate (§5.4–5.5).
 
 ---
 
@@ -517,7 +560,7 @@ A producer is **conformant** if it:
 
 **Audit trail integrity** — The hash-chain audit trail is append-only. Runtimes MUST NOT expose a deletion endpoint for audit entries. Backup and replication of the audit store is REQUIRED for production deployments.
 
-**Confidence tier downgrade** — Altering the `confidence` field without re-sealing constitutes misrepresentation of the artifact's provenance. Runtimes MUST preserve the `confidence` field verbatim from the sealed artifact. Valid values are `DECLARED`, `VALIDATED`, and `CERTIFIED`.
+**Confidence tier downgrade** — Altering the `confidence` field without re-sealing constitutes misrepresentation of the artifact's provenance. Runtimes MUST preserve the `confidence` field verbatim from the sealed artifact. Valid values are `DECLARED`, `VALIDATED`, `CERTIFIED`, `PROVEN`, and `SOVEREIGN`. Any other value MUST be rejected with `confidence_tier_invalid`.
 
 ---
 
@@ -531,7 +574,8 @@ All errors produced by a conformant runtime MUST use the machine-readable codes 
 | `seal_verification_failed` | 400 | §8.1 | Payload hash or HMAC does not match the `seal` block | Artifact may be tampered; do not execute; re-seal from source |
 | `artifact_not_found` | 404 | §6.2 | `artifact_id` + `version` combination not in registry | Confirm the artifact has been sealed and registered |
 | `data_contract_violation` | 422 | §3.9 | One or more `required_fields` absent from execution context | Add the missing fields before retrying |
-| `confidence_tier_invalid` | 400 | §5 | `confidence` value is not one of `DECLARED`, `VALIDATED`, `CERTIFIED` | Fix the producer; re-seal with a valid confidence value |
+| `confidence_tier_invalid` | 400 | §5 | `confidence` value is not one of `DECLARED`, `VALIDATED`, `CERTIFIED`, `PROVEN`, `SOVEREIGN` | Fix the producer; re-seal with a valid confidence value |
+| `confidence_gate_failed` | 422 | §5.4–5.5 | Artifact claims `PROVEN` or `SOVEREIGN` but ARI score does not meet the required threshold | Re-compile with sufficient behavioral data to achieve ARI ≥ 0.60 (`PROVEN`) or ≥ 0.75 (`SOVEREIGN`) |
 | `duplicate_request_id` | 409 | §6.5 | `request_id` already processed within the dedup window | Use a fresh UUIDv4; retrieve cached response from original call |
 | `chain_corruption` | 500 | §7.2 | Audit chain hash verification fails at one or more entries | Halt writes; alert operator; restore from verified backup |
 | `unsupported_operator` | — | §4.2 | Condition node `op` is not in the operator table | Not an error response — runtime MUST return `ESCALATE` with `reason: "unsupported_operator"` |
@@ -555,6 +599,71 @@ All error responses MUST follow this envelope:
 ```
 
 `code` is REQUIRED. `message` and `hint` are RECOMMENDED. `doc_url` is OPTIONAL. Runtimes MUST NOT return different codes for the same error condition across calls.
+
+---
+
+---
+
+## 12. SDK & Distribution
+
+### 12.1 TypeScript SDK
+
+The official SDK (`@nomosprotocol/sdk`) provides a typed client for interacting with any conformant NOMOS runtime. It is zero-dependency, fetch-based, and auto-retries on rate limits and transient errors.
+
+```bash
+npm install @nomosprotocol/sdk
+```
+
+**Core methods:**
+
+| Method | Maps to | Notes |
+|---|---|---|
+| `nomos.decisions.verify(params)` | `POST /api/v1/verify` or `/api/v1/verify-decision` | Public artifacts (`pub_*`) use the open endpoint; custom artifacts require an API key |
+| `nomos.artifacts.list(params)` | `GET /api/exchange/artifacts` | Filter by band, domain, jurisdiction |
+| `nomos.artifacts.retrieve(id)` | `GET /api/exchange/artifacts/:id` | Returns full artifact metadata |
+| `nomos.governance.generate(params)` | `POST /api/v1/generate-governance` | Compile a governance artifact from policy text |
+| `nomos.governance.detectContradictions(params)` | `POST /api/v1/detect-contradictions` | Check rules array for conflicts before sealing |
+
+**Typed errors:** `NomosAuthenticationError`, `NomosAuthorizationError`, `NomosRateLimitError`, `NomosValidationError`, `NomosNotFoundError`, `NomosAPIError`, `NomosNetworkError` — all extend `NomosError`.
+
+```typescript
+import { Nomos, NomosRateLimitError } from '@nomosprotocol/sdk';
+
+const nomos = new Nomos('nms_live_...');
+
+const result = await nomos.decisions.verify({
+  artifact_id:      'loan_approval_v1',
+  decision_context: { credit_score: 720, loan_amount: 50_000 },
+});
+// result.allowed, result.verdict, result.audit_record
+```
+
+### 12.2 NOMOS Exchange
+
+The NOMOS Exchange is the distribution layer for sealed artifacts. Publishers may list `PROVEN` (ARI ≥ 0.60) and `SOVEREIGN` (ARI ≥ 0.75) artifacts. `DECLARED` and `VALIDATED` artifacts are not eligible.
+
+**Exchange lifecycle:**
+
+1. Artifact sealed in Studio (`PROVEN` or `SOVEREIGN`)
+2. Publisher submits `POST /api/exchange/artifacts` — quality gate enforced server-side
+3. Artifact enters `pending` status (admin review for `SOVEREIGN`)
+4. Artifact activated → discoverable at `/exchange/:artifactId`
+5. Consumers fork to Studio or download `.nomos` directly
+6. Forked artifact records provenance (`forkedFrom.artifactId`, `forkedFrom.sealHash`)
+
+**Autonomy band filter:** Consumers may filter Exchange listings by `autonomy_band` (`autonomous` / `bounded` / `human_governed`), which is derived from `readiness.ari` per §3.7.
+
+### 12.3 Public demo artifacts
+
+The reference runtime ships with pre-sealed public artifacts accessible without authentication. Their `artifact_id` values carry a `pub_` prefix:
+
+| Artifact ID | Domain | Confidence |
+|---|---|---|
+| `pub_lending_v1` | Loan approval | PROVEN |
+| `pub_fraud_v1` | Fraud detection | CERTIFIED |
+| `pub_kyc_v1` | KYC screening | CERTIFIED |
+
+Public artifacts are callable via `POST /api/v1/verify` with no API key. They are read-only and not listed on the Exchange.
 
 ---
 
