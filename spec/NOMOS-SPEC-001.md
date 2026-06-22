@@ -347,71 +347,220 @@ A runtime MAY surface the confidence tier in its API response. A runtime MUST NO
 
 ### 6.1 Request
 
-An execution request carries:
+Submit a decision payload to a conformant runtime via `POST /api/v1/verify-decision`.
 
 ```json
 {
-  "artifact_id": "<string>",
-  "version":     "<semver | omit for latest>",
-  "context":     { "<field>": "<value>", ... },
-  "request_id":  "<uuid>"
+  "artifact_id":  "<string>",
+  "decision":     "<string, ≤ 200 chars>",
+  "inputs":       { "<field>": "<value>", ... },
+  "domain_id":    "<integer | omit if not domain-scoped>",
+  "caller": {
+    "agent_id":        "<string | omit>",
+    "correlation_id":  "<string, ≤ 256 chars | omit>",
+    "user_id":         "<string | omit>"
+  }
 }
 ```
 
-`context` is a flat or nested JSON object whose keys correspond to field paths referenced in rule conditions.
+| Field | Required | Description |
+|-------|----------|-------------|
+| `artifact_id` | REQUIRED | Identifier of a sealed artifact in `active` or `superseded` state. A runtime MUST reject `draft` or `deprecated` artifacts with HTTP 422. |
+| `decision` | REQUIRED | Human-readable label for the decision point. Recorded in the audit trail and used for escalation routing. |
+| `inputs` | REQUIRED | Key/value map of decision factors. Types MUST match the data contract declared in the artifact (§3.9). Unknown keys are recorded in the audit trail but do not affect rule evaluation. |
+| `domain_id` | OPTIONAL | Scopes the execution to a specific domain. The runtime verifies the caller has access. |
+| `caller.agent_id` | OPTIONAL | Identity of the calling agent. SHOULD be stable across calls from the same agent instance. Recorded verbatim in the audit trail. |
+| `caller.correlation_id` | OPTIONAL | Caller-assigned trace identifier. Propagated to audit records and LangSmith traces. Serves as the idempotency key (see §6.7). |
+| `caller.user_id` | OPTIONAL | End-user identifier for downstream accountability. Recorded in the audit trail. |
 
-### 6.2 Evaluation pipeline
+A runtime MUST NOT include credential material (passwords, tokens, private keys) from `inputs` in plaintext audit records. Fields declared in the artifact's redaction policy MUST be hashed or masked before storage (see §3.9).
 
-1. **Scope validation** — confirm `artifact_id` and `version` resolve to a known sealed artifact.
-2. **Data contract validation** — check that required context fields are present.
-3. **Rule evaluation** — iterate rules in priority order (or per `conflict_resolution` mode). Evaluate each condition against `context`.
-4. **Conflict resolution** — apply the artifact's `conflict_resolution` mode if multiple rules match.
-5. **Verdict emission** — return a Verdict object (§6.3).
-6. **Audit append** — append the verdict to the artifact's audit trail (§7).
+### 6.2 Authentication
 
-### 6.3 Verdict
+A conformant runtime MUST support two authentication methods, evaluated in this order:
+
+1. **API key** — Supply `X-Nomos-Api-Key: <key>` in the request header. The key is validated against a stored hash; the plaintext MUST NOT be stored. Keys are scoped to a domain and a subscription tier.
+2. **Session** — For callers with an active session, the runtime MAY accept the session credential. The session identity MUST have domain access.
+
+Unauthenticated requests MUST be rejected with HTTP 401.
+
+### 6.3 Version negotiation
+
+A runtime MUST support two response formats selected by the `Accept-Nomos-Version` request header:
+
+| Header value | Response format | Response header |
+|---|---|---|
+| `1.0.0` | Spec-compliant `ExecutionReceipt` (§6.5) | `Content-Nomos-Version: 1.0.0` |
+| `1.0` or omitted | Legacy verdict object (§6.6) | `Content-Nomos-Version: 1.0` |
+
+New integrations SHOULD request `Accept-Nomos-Version: 1.0.0`. The legacy format is stable but will not receive new fields.
+
+### 6.4 Evaluation pipeline
+
+1. **Scope validation** — confirm `artifact_id` resolves to a known sealed artifact in an executable state.
+2. **Seal verification** — verify the artifact's HMAC-SHA-256 seal (§8.1). A runtime MUST NOT evaluate rules against an artifact with a broken seal.
+3. **Data contract validation** — check that all `required_fields` from the artifact's data contract (§3.9) are present in `inputs`. Record `missing_required` for the response.
+4. **Confidence check** — compute `inputs.confidence` (§6.8). If it falls below `min_confidence_for_autonomy`, apply the `on_low_confidence` policy before rule evaluation.
+5. **Constraint enforcement** — evaluate speed, quality, and sovereignty dials from the artifact's calibration profile.
+6. **Rule evaluation** — iterate rules in priority order (or per `conflict_resolution` mode). Evaluate each condition against `inputs`.
+7. **Conflict resolution** — apply the artifact's `conflict_resolution` mode if multiple rules match (`first_match`, `highest_priority`, or `collect_and_resolve`).
+8. **Action execution** — execute outcome actions with idempotency tracking keyed on `caller.correlation_id`.
+9. **Verdict emission** — return an `ExecutionReceipt` (§6.5) or legacy verdict (§6.6).
+10. **Audit append** — append the verdict to the artifact's hash-chained audit trail (§7).
+
+### 6.5 Spec-compliant response (v1.0.0)
+
+When `Accept-Nomos-Version: 1.0.0` is requested, the runtime returns an `ExecutionReceipt`:
 
 ```json
 {
-  "verdict":       "ALLOW | DENY | ESCALATE",
-  "confidence":    "<float 0–1>",
-  "matched_rules": ["<rule_id>"],
-  "artifact_id":   "<string>",
-  "version":       "<semver>",
-  "request_id":    "<uuid>",
-  "ts":            "<ISO 8601 UTC>",
-  "audit_hash":    "<hex-encoded SHA-256>",
-  "contradictions": 0
+  "receipt_version": "1.0.0",
+
+  "artifact": {
+    "artifact_id":        "<string>",
+    "artifact_version":   "<semver>",
+    "seal_hash":          "<hex-encoded HMAC-SHA-256 | null>",
+    "verification_tier":  "DECLARED | CERTIFIED | null"
+  },
+
+  "execution": {
+    "execution_id":  "<uuid>",
+    "started_at":    "<ISO 8601 UTC>",
+    "ended_at":      "<ISO 8601 UTC>",
+    "status":        "allowed | blocked | escalated | deferred | error",
+    "final_reason":  "<string — matched rule ID and condition>",
+    "latency_ms":    "<integer>"
+  },
+
+  "inputs": {
+    "provided":          { "<field>": "<value>", ... },
+    "missing_required":  ["<field>", ...],
+    "confidence":        "<float 0–1>",
+    "provenance":        { "<field>": "<source>", ... }
+  },
+
+  "trace": {
+    "constraints": [
+      { "constraint_id": "<string>", "result": "passed | violated", "message": "<string | omit>" }
+    ],
+    "decisions": [
+      { "decision_id": "<rule_id>", "result": "matched | not_matched | error", "outcome": "allow | block | escalate | omit", "error": "<string | omit>" }
+    ],
+    "actions": [
+      { "action": "<string>", "result": "success | failure | skipped", "idempotency_key": "<string>", "error": "<string | omit>" }
+    ],
+    "escalation": {
+      "role_required":  "<string>",
+      "trigger_id":     "<rule_id>",
+      "payload_fields": ["<field>", ...],
+      "sla_minutes":    "<integer | null>"
+    }
+  },
+
+  "audit": {
+    "event_ids": ["<uuid>", ...],
+    "redaction": {
+      "strategy":        "hash | mask | remove",
+      "fields_redacted": ["<field>", ...]
+    }
+  },
+
+  "errors": [
+    { "code": "<string>", "message": "<string>", "location": "<string | omit>" }
+  ]
 }
 ```
 
-`audit_hash` is the hash-chain value linking this verdict to the previous verdict for the same artifact (see §7.2).
+| Field | Type | Description |
+|-------|------|-------------|
+| `receipt_version` | `"1.0.0"` | Literal. MUST be `"1.0.0"` for receipts conforming to this specification. |
+| `artifact.seal_hash` | `string \| null` | The artifact's HMAC-SHA-256 seal. Null only when the artifact record has no seal — a condition that MUST NOT arise in production. |
+| `execution.execution_id` | UUID | Assigned by the runtime. Stable reference for audit queries. |
+| `execution.status` | enum | See §6.6 for the full status table. |
+| `execution.final_reason` | string | Human-readable explanation of the verdict. SHOULD include the matched rule ID and the condition that determined the outcome. |
+| `execution.latency_ms` | integer | Wall-clock evaluation time in milliseconds. Excludes network round-trip. |
+| `inputs.confidence` | float | 0–1. Reflects data contract validation; degrades for missing or mistyped fields (see §6.8). |
+| `inputs.missing_required` | string[] | Fields declared `REQUIRED` in the data contract that were absent from the payload. Non-empty implies `confidence < 1.0`. |
+| `inputs.provenance` | object | Maps field names to their declared source. Populated from the data contract's `provenance` entries. |
+| `trace.escalation` | object \| null | Present when `status` is `escalated`. Identifies the required reviewer role, trigger rule, and SLA in minutes. |
+| `audit.event_ids` | string[] | IDs of audit trail entries written for this execution. Retrieve the full hash-chained record via `GET /api/audit/:id`. |
+| `audit.redaction.strategy` | enum | How sensitive fields were handled before storage. Declared in the artifact's data contract (§3.9). |
+| `errors` | array | Non-fatal evaluation errors. An empty array is the normal case. Errors here do not prevent a verdict but degrade `inputs.confidence`. |
 
-### 6.4 Missing context
+### 6.6 Status values
 
-If a required field is absent from `context` and the condition cannot be evaluated:
+| Status | Meaning |
+|--------|---------|
+| `allowed` | All applicable rules evaluated; at least one `allow` rule matched and no `block` rule matched. |
+| `blocked` | A `block` rule matched. The decision MUST NOT proceed. |
+| `escalated` | No rule produced a definitive outcome, OR a rule explicitly routed to a human reviewer. The `trace.escalation` object identifies the required role and SLA. |
+| `deferred` | Data confidence fell below `min_confidence_for_autonomy` and `on_low_confidence` is `"defer"`. A human decision is required within the declared SLA. |
+| `error` | The runtime encountered a fatal evaluation error. The `errors` array contains details. A runtime MUST NOT return `allowed` when `errors` is non-empty and any error affected a `block` or `escalate` rule. |
 
-- If `autonomy_band` is `human_governed` → verdict is `ESCALATE`.
-- Otherwise → verdict is `ESCALATE` with `reason: "missing_context_field"`.
+### 6.7 Legacy response (v1.0)
 
-A runtime MUST NOT default missing numeric fields to `0` or string fields to `""`.
-
-### 6.5 Idempotency
-
-`request_id` is the idempotency key for an execution. If a runtime receives a request with a `request_id` it has already processed within the deduplication window (RECOMMENDED: 5 minutes), it MUST return the original cached verdict without creating a new audit trail entry.
-
-The cached response MUST include a `"cached": true` field at the top level and the original `audit_hash`. The audit trail entry count MUST NOT increment for a cache hit.
+When `Accept-Nomos-Version` is omitted or set to `1.0`, the runtime returns:
 
 ```json
 {
-  "verdict":    "ALLOW",
-  "audit_hash": "sha256:b7c12e34...",
-  "cached":     true,
-  "request_id": "<the original uuid>"
+  "verdict":          "approved | escalated | blocked",
+  "rule_applied":     "<condition expression>",
+  "rule_id":          "<string | null>",
+  "rule_reference":   "<string>",
+  "rule_description": "<string>",
+  "confidence":       "<float 0–1>",
+  "latency_ms":       "<integer>",
+  "audit_hash":       "sha256:<hex>",
+  "evaluated_at":     "<ISO 8601 UTC>"
 }
 ```
 
-A runtime MUST use `request_id` as the idempotency key. Using caller IP address or payload hash as the primary deduplication mechanism is NOT conformant. If `request_id` is omitted by the caller, the runtime SHOULD generate one and include it in the response — the execution is treated as non-idempotent.
+`audit_hash` in the legacy format is a content hash of the verdict record (SHA-256 of `{ artifact_id, decision, inputs, verdict, ts }`). It is suitable for spot-checking response integrity but does not constitute a full audit chain. Use the spec-compliant `audit.event_ids` field and `GET /api/audit/:id` for a verifiable, hash-chained trail.
+
+### 6.8 Confidence degradation
+
+`inputs.confidence` reflects how fully the runtime could trust the decision payload. Three landmark values are defined:
+
+| Value | Condition |
+|-------|-----------|
+| `0.99` | All required fields present, correctly typed, within declared ranges, and all field-level confidence thresholds satisfied. |
+| `0.92` | One field is borderline — within 10% of a numeric threshold or near a categorical boundary. |
+| `0.85` | Multiple borderline fields. Degrades further for each additional borderline condition. |
+
+When `inputs.confidence` falls below the artifact's `min_confidence_for_autonomy` threshold, the runtime MUST apply the `on_low_confidence` policy declared in the data contract:
+
+- `block` → return `status: blocked`
+- `escalate` → return `status: escalated`
+- `defer` → return `status: deferred` and write a pending decision record
+
+A runtime MUST NOT return `status: allowed` when confidence is below the declared threshold.
+
+If a required field is absent from `inputs` and its condition cannot be evaluated:
+
+- A runtime MUST NOT default missing numeric fields to `0` or string fields to `""`.
+- If `autonomy_band` is `human_governed` → status is `escalated`.
+- Otherwise → status is `escalated` with `final_reason: "missing_context_field"`.
+
+### 6.9 Idempotency
+
+`caller.correlation_id` is the idempotency key for an execution. If a runtime receives a request with a `correlation_id` it has already processed within the deduplication window (RECOMMENDED: 5 minutes), it MUST return the original cached receipt without creating a new audit trail entry.
+
+The cached response MUST include a `"cached": true` field at the top level and the original `execution.execution_id`. The audit trail entry count MUST NOT increment for a cache hit.
+
+A runtime MUST NOT use caller IP address or payload hash as the primary deduplication mechanism. If `correlation_id` is omitted, the runtime SHOULD generate one and include it in the response — the execution is treated as non-idempotent.
+
+### 6.10 Quota and rate limits
+
+A conformant runtime MUST return the following headers on every execution response:
+
+| Header | Description |
+|--------|-------------|
+| `X-Verifications-Used` | Verifications consumed in the current billing period. |
+| `X-Verifications-Limit` | Monthly limit for the account's subscription tier. `"unlimited"` for uncapped tiers. |
+| `X-Overage` | Present and set to `"true"` when the account has exceeded its monthly limit. |
+| `X-Overage-Count` | Calls beyond the monthly limit in the current billing period. |
+
+When the free tier limit is reached the runtime MUST return HTTP 429 with `code: "QUOTA_EXCEEDED"`, a `reset_date` field (ISO 8601), and an `upgrade_url`.
 
 ---
 
@@ -572,11 +721,11 @@ All errors produced by a conformant runtime MUST use the machine-readable codes 
 |------|------|--------|---------|----------|
 | `spec_version_unsupported` | 400 | §3.3 | `spec_version` is not recognised by this runtime | Upgrade the runtime or use a supported spec version |
 | `seal_verification_failed` | 400 | §8.1 | Payload hash or HMAC does not match the `seal` block | Artifact may be tampered; do not execute; re-seal from source |
-| `artifact_not_found` | 404 | §6.2 | `artifact_id` + `version` combination not in registry | Confirm the artifact has been sealed and registered |
+| `artifact_not_found` | 404 | §6.4 | `artifact_id` not in registry or not in an executable state | Confirm the artifact has been sealed and registered |
 | `data_contract_violation` | 422 | §3.9 | One or more `required_fields` absent from execution context | Add the missing fields before retrying |
 | `confidence_tier_invalid` | 400 | §5 | `confidence` value is not one of `DECLARED`, `VALIDATED`, `CERTIFIED`, `PROVEN`, `SOVEREIGN` | Fix the producer; re-seal with a valid confidence value |
 | `confidence_gate_failed` | 422 | §5.4–5.5 | Artifact claims `PROVEN` or `SOVEREIGN` but ARI score does not meet the required threshold | Re-compile with sufficient behavioral data to achieve ARI ≥ 0.60 (`PROVEN`) or ≥ 0.75 (`SOVEREIGN`) |
-| `duplicate_request_id` | 409 | §6.5 | `request_id` already processed within the dedup window | Use a fresh UUIDv4; retrieve cached response from original call |
+| `duplicate_request_id` | 409 | §6.9 | `correlation_id` already processed within the dedup window | Use a fresh UUID; retrieve cached response from original call |
 | `chain_corruption` | 500 | §7.2 | Audit chain hash verification fails at one or more entries | Halt writes; alert operator; restore from verified backup |
 | `unsupported_operator` | — | §4.2 | Condition node `op` is not in the operator table | Not an error response — runtime MUST return `ESCALATE` with `reason: "unsupported_operator"` |
 | `unknown_agent` | — | SPEC-002 §3 | `agent_id` not in the artifact's `agents` manifest | Advisory mode: ESCALATE. Enforce mode: hard block |
