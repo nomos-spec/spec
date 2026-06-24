@@ -39,6 +39,16 @@
       "maximum": 1,
       "description": "Extraction confidence for this individual rule"
     },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC — rule is inactive before this instant. Half-open interval: [valid_from, valid_until). NOMOS-SPEC-003 §3."
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC — rule is inactive at and after this instant. Half-open interval: [valid_from, valid_until). NOMOS-SPEC-003 §3."
+    },
     "metadata": {
       "type": "object",
       "additionalProperties": false,

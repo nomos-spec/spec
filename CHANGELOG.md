@@ -7,6 +7,26 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-003] — 2026-06-24
+
+Temporal validity and staleness signalling — Spec 3 foundations.
+
+### Added (NOMOS-SPEC-003)
+
+- **`spec/NOMOS-SPEC-003.md`** — new spec document: temporal bounds on rules + staleness signal
+- **§3 Temporal validity** — `valid_from` and `valid_until` optional fields on Rule; half-open interval `[valid_from, valid_until)`; rules outside active window are skipped without error
+- **§4 Runtime algorithm** — execution instant captured once per call; all temporal bounds evaluated against the same instant; expired rules do not contribute to verdict
+- **§5 Audit trace extension** — `result: "expired"` added to the decision trace result union; every skipped rule produces a trace entry so the audit record reflects the complete rule set at decision time
+- **§6 Staleness signal** — triangulation baseline (`triangulated_at`, `decision_volume_at_triangulation`) recorded at seal time; staleness delta computed after each execution; advisory emitted when delta ≥ threshold (default 500)
+- **§7 Response extension** — `staleness_advisory` optional object in execution response: `triangulated_at`, `decisions_since_triangulation`, `threshold`, `recommendation`; never affects verdict
+
+### Updated (schemas)
+
+- **`schema/rule.schema.json`** — added `valid_from` and `valid_until` optional string (date-time) fields
+- **`schema/execution-response.schema.json`** — added `staleness_advisory` optional object with required sub-fields
+
+---
+
 ## [Repository] — 2026-06-11
 
 World-class gap closure: error catalog, data contract formalization, conformance test vectors, artifact versioning semantics, idempotency guarantee, five new domain examples, and deprecation policy.

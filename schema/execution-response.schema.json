@@ -79,6 +79,34 @@
     "reason": {
       "type": "string",
       "description": "Present when verdict is 'escalate' due to a system condition rather than a rule match (e.g. 'missing_context_field', 'guard_constraint_violated', 'unknown_agent')."
+    },
+    "staleness_advisory": {
+      "type": "object",
+      "description": "Passive advisory emitted when decisions since last triangulation exceed the staleness threshold. Never affects verdict. NOMOS-SPEC-003 §6.",
+      "required": ["triangulated_at", "decisions_since_triangulation", "threshold", "recommendation"],
+      "additionalProperties": false,
+      "properties": {
+        "triangulated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 UTC timestamp of the last triangulation run."
+        },
+        "decisions_since_triangulation": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of executions against this artifact since the triangulation baseline was recorded."
+        },
+        "threshold": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The staleness threshold that was exceeded."
+        },
+        "recommendation": {
+          "type": "string",
+          "const": "consider_retriangulation",
+          "description": "Always 'consider_retriangulation'."
+        }
+      }
     }
   },
   "examples": [
