@@ -1,7 +1,7 @@
 # NOMOS-SPEC-003: Temporal Validity and Staleness Signalling
 
 **Status:** Active  
-**Version:** 1.2.0  
+**Version:** 1.3.0  
 **Extends:** NOMOS-SPEC-001 v1.0.0, NOMOS-SPEC-002 v1.1.0  
 **Published:** 2026-06-24  
 **Authors:** SafeHaven LLC / NOMOS Protocol Working Group  
@@ -31,6 +31,13 @@ executed against an artifact since its last triangulation exceeds a
 configurable threshold. The signal is informational only — it never changes
 the verdict. Consuming applications decide what to do with it.
 
+This document also defines **deterministic replay**: a mechanism by which a
+caller can supply an `execution_at` timestamp in the request, causing the
+runtime to evaluate temporal bounds as if it were that historical instant.
+This closes the regulatory audit requirement: given the same sealed artifact,
+the same inputs, and the same `execution_at`, a conformant runtime MUST
+produce an identical verdict.
+
 NOMOS-SPEC-001 and NOMOS-SPEC-002 artifacts remain valid under a
 NOMOS-SPEC-003 runtime. The new fields are optional and the staleness signal
 is absent when the runtime has no triangulation baseline.
@@ -46,9 +53,10 @@ is absent when the runtime has no triangulation baseline.
 5. Audit Trace Extension
 6. Staleness Signal
 7. Execution Response Extension
-8. Conformance
-9. Security Considerations
-10. Examples
+8. Deterministic Replay
+9. Conformance
+10. Security Considerations
+11. Examples
 
 ---
 
@@ -299,7 +307,93 @@ Example:
 
 ---
 
-## 8. Conformance
+## 8. Deterministic Replay
+
+### 8.1 Motivation
+
+Regulatory and compliance contexts require the ability to reconstruct exactly
+what verdict would have been produced at any past instant — for incident
+investigation, audit, and backtesting. NOMOS-SPEC-003 runtimes MUST support
+this via the `execution_at` request field.
+
+### 8.2 `execution_at` field
+
+An optional `execution_at` field MAY be supplied in the execution request
+alongside `inputs` and other required fields.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `execution_at` | string (ISO 8601 UTC) | No | The instant to use for temporal bound evaluation. MUST be ≤ the server's current clock. Future timestamps MUST be rejected. |
+
+### 8.3 Runtime behaviour
+
+A compliant runtime MUST:
+
+1. Parse `execution_at` as an ISO 8601 UTC datetime. If parsing fails,
+   return an error with code `INVALID_EXECUTION_AT` (HTTP 422).
+
+2. If `execution_at` is strictly after the server clock at the time of
+   the request, return `INVALID_EXECUTION_AT` (HTTP 422). Future replay
+   is not permitted.
+
+3. Set `executionNow = execution_at`. Use this value for all temporal
+   bound checks per §4. The same value MUST be used for the `ts` field
+   in the response.
+
+4. Persist `execution_at` to the audit record. A verifier MUST be able
+   to confirm, from the audit trail alone, which instant was used for
+   temporal evaluation.
+
+5. Include `replay: true` in the response envelope when `execution_at`
+   was supplied, so consumers can distinguish replay responses from
+   live executions.
+
+### 8.4 Determinism guarantee
+
+Given the same sealed artifact, the same `inputs`, and the same
+`execution_at`, a conformant runtime MUST produce an identical `verdict`
+on every invocation. Implementations MUST NOT introduce non-deterministic
+state (random seeds, external calls that may differ) into the rule
+evaluation path during replay.
+
+### 8.5 Replay audit semantics
+
+Replay executions SHOULD be written to the audit trail with `replay: true`.
+They SHOULD NOT increment quota counters, staleness deltas, or drift metrics
+— they are observations of past state, not new governance decisions.
+
+### 8.6 Example
+
+```json
+// Request — replay at a historical instant
+POST /api/v1/verify-decision
+{
+  "artifact_id":  "art_7f3c9a...",
+  "decision":     "loan_application_review",
+  "inputs":       { "amount": 45000, "credit_score": 730 },
+  "execution_at": "2026-01-01T00:00:00Z"
+}
+
+// Response
+{
+  "allowed":        false,
+  "outcome":        "escalated",
+  "ts":             "2026-01-01T00:00:00Z",
+  "replay":         true,
+  "execution_at":   "2026-01-01T00:00:00Z",
+  "expired_rules":  ["updated_threshold"],
+  "audit_hash":     "c9d6e3f0a7b4c1d8..."
+}
+```
+
+At `2026-01-01T00:00:00Z`, `updated_threshold` (with `valid_from:
+"2026-01-01T00:00:00Z"`) is active, but `legacy_threshold` (with
+`valid_until: "2026-01-01T00:00:00Z"`) is expired at and after that
+instant. The verdict reflects the rule set in force at that exact moment.
+
+---
+
+## 9. Conformance
 
 A runtime claims NOMOS-SPEC-003 conformance if and only if it satisfies all
 of the following:
@@ -323,18 +417,22 @@ of the following:
    without `valid_from`/`valid_until` fields execute identically to their
    behavior under prior spec versions.
 
-### 8.1 Conformance levels
+7. **Deterministic replay**: When `execution_at` is supplied, the runtime
+   validates, applies, and records it per §8. Future timestamps are rejected.
+   The determinism guarantee in §8.4 MUST hold.
+
+### 9.1 Conformance levels
 
 | Level | Requirements |
 |---|---|
-| **Temporal-only** | §3, §4, §5 — temporal bounds implemented; staleness not required |
-| **Full** | §3, §4, §5, §6, §7 — temporal bounds + staleness signal |
+| **Temporal-only** | §3, §4, §5 — temporal bounds; staleness and replay not required |
+| **Full** | §3, §4, §5, §6, §7, §8 — temporal bounds + staleness signal + deterministic replay |
 
 ---
 
-## 9. Security Considerations
+## 10. Security Considerations
 
-### 9.1 Clock integrity
+### 10.1 Clock integrity
 
 Temporal bounds depend on the runtime clock. A compromised or manipulated
 clock can cause active rules to appear expired or expired rules to appear
@@ -346,7 +444,7 @@ the response provides a verifiable record of the clock value used for temporal
 evaluation. Verifiers auditing past decisions can cross-reference the `ts`
 field against external time sources.
 
-### 9.2 Staleness advisory integrity
+### 10.2 Staleness advisory integrity
 
 The `staleness_advisory` is computed from the runtime's own execution log and
 is not part of the sealed artifact. It cannot be forged by an artifact author.
@@ -354,11 +452,27 @@ It can be omitted by a non-compliant runtime. Consumers relying on the advisory
 for governance assurance SHOULD verify that the runtime is NOMOS-SPEC-003
 conformant before treating absence of the advisory as evidence of freshness.
 
+### 10.3 Replay integrity
+
+The `execution_at` field is caller-supplied and not part of the sealed
+artifact. A malicious caller could supply any past timestamp to observe
+how the artifact would have behaved at a different moment — this is by
+design, since historical verdicts are not secret. However:
+
+- Runtimes MUST reject future timestamps to prevent speculation about
+  rules not yet active.
+- Replay executions SHOULD be marked in the audit trail so auditors can
+  distinguish live decisions from retrospective reconstructions.
+- The determinism guarantee means the verdict for a given
+  (artifact, inputs, execution_at) triple is reproducible by anyone
+  with the artifact and inputs — treat the artifact as a public document
+  if replay transparency is a concern.
+
 ---
 
-## 10. Examples
+## 11. Examples
 
-### 10.1 Temporal rule — regulatory transition
+### 11.1 Temporal rule — regulatory transition
 
 ```json
 {
@@ -388,7 +502,7 @@ Both rules are sealed in the same artifact. Before 2026-01-01, only
 `legacy_threshold` is active. At and after 2026-01-01, only `updated_threshold`
 is active. The cutover is atomic and auditable.
 
-### 10.2 Audit trace showing expired rule
+### 11.2 Audit trace showing expired rule
 
 ```json
 {
@@ -403,7 +517,7 @@ The audit trace records both rules — the one that was skipped and the one
 that fired — providing a complete picture of the rule set at the moment of
 the decision.
 
-### 10.3 Staleness advisory
+### 11.3 Staleness advisory
 
 ```json
 {

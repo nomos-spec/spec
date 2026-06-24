@@ -7,7 +7,28 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [NOMOS-SPEC-003] — 2026-06-24
+## [NOMOS-SPEC-003 v1.3.0] — 2026-06-24
+
+Deterministic replay — closes the regulatory audit requirement.
+
+### Added (NOMOS-SPEC-003 v1.3.0)
+
+- **§8 Deterministic replay** — `execution_at` optional field in the execution
+  request; runtime uses that timestamp for all temporal bound checks; future
+  timestamps rejected with `INVALID_EXECUTION_AT` (422); determinism guarantee:
+  same artifact + same inputs + same `execution_at` → identical verdict always;
+  replay executions marked `replay: true` in response and audit trail; SHOULD NOT
+  increment staleness deltas or drift metrics
+- **§9.1 Conformance** — updated to include deterministic replay as requirement 7;
+  conformance levels updated: Full now requires §3–§8
+- **§10.3 Security** — replay integrity considerations: future timestamp rejection,
+  audit marking, determinism transparency
+- **`schema/execution-response.schema.json`** — added `replay` boolean and
+  `execution_at` string fields; added `expired_rules` string array
+
+---
+
+## [NOMOS-SPEC-003 v1.2.0] — 2026-06-24
 
 Temporal validity and staleness signalling — Spec 3 foundations.
 

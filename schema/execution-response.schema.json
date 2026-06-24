@@ -80,6 +80,21 @@
       "type": "string",
       "description": "Present when verdict is 'escalate' due to a system condition rather than a rule match (e.g. 'missing_context_field', 'guard_constraint_violated', 'unknown_agent')."
     },
+    "replay": {
+      "type": "boolean",
+      "const": true,
+      "description": "Present and true when the execution used a caller-supplied execution_at timestamp. Absent on live executions. NOMOS-SPEC-003 §8."
+    },
+    "execution_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Echo of the execution_at value from the request. Present only when replay: true. NOMOS-SPEC-003 §8."
+    },
+    "expired_rules": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "IDs of rules that were skipped due to temporal bounds at the execution instant. Present when at least one rule was expired. NOMOS-SPEC-003 §5."
+    },
     "staleness_advisory": {
       "type": "object",
       "description": "Passive advisory emitted when decisions since last triangulation exceed the staleness threshold. Never affects verdict. NOMOS-SPEC-003 §6.",
