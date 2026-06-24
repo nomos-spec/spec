@@ -1,7 +1,7 @@
 # NOMOS-SPEC-003: Temporal Validity and Staleness Signalling
 
 **Status:** Active  
-**Version:** 1.3.0  
+**Version:** 1.3.1  
 **Extends:** NOMOS-SPEC-001 v1.0.0, NOMOS-SPEC-002 v1.1.0  
 **Published:** 2026-06-24  
 **Authors:** SafeHaven LLC / NOMOS Protocol Working Group  
@@ -222,15 +222,27 @@ each decision.
 
 When an artifact is sealed following a triangulation run (validation against
 real decision data), the compliant runtime SHOULD record a **triangulation
-baseline** consisting of:
+baseline record** with the following normative fields:
 
-| Field | Type | Description |
-|---|---|---|
-| `triangulated_at` | string (ISO 8601 UTC) | Timestamp of the triangulation run |
-| `decision_volume_at_triangulation` | integer | Count of executions against this artifact at triangulation time |
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `artifact_id` | string | REQUIRED | The `artifact_id` of the sealed artifact |
+| `artifact_version` | string | REQUIRED | The `version` of the sealed artifact at triangulation time |
+| `triangulated_at` | string (ISO 8601 UTC) | REQUIRED | Timestamp of the triangulation run |
+| `decision_volume_at_triangulation` | integer | REQUIRED | Count of executions logged against this artifact at triangulation time |
 
-This baseline is stored by the runtime, not embedded in the artifact. It is
-associated with the `artifact_id`.
+The baseline record is stored by the runtime, not embedded in the artifact.
+It is keyed by `artifact_id + artifact_version` — a new baseline record MUST
+be created when a new artifact version is sealed; it MUST NOT overwrite the
+baseline of a prior version.
+
+A baseline record MUST NOT be modified after it is written. If the runtime
+needs to record a re-triangulation, it creates a new baseline record for the
+new artifact version produced by the re-sealing.
+
+Forked artifacts (artifacts created by copying rules from an existing artifact)
+do not inherit the source artifact's baseline. A forked artifact has no
+baseline until it is sealed following its own triangulation run.
 
 ### 6.2 Staleness delta computation
 
@@ -241,7 +253,15 @@ delta = current_execution_count - decision_volume_at_triangulation
 ```
 
 where `current_execution_count` is the total number of executions logged
-against this artifact since it was first sealed.
+against this `artifact_id + artifact_version` pair since it was first sealed.
+
+**Approximate counting is acceptable.** The staleness signal is advisory;
+exact global consistency of the execution counter is not required. In
+distributed or multi-region deployments, counters may drift. A delta that
+is occasionally imprecise produces false positives (advisory fires
+unnecessarily) or false negatives (advisory fires late) — neither affects
+the verdict. Implementations MUST NOT block or delay execution responses
+to achieve a strongly consistent count.
 
 ### 6.3 Staleness threshold
 
@@ -443,6 +463,17 @@ The execution instant recorded in the audit trace and in the `ts` field of
 the response provides a verifiable record of the clock value used for temporal
 evaluation. Verifiers auditing past decisions can cross-reference the `ts`
 field against external time sources.
+
+**Distributed and microservice deployments:** In architectures where the
+calling service and the policy runtime are separate processes, clock skew
+between hosts can cause the same rule to appear active on one node and expired
+on another. The correct mitigation is not to fix clocks (clock drift is
+unavoidable) but to use the `execution_at` field (§8): the initiating service
+captures a single timestamp from its own clock and propagates it to the policy
+runtime as `execution_at`. All temporal bound checks are then performed against
+the caller-supplied instant, eliminating inter-service skew. Implementations
+that operate as policy sidecars or remote services SHOULD document this pattern
+and encourage callers to supply `execution_at` explicitly.
 
 ### 10.2 Staleness advisory integrity
 

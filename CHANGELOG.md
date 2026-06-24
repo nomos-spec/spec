@@ -7,6 +7,28 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-003 v1.3.1] — 2026-06-24
+
+Closes three underspecification gaps identified in implementer review.
+
+### Changed (NOMOS-SPEC-003 v1.3.1)
+
+- **§6.1 Triangulation baseline** — promoted from two-field hint to a normative
+  record schema with four required fields (`artifact_id`, `artifact_version`,
+  `triangulated_at`, `decision_volume_at_triangulation`); keyed by
+  `artifact_id + artifact_version`; immutability guarantee added ("MUST NOT be
+  modified after it is written"); fork semantics defined (forked artifacts have
+  no inherited baseline)
+- **§6.2 Staleness delta** — "approximate counting is acceptable" clause added;
+  exact global counter consistency is not required; implementations MUST NOT
+  block responses to achieve it; delta is now keyed per `artifact_id + version`
+- **§10.1 Clock integrity** — distributed / microservice skew mitigation pattern
+  added: initiating service captures a single timestamp and propagates it via
+  `execution_at`; policy runtime uses caller-supplied instant for all temporal
+  checks, eliminating inter-service skew
+
+---
+
 ## [NOMOS-SPEC-003 v1.3.0] — 2026-06-24
 
 Deterministic replay — closes the regulatory audit requirement.
