@@ -181,12 +181,17 @@ Declares the minimum context fields the artifact requires to evaluate correctly.
 
 `required_fields` is the normative constraint. `field_types` is OPTIONAL documentation — runtimes SHOULD NOT perform type coercion on incoming context values.
 
+The `seal` block (see §8). Ed25519 is RECOMMENDED — it makes the artifact publicly verifiable:
+
 ```json
 {
-  "algorithm": "HMAC-SHA256",
-  "ts":        "<ISO 8601 UTC>",
-  "hash":      "<hex-encoded SHA-256 of canonical payload>",
-  "sig":       "<hex-encoded HMAC-SHA256 of hash>"
+  "status":              "sealed",
+  "canonicalization":    "JCS",
+  "signature_algorithm": "Ed25519",
+  "kid":                 "<key id>",
+  "hash":                "<hex-encoded SHA-256 of canonical payload>",
+  "signed_by":           { "name": "...", "org_id": "...", "role": "...", "timestamp": "<ISO 8601 UTC>" },
+  "signature":           "<base64 Ed25519 signature over JCS({hash, signed_by})>"
 }
 ```
 
@@ -476,46 +481,85 @@ hash = SHA-256( canonical_bytes )
 
 Encode as lowercase hex (64 characters).
 
-### Step 4: Compute signature
+### Step 4: Sign
+
+A seal proves two things: **integrity** (the payload is unchanged, established by the hash in Step 3) and **authenticity** (a specific authority sealed it, and no one else could forge it). Two signing methods are defined.
+
+**Asymmetric — Ed25519 (RECOMMENDED).** The sealing authority signs with a private key; anyone verifies with the corresponding **public key**. Because the verification key cannot produce signatures, it is safe to publish (§8.2), which makes a sealed `.nomos` **independently verifiable by any party, offline, without the secret and without contacting the sealing authority.**
 
 ```
-sig = HMAC-SHA256( key=SEAL_KEY, msg=hash )
+signer_id = { "name": "...", "org_id": "...", "role": "...", "timestamp": "<ISO 8601 UTC>" }
+signature = base64( Ed25519_sign( private_key, JCS({ "hash": hash, "signed_by": signer_id }) ) )
 ```
 
-`SEAL_KEY` is a 256-bit secret held by the sealing authority. Encode `sig` as lowercase hex (64 characters).
+The message signed is the JCS canonicalization (Step 2 rules) of the object `{ hash, signed_by }`. `kid` is the key id of the signing key (§8.2).
+
+**Symmetric — HMAC-SHA256 (LEGACY).** A 256-bit shared secret (`SEAL_KEY`) both creates and verifies the signature. Because the verification key *is* the forging key, HMAC seals can only be verified by a holder of the secret and are therefore **NOT third-party verifiable.** HMAC MUST NOT be used where independent verifiability is claimed; it is retained only for backward compatibility and closed deployments.
+
+```
+sig = HMAC-SHA256( key=SEAL_KEY, msg=hash )   # hex, over the hex hash string
+```
 
 ### Step 5: Embed seal block
 
-Append the `seal` field to the artifact object:
+Append the `seal` field to the artifact object.
+
+**Asymmetric (RECOMMENDED):**
 
 ```json
 "seal": {
-  "algorithm": "HMAC-SHA256",
-  "ts":        "<ISO 8601 UTC at time of sealing>",
-  "hash":      "<hex hash from step 3>",
-  "sig":       "<hex sig from step 4>"
+  "status":              "sealed",
+  "canonicalization":    "JCS",
+  "signature_algorithm": "Ed25519",
+  "kid":                 "<key id of the signing key>",
+  "hash":                "<hex SHA-256 from Step 3>",
+  "signed_by":           { "name": "...", "org_id": "...", "role": "...", "timestamp": "<ISO 8601 UTC>" },
+  "signature":           "<base64 Ed25519 signature from Step 4>"
 }
 ```
 
-The artifact is now sealed and MUST be treated as immutable.
+**Legacy (HMAC):**
+
+```json
+"seal": {
+  "status":              "sealed",
+  "canonicalization":    "JCS",
+  "signature_algorithm": "HMAC-SHA256",
+  "hash":                "<hex SHA-256 from Step 3>",
+  "signed_by":           { "name": "...", "org_id": "...", "role": "...", "timestamp": "<ISO 8601 UTC>" },
+  "sig":                 "<hex HMAC from Step 4>"
+}
+```
+
+The artifact is now sealed and MUST be treated as immutable. A verifier dispatches on `signature_algorithm`.
 
 ### 8.1 Verification
 
-To verify a sealed artifact:
+Verification runs **two independent checks; both MUST pass**, and both run offline:
 
-1. Extract and save the `seal` block.
-2. Remove the `seal` field from the object.
-3. Re-canonicalize (Step 2).
-4. Recompute `SHA-256` (Step 3).
-5. Confirm `hash` in the seal matches the recomputed value.
-6. Recompute `HMAC-SHA256(SEAL_KEY, hash)`.
-7. Confirm `sig` in the seal matches the recomputed HMAC (constant-time comparison).
+1. **Integrity.** Remove the `seal` field, re-canonicalize (Step 2), recompute `SHA-256` (Step 3), and confirm it equals `seal.hash`.
+2. **Authenticity.**
+   - `Ed25519` → reconstruct `JCS({ "hash": seal.hash, "signed_by": seal.signed_by })` and verify `seal.signature` against the public key whose id is `seal.kid` (obtained per §8.2). No secret is involved.
+   - `HMAC-SHA256` → recompute `HMAC-SHA256(SEAL_KEY, seal.hash)` and compare in constant time. Requires the shared secret.
 
-Failure at Step 5 indicates the payload was modified after sealing. Failure at Step 7 indicates the artifact was sealed with a different key or the signature was forged.
+An integrity failure means the payload was modified after sealing. An authenticity failure means the seal was produced by a different key or forged. Note that both checks are required and neither implies the other: a body altered under an untouched signature passes authenticity but fails integrity; a body whose hash anyone could have written passes integrity but fails authenticity.
 
-### 8.2 Key rotation
+### 8.2 Public key discovery
 
-`SEAL_KEY` MUST NOT be rotated after artifacts are in production use. Rotation invalidates the seal of every previously issued artifact. If rotation is unavoidable, all affected artifacts MUST be re-issued with new `version` values and re-sealed under the new key.
+A sealing authority publishes its Ed25519 verification keys, unauthenticated, at a well-known location so any verifier can fetch them once and then verify offline:
+
+```
+GET /.well-known/nomos-signing-keys
+→ { "keys": [ { "kid": "...", "algorithm": "Ed25519", "public_key_pem": "-----BEGIN PUBLIC KEY-----\n…" } ] }
+```
+
+`kid` is derived from the public key as `base64url( SHA-256( SPKI-DER(public_key) ) )` truncated to 16 characters, so every implementation computes the same id. The response is a key **set**: it MAY carry more than one key (e.g. a rotated-out key retained so old seals still verify). A verifier selects the key whose `kid` matches the seal.
+
+### 8.3 Key rotation
+
+Asymmetric keys MAY be rotated without invalidating existing seals, provided **the retired public key remains published**. Each seal names its signer via `kid`, so a verifier always resolves the exact key that produced it; a new key is added to the published set and used for new seals while old public keys are retained for old artifacts. The private key MUST be protected (env/KMS/HSM) and never published.
+
+The legacy `SEAL_KEY` (HMAC) MUST NOT be rotated once artifacts are in production, since a symmetric secret is both signer and verifier: rotating it invalidates every prior seal. This limitation is one of the reasons Ed25519 is RECOMMENDED.
 
 ---
 
@@ -537,7 +581,7 @@ A runtime is **conformant** if it:
 A producer is **conformant** if it:
 
 1. Generates artifacts that validate against `schema/artifact.schema.json`.
-2. Seals artifacts using the procedure in §8.
+2. Seals artifacts using the procedure in §8. A producer that claims **publicly verifiable** seals MUST use an asymmetric algorithm (Ed25519 RECOMMENDED), stamp each seal with its `kid`, and publish the corresponding public key(s) at `/.well-known/nomos-signing-keys` (§8.2). HMAC-SHA256 seals are NOT publicly verifiable and MUST NOT be represented as such.
 3. Assigns `confidence` per the following rules (in order of precedence):
    - `SOVEREIGN`: behavioral data used, full gap analysis passed, ARI ≥ 0.75.
    - `PROVEN`: behavioral data used, full gap analysis passed, ARI ≥ 0.60.
@@ -552,7 +596,9 @@ A producer is **conformant** if it:
 
 ## 10. Security Considerations
 
-**Seal key protection** — The `SEAL_KEY` is the root of trust for all artifacts. It MUST be stored in a secrets manager and never embedded in application code or version control.
+**Signing key protection** — The signing key is the root of trust for all artifacts. For Ed25519, the **private** key MUST be stored in a secrets manager (env/KMS/HSM) and never embedded in code, version control, or the artifact; only the **public** key is published (§8.2), and publishing it is safe because it cannot forge a seal. For legacy HMAC, `SEAL_KEY` is both signer and verifier and MUST be treated as a top-level secret. Making seals publicly verifiable removes the *verification* secret, not the *signing* secret — signing remains a privileged operation.
+
+**Key provenance** — Publishing a public key at `/.well-known/nomos-signing-keys` lets verifiers fetch it over TLS, which binds trust to the domain's certificate. Deployments requiring a stronger anchor SHOULD pin the key out of band or record its publication in an append-only transparency log so the key set itself is auditable.
 
 **Replay attacks** — The `request_id` in an execution request SHOULD be a UUIDv4. Runtimes SHOULD reject duplicate `request_id` values within a configurable window (recommended: 5 minutes).
 

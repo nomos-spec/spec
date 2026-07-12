@@ -83,12 +83,18 @@ npx tsx cli/nomos.ts validate examples/lending_policy_v1.nomos
 
 ### Verify cryptographic seal
 
+Production artifacts are sealed with **Ed25519** and are **publicly verifiable** — anyone checks the seal offline with the published public key, no secret and no call to the sealing authority:
+
 ```bash
-npx tsx cli/nomos.ts verify examples/lending_policy_v1.nomos \
-  --key deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef
+# Fetch the public key once from /.well-known/nomos-signing-keys, then verify locally:
+npx tsx verify/verify.ts <artifact.nomos> --url https://nomosprotocol.com
+# …or fully offline with a pinned public key:
+npx tsx verify/verify.ts <artifact.nomos> --pubkey signing_key.pub.pem
 ```
 
-> **Note:** The example artifacts in `examples/` are sealed with the public test key above (`deadbeef...`). Production artifacts use a private `NOMOS_SEAL_KEY` held by the sealing authority.
+The verifier runs two independent, offline checks: **integrity** (recompute the JCS/SHA-256 hash) and **authenticity** (verify the Ed25519 signature against the public key for the seal's `kid`). Tampering the artifact fails the hash check; a forged or wrong-key signature fails authenticity. See §8 of NOMOS-SPEC-001.
+
+> **Legacy:** The bundled `examples/` are older HMAC-SHA256 test artifacts (symmetric — not third-party verifiable), sealed with the public test key `deadbeef…`. Verify them with `--key deadbeef…`. HMAC is retained for backward compatibility only; new seals SHOULD be Ed25519.
 
 ### Execute a decision locally
 
@@ -128,9 +134,14 @@ curl -X POST https://nomosprotocol.com/api/nomos/execute \
 ### Verify an artifact (Python)
 
 ```bash
+# Ed25519 (production) — verify with the published public key, offline:
+python verify/verify.py <artifact.nomos> --url https://nomosprotocol.com   # or --pubkey key.pem
+# Legacy HMAC example artifacts:
 python verify/verify.py examples/lending_policy_v1.nomos \
   --key deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef
 ```
+
+(Ed25519 verification needs `pip install cryptography`; the Node verifier `verify/verify.ts` is zero-dependency.)
 
 ---
 

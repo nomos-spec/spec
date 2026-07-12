@@ -7,6 +7,23 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Repository] — 2026-07-13
+
+Publicly verifiable seals: asymmetric signing so any party can verify a sealed `.nomos` offline with a public key — no shared secret and no call to the sealing authority. Backward compatible (existing HMAC seals still verify).
+
+### Added / Changed (NOMOS-SPEC-001)
+
+- **§8 Sealing** — **Ed25519 asymmetric signing is now RECOMMENDED.** The authority signs with a private key; anyone verifies with the published public key, which cannot forge a seal. HMAC-SHA256 reclassified as LEGACY (symmetric — not third-party verifiable). The signed message is `JCS({hash, signed_by})`; the seal gains `signature_algorithm`, `signed_by`, `signature` (base64), and `kid`.
+- **§8.1 Verification** — restated as two independent, offline checks that both MUST pass: integrity (recompute JCS/SHA-256 hash) and authenticity (Ed25519 against the public key by `kid`, or HMAC with the secret). Clarified why both are required.
+- **§8.2 Public key discovery** — `GET /.well-known/nomos-signing-keys` (a key **set**), and `kid = base64url(SHA-256(SPKI-DER(pubkey)))[:16]`.
+- **§8.3 Key rotation** — asymmetric keys MAY rotate without invalidating old seals, provided retired public keys stay published; each seal names its signer via `kid`.
+- **§9.2 Conformance** — a producer claiming "publicly verifiable" MUST use an asymmetric algorithm and publish its public key; HMAC MUST NOT be represented as publicly verifiable.
+- **§10 Security** — private-key vs public-key protection; key-provenance guidance (TLS/DNS today, transparency log for a stronger anchor).
+- **`schema/artifact.schema.json`** — the `seal` object is now a `oneOf` of the asymmetric (recommended) and legacy-HMAC forms.
+- **Reference verifiers** — `verify/verify.ts` (zero-dep, Node-native Ed25519) and `verify/verify.py` (`cryptography` for Ed25519) upgraded to verify Ed25519 seals via `--url` (fetch published key) or `--pubkey` (offline). Both verify a production-sealed artifact against the published key and reject tampered artifacts.
+
+---
+
 ## [Repository] — 2026-06-11
 
 World-class gap closure: error catalog, data contract formalization, conformance test vectors, artifact versioning semantics, idempotency guarantee, five new domain examples, and deprecation policy.

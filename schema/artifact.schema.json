@@ -147,29 +147,46 @@
     },
     "seal": {
       "type": "object",
-      "required": ["algorithm", "ts", "hash", "sig"],
-      "additionalProperties": false,
-      "properties": {
-        "algorithm": {
-          "type": "string",
-          "const": "HMAC-SHA256"
+      "description": "The cryptographic seal (§8). Ed25519 (asymmetric) is RECOMMENDED and publicly verifiable; HMAC-SHA256 (symmetric) is legacy and not third-party verifiable.",
+      "oneOf": [
+        {
+          "title": "Asymmetric seal (RECOMMENDED, publicly verifiable)",
+          "required": ["signature_algorithm", "hash", "signed_by", "signature"],
+          "properties": {
+            "status": { "type": "string", "const": "sealed" },
+            "canonicalization": { "type": "string", "const": "JCS" },
+            "signature_algorithm": { "type": "string", "enum": ["Ed25519", "RS256", "ES256"] },
+            "kid": { "type": "string", "description": "Key id of the signing key; selects the public key at /.well-known/nomos-signing-keys" },
+            "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Lowercase hex SHA-256 of the canonical payload (excluding seal)" },
+            "signed_by": {
+              "type": "object",
+              "required": ["name", "org_id", "role", "timestamp"],
+              "properties": {
+                "name": { "type": "string" },
+                "org_id": { "type": "string" },
+                "role": { "type": "string" },
+                "timestamp": { "type": "string", "format": "date-time" }
+              }
+            },
+            "signature": { "type": "string", "description": "base64 signature over JCS({hash, signed_by})" }
+          }
         },
-        "ts": {
-          "type": "string",
-          "format": "date-time",
-          "description": "ISO 8601 UTC timestamp of sealing"
-        },
-        "hash": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$",
-          "description": "Lowercase hex SHA-256 of the canonical artifact payload (excluding seal)"
-        },
-        "sig": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$",
-          "description": "Lowercase hex HMAC-SHA256(SEAL_KEY, hash)"
+        {
+          "title": "Legacy HMAC seal (symmetric, not third-party verifiable)",
+          "required": ["hash"],
+          "properties": {
+            "status": { "type": "string", "const": "sealed" },
+            "canonicalization": { "type": "string", "const": "JCS" },
+            "algorithm": { "type": "string", "const": "HMAC-SHA256" },
+            "signature_algorithm": { "type": "string", "const": "HMAC-SHA256" },
+            "ts": { "type": "string", "format": "date-time" },
+            "signed_by": { "type": "object" },
+            "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "sig": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Lowercase hex HMAC-SHA256(SEAL_KEY, hash)" },
+            "signature": { "type": "string" }
+          }
         }
-      }
+      ]
     }
   }
 }
