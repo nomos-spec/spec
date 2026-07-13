@@ -24,6 +24,69 @@ Publicly verifiable seals: asymmetric signing so any party can verify a sealed `
 
 ---
 
+## [NOMOS-SPEC-003 v1.3.1] — 2026-06-24
+
+Closes three underspecification gaps identified in implementer review.
+
+### Changed (NOMOS-SPEC-003 v1.3.1)
+
+- **§6.1 Triangulation baseline** — promoted from two-field hint to a normative
+  record schema with four required fields (`artifact_id`, `artifact_version`,
+  `triangulated_at`, `decision_volume_at_triangulation`); keyed by
+  `artifact_id + artifact_version`; immutability guarantee added ("MUST NOT be
+  modified after it is written"); fork semantics defined (forked artifacts have
+  no inherited baseline)
+- **§6.2 Staleness delta** — "approximate counting is acceptable" clause added;
+  exact global counter consistency is not required; implementations MUST NOT
+  block responses to achieve it; delta is now keyed per `artifact_id + version`
+- **§10.1 Clock integrity** — distributed / microservice skew mitigation pattern
+  added: initiating service captures a single timestamp and propagates it via
+  `execution_at`; policy runtime uses caller-supplied instant for all temporal
+  checks, eliminating inter-service skew
+
+---
+
+## [NOMOS-SPEC-003 v1.3.0] — 2026-06-24
+
+Deterministic replay — closes the regulatory audit requirement.
+
+### Added (NOMOS-SPEC-003 v1.3.0)
+
+- **§8 Deterministic replay** — `execution_at` optional field in the execution
+  request; runtime uses that timestamp for all temporal bound checks; future
+  timestamps rejected with `INVALID_EXECUTION_AT` (422); determinism guarantee:
+  same artifact + same inputs + same `execution_at` → identical verdict always;
+  replay executions marked `replay: true` in response and audit trail; SHOULD NOT
+  increment staleness deltas or drift metrics
+- **§9.1 Conformance** — updated to include deterministic replay as requirement 7;
+  conformance levels updated: Full now requires §3–§8
+- **§10.3 Security** — replay integrity considerations: future timestamp rejection,
+  audit marking, determinism transparency
+- **`schema/execution-response.schema.json`** — added `replay` boolean and
+  `execution_at` string fields; added `expired_rules` string array
+
+---
+
+## [NOMOS-SPEC-003 v1.2.0] — 2026-06-24
+
+Temporal validity and staleness signalling — Spec 3 foundations.
+
+### Added (NOMOS-SPEC-003)
+
+- **`spec/NOMOS-SPEC-003.md`** — new spec document: temporal bounds on rules + staleness signal
+- **§3 Temporal validity** — `valid_from` and `valid_until` optional fields on Rule; half-open interval `[valid_from, valid_until)`; rules outside active window are skipped without error
+- **§4 Runtime algorithm** — execution instant captured once per call; all temporal bounds evaluated against the same instant; expired rules do not contribute to verdict
+- **§5 Audit trace extension** — `result: "expired"` added to the decision trace result union; every skipped rule produces a trace entry so the audit record reflects the complete rule set at decision time
+- **§6 Staleness signal** — triangulation baseline (`triangulated_at`, `decision_volume_at_triangulation`) recorded at seal time; staleness delta computed after each execution; advisory emitted when delta ≥ threshold (default 500)
+- **§7 Response extension** — `staleness_advisory` optional object in execution response: `triangulated_at`, `decisions_since_triangulation`, `threshold`, `recommendation`; never affects verdict
+
+### Updated (schemas)
+
+- **`schema/rule.schema.json`** — added `valid_from` and `valid_until` optional string (date-time) fields
+- **`schema/execution-response.schema.json`** — added `staleness_advisory` optional object with required sub-fields
+
+---
+
 ## [Repository] — 2026-06-11
 
 World-class gap closure: error catalog, data contract formalization, conformance test vectors, artifact versioning semantics, idempotency guarantee, five new domain examples, and deprecation policy.
