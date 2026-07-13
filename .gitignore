@@ -3,3 +3,8 @@ __pycache__/
 node_modules/
 .env
 .DS_Store
+
+# Local build output — no accompanying source is committed for this
+runtime/dist/
+runtime/node_modules/
+runtime/package-lock.json
