@@ -7,6 +7,19 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-004 v1.4.0] — 2026-07-13
+
+Two optional, backward-compatible capabilities: composable artifacts and third-party attestations. Neither changes how a sealed artifact evaluates — composition is a pre-seal transform, attestation is a post-seal annotation.
+
+### Added (NOMOS-SPEC-004)
+
+- **Composable artifacts (`extends`)** — a base artifact owns shared rules; a child declares an overlay (override / add / remove) and is composed at BUILD time into a single self-contained sealed artifact. §1.2 pins the deterministic merge algorithm (walk base in order; override in place; drop `removed`; append locals; merge variables). A `composition` provenance block (inherited / overridden / removed / local, `extends.seal_hash`) is written before sealing, so it is covered by the seal. "Change once, everywhere" is realised by **re-composition** against a new base with the overlay re-applied. §1.5 requires contradiction detection over the merged set (cross-tree conflicts).
+- **Third-party attestations (`attestations`)** — a detached signature by a party OTHER than the issuer (regulator / auditor / authority), made with the attester's OWN key over the artifact's seal hash. Binds to one version, travels with the file, verified with the attester's public key by `kid` at `/.well-known/nomos-signing-keys`. §2.4 mandates BOTH a signature check and a binding check (`artifact_hash == seal.hash`) to block replay. Revocable via `revoked_at`.
+- **Seal-hash exclusion (normative)** — the seal now covers the artifact minus **both** `seal` and `attestations`, so an attestation can be appended or removed without invalidating the seal. Backward compatible: a v1.0 artifact has no `attestations`, so the computation is unchanged for all existing artifacts.
+- **`schema/artifact.schema.json`** — added optional `composition` and `attestations`; `spec_version` enum extended to include `NOMOS-SPEC-003` and `NOMOS-SPEC-004`.
+
+---
+
 ## [Repository] — 2026-07-13
 
 Publicly verifiable seals: asymmetric signing so any party can verify a sealed `.nomos` offline with a public key — no shared secret and no call to the sealing authority. Backward compatible (existing HMAC seals still verify).

@@ -29,6 +29,8 @@ Think of a `.nomos` file the way you think of a `.pdf` file — except instead o
 |------|-------------|
 | `spec/NOMOS-SPEC-001.md` | Core protocol specification — rules, sealing, execution |
 | `spec/NOMOS-SPEC-002.md` | Multi-agent extension — agents manifest, guard phases, constraints DSL |
+| `spec/NOMOS-SPEC-003.md` | Temporal validity, staleness signalling, deterministic replay |
+| `spec/NOMOS-SPEC-004.md` | Composable artifacts (`extends`) + third-party attestations |
 | `schema/artifact.schema.json` | JSON Schema for `.nomos` artifact files |
 | `schema/rule.schema.json` | JSON Schema for a single rule object |
 | `examples/lending_policy_v1.nomos` | Example — public lending policy |

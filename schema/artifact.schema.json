@@ -29,7 +29,7 @@
     },
     "spec_version": {
       "type": "string",
-      "enum": ["NOMOS-SPEC-001", "NOMOS-SPEC-002"],
+      "enum": ["NOMOS-SPEC-001", "NOMOS-SPEC-002", "NOMOS-SPEC-003", "NOMOS-SPEC-004"],
       "description": "Protocol specification version this artifact conforms to"
     },
     "confidence": {
@@ -187,6 +187,60 @@
           }
         }
       ]
+    },
+    "composition": {
+      "type": "object",
+      "description": "Composition provenance (NOMOS-SPEC-004 §1.3). Present on artifacts produced by extending a base artifact. Written before sealing and therefore covered by the seal.",
+      "required": ["extends", "parent_rule_count", "inherited", "overridden", "removed", "local", "composed_at"],
+      "additionalProperties": false,
+      "properties": {
+        "extends": {
+          "type": "object",
+          "required": ["artifact_id", "version"],
+          "additionalProperties": false,
+          "properties": {
+            "artifact_id": { "type": "string" },
+            "version": { "type": "string" },
+            "seal_hash": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "The base version's seal hash, pinning exactly what was inherited" }
+          }
+        },
+        "parent_rule_count": { "type": "integer", "minimum": 0 },
+        "inherited": { "type": "array", "items": { "type": "string" }, "description": "Base rule ids kept verbatim" },
+        "overridden": { "type": "array", "items": { "type": "string" }, "description": "Base rule ids replaced by a same-id child rule" },
+        "removed": { "type": "array", "items": { "type": "string" }, "description": "Base rule ids dropped" },
+        "local": { "type": "array", "items": { "type": "string" }, "description": "Child-only rule ids (no base counterpart)" },
+        "composed_at": { "type": "string", "format": "date-time" },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "attestations": {
+      "type": "array",
+      "description": "Third-party co-signatures (NOMOS-SPEC-004 §2). Added AFTER sealing by parties other than the issuer, and EXCLUDED from the seal-hash computation — the seal covers the artifact minus both `seal` and `attestations`.",
+      "items": {
+        "type": "object",
+        "required": ["attester", "statement", "artifact_hash", "artifact_version", "algorithm", "kid", "signature", "attested_at"],
+        "additionalProperties": false,
+        "properties": {
+          "attester": {
+            "type": "object",
+            "required": ["name", "org_id", "role"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "org_id": { "type": "string" },
+              "role": { "type": "string", "description": "e.g. regulator | auditor | authority" }
+            }
+          },
+          "statement": { "type": "string" },
+          "artifact_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "MUST equal the artifact's seal.hash (binds to this version)" },
+          "artifact_version": { "type": "string" },
+          "algorithm": { "type": "string", "const": "Ed25519" },
+          "kid": { "type": "string", "description": "Attester public-key id; resolves at /.well-known/nomos-signing-keys" },
+          "signature": { "type": "string", "description": "base64 Ed25519 over JCS({artifact_hash, artifact_version, attester, statement, attested_at})" },
+          "attested_at": { "type": "string", "format": "date-time" },
+          "revoked_at": { "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }] }
+        }
+      }
     }
   }
 }
