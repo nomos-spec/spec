@@ -9,7 +9,7 @@
 
 The **NOMOS Protocol** defines an open, vendor-neutral format for packaging governance policies as sealed, machine-executable artifacts.
 
-A `.nomos` file is a signed JSON document containing extracted policy rules, confidence metadata, and a cryptographic seal. Any compliant runtime can load a `.nomos` artifact and evaluate decisions against it — deterministically, without calling an AI model at runtime.
+A `.nomos` file is a JSON document containing extracted policy rules, confidence metadata, and a cryptographic seal — signed with Ed25519 by default, so anyone can verify an artifact is authentic and unmodified offline, with the publisher's public key alone, no server call and no shared secret. Any compliant runtime can load a `.nomos` artifact and evaluate decisions against it — deterministically, without calling an AI model at runtime.
 
 ---
 
@@ -19,9 +19,13 @@ Governance policies live in PDFs. AI agents making decisions live in code. NOMOS
 
 Think of a `.nomos` file the way you think of a `.pdf` file — except instead of capturing a document's visual layout for portable rendering, it captures an organisation's decision logic for portable execution. The meaning is collapsed into structure before runtime begins.
 
-**Compile-time**: A policy document is uploaded to NOMOS Studio. Rules are extracted and verified. A `.nomos` artifact is sealed.
+A `.nomos` artifact now moves through three distinct moments, not two:
 
-**Runtime**: Your system calls the NOMOS Runtime API (or runs the CLI locally). Rules are evaluated deterministically. Every verdict comes with an audit hash.
+**Compile-time**: A policy document is uploaded to NOMOS Studio. Rules are extracted and verified — optionally composed from a shared base artifact (SPEC-004). The result is sealed.
+
+**Runtime**: Your system calls the NOMOS Runtime API (or runs the CLI locally). Rules are evaluated deterministically, respecting any temporal bounds (SPEC-003). Every verdict comes with an audit hash.
+
+**Attest** *(optional, post-seal)*: An independent party — a regulator, an auditor — co-signs the exact sealed version with their own key (SPEC-004), without altering the artifact or its seal.
 
 ---
 
@@ -209,20 +213,94 @@ See `spec/NOMOS-SPEC-002.md §5.6` for the full specification.
 
 ## Seal Integrity
 
-Every `.nomos` artifact carries a `seal` block:
+Every `.nomos` artifact carries a `seal` block. Ed25519 is the default, publicly verifiable form:
 
 ```json
 "seal": {
-  "algorithm": "HMAC-SHA256",
-  "ts": "2026-01-15T10:30:00.000Z",
+  "status": "sealed",
+  "canonicalization": "JCS",
+  "signature_algorithm": "Ed25519",
+  "kid": "<public-key-id>",
   "hash": "<sha256-of-canonical-payload>",
-  "sig": "<hmac-sha256-of-hash>"
+  "signed_by": { "name": "...", "org_id": "...", "role": "...", "timestamp": "..." },
+  "signature": "<base64-ed25519-signature>"
 }
 ```
 
-The seal is computed over the artifact body canonicalized per [RFC 8785 (JCS)](https://www.rfc-editor.org/rfc/rfc8785). Any modification to any field — including whitespace — produces a different hash and invalidates the signature.
+The seal is computed over the artifact body canonicalized per [RFC 8785 (JCS)](https://www.rfc-editor.org/rfc/rfc8785), excluding the `seal` and `attestations` fields themselves. Any modification to any other field — including whitespace — produces a different hash and invalidates the signature. Verify offline with the publisher's public key at `/.well-known/nomos-signing-keys` — no secret required. Legacy `HMAC-SHA256` seals (symmetric, verifiable only by the issuer) remain valid but are not third-party verifiable.
 
 See `spec/NOMOS-SPEC-001.md §8` for the full sealing procedure.
+
+---
+
+## Temporal Validity & Staleness (SPEC-003)
+
+NOMOS-SPEC-003 lets a rule declare the window during which it's actually in force, and gives a runtime a way to say "this artifact hasn't been re-validated in a while" without blocking anything.
+
+```json
+{
+  "id": "cross_border_threshold",
+  "valid_from": "2026-01-01T00:00:00Z",
+  "valid_until": "2026-12-31T23:59:59Z",
+  "when": "...",
+  "then": [ ... ]
+}
+```
+
+A rule outside its window is skipped and traced in the audit record as `expired` — it's never silently ignored. Execution requests can also supply `execution_at`, replaying a decision as if it were evaluated at that historical instant — the same sealed artifact and inputs always produce the same verdict for a given point in time.
+
+When an artifact has accumulated enough executions since it was last triangulated against real behavioral data, the runtime response carries a `staleness_advisory` — informational only, never a block:
+
+```json
+"staleness_advisory": {
+  "triangulated_at": "2026-05-30T09:41:00Z",
+  "decisions_since_triangulation": 503,
+  "threshold": 500,
+  "recommendation": "consider_retriangulation"
+}
+```
+
+See `spec/NOMOS-SPEC-003.md` for the full specification.
+
+---
+
+## Composition & Attestation (SPEC-004)
+
+NOMOS-SPEC-004 adds two independent capabilities: building an artifact from a shared base, and letting a third party co-sign one.
+
+**Composition.** A child artifact declares `extends` and carries only its overlay — the rules it overrides, adds, or removes on top of a base:
+
+```json
+{
+  "extends": { "artifact_id": "base_policy", "version": "2.0.0", "seal_hash": "..." },
+  "overlay": {
+    "decisions": [ { "id": "min_experience", "when": "...", "then": [ ... ] } ],
+    "removed": ["some_base_rule_id"]
+  }
+}
+```
+
+Base and overlay resolve into one self-contained sealed artifact at build time — a runtime never needs the base to evaluate the child. When the base is updated, each child can re-compose against the new version with its overlay re-applied, so a shared rule changes once and propagates everywhere.
+
+**Attestation.** A party other than the issuer signs a sealed version with their own key, over its seal hash:
+
+```json
+"attestations": [
+  {
+    "attester": { "name": "...", "org_id": "...", "role": "regulator" },
+    "statement": "Reviewed and approved for AY2026",
+    "artifact_hash": "<must equal seal.hash>",
+    "algorithm": "Ed25519",
+    "kid": "...",
+    "signature": "...",
+    "attested_at": "..."
+  }
+]
+```
+
+An attestation binds to one exact version — its `artifact_hash` must match the artifact's `seal.hash`, so it can't be replayed onto a different version — and is excluded from the seal-hash computation, so adding or revoking one never invalidates the seal.
+
+See `spec/NOMOS-SPEC-004.md` for the full specification.
 
 ---
 
