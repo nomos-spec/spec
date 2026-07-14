@@ -2,6 +2,8 @@
 
 [![Spec 001](https://img.shields.io/badge/spec-NOMOS--SPEC--001-blue)](spec/NOMOS-SPEC-001.md)
 [![Spec 002](https://img.shields.io/badge/spec-NOMOS--SPEC--002-green)](spec/NOMOS-SPEC-002.md)
+[![Spec 003](https://img.shields.io/badge/spec-NOMOS--SPEC--003-orange)](spec/NOMOS-SPEC-003.md)
+[![Spec 004](https://img.shields.io/badge/spec-NOMOS--SPEC--004-blueviolet)](spec/NOMOS-SPEC-004.md)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![Validate](https://github.com/nomos-spec/spec/actions/workflows/validate.yml/badge.svg)](https://github.com/nomos-spec/spec/actions/workflows/validate.yml)
 
@@ -232,6 +234,8 @@ This repository tracks the NOMOS artifact format specification. Backward-incompa
 |------|--------|---------|
 | NOMOS-SPEC-001 | Active | Core rules, sealing, execution, conflict resolution |
 | NOMOS-SPEC-002 | Active | Multi-agent manifest, guard phases, constraints DSL |
+| NOMOS-SPEC-003 | Active | Temporal validity, staleness signalling, deterministic replay |
+| NOMOS-SPEC-004 | Active | Composable artifacts (`extends`), third-party attestations |
 
 ---
 
