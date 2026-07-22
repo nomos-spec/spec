@@ -7,6 +7,39 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-005 v1.5.0] — 2026-07-22 (Draft)
+
+A new, wholly optional capability area: querying **public** artifacts without
+authentication. Nothing in NOMOS-SPEC-001–004 changes; a runtime implementing
+only the authenticated model in NOMOS-SPEC-001 §6 is unaffected.
+
+### Added (NOMOS-SPEC-005)
+
+- **Public query (§1, MUST)** — `POST /query`-shaped request/response for
+  asking a public artifact whether an action is allowed. No API key, no
+  `domain_id`. Verdict vocabulary `AUTHORIZED | DENIED | ESCALATED`.
+- **Transcript retrieval (§2, MUST)** — `GET /queries/{query_id}`, unchanged,
+  any time. `audit_hash` independently re-computable from `{ query_id,
+  seal_hash, inputs, verdict, queried_at }` without calling the runtime.
+- **Completeness disclosure (`open_higher_priority_count`, §1.4)** — how many
+  higher-priority rule conditions were still unresolved at the exact moment a
+  verdict was sealed. Lets two structurally different situations — every fact
+  known vs. proceeding with facts still missing — stay distinguishable on a
+  permanent transcript instead of looking identical. Excluded from
+  `audit_hash` (it discloses completeness, it isn't itself an attested fact).
+- **Guided interaction (§3, RECOMMENDED)** — a stateless endpoint compiling an
+  artifact's own rules into progressive `situation` / `checklist` /
+  `conditional_verdict` screens, so a caller doesn't need to already know every
+  field name. Labels/definitions MUST be derived deterministically from the
+  artifact's own contents — normatively, not from a language model at request
+  time. §3.4 prohibits asserting a bundle of facts from one caller choice
+  unless each fact is independently confirmable.
+- **Decision atlas (§4, OPTIONAL)** — the artifact's full rule set as browsable
+  data, grouped by verdict.
+- **`schema/public-query-request.schema.json`**, **`schema/public-query-response.schema.json`** — new, additive schemas.
+
+---
+
 ## [NOMOS-SPEC-004 v1.4.0] — 2026-07-13
 
 Two optional, backward-compatible capabilities: composable artifacts and third-party attestations. Neither changes how a sealed artifact evaluates — composition is a pre-seal transform, attestation is a post-seal annotation.
