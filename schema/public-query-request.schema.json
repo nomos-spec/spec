@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/public-query-request.schema.json",
+  "title": "NOMOS Public Query Request",
+  "description": "Request body for POST /query (NOMOS-SPEC-005 §1) — a keyless query against a public sealed artifact. No authentication, no domain scoping.",
+  "type": "object",
+  "required": ["inputs"],
+  "additionalProperties": false,
+  "properties": {
+    "inputs": {
+      "type": "object",
+      "description": "Key-value map of decision factors. Field names SHOULD match the artifact's data contract. A conformant runtime MUST NOT reject unrecognised keys and MUST NOT default an absent field to false/0/\"\" when evaluating a condition that depends on it.",
+      "additionalProperties": true
+    },
+    "action": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Optional human-readable label for what is being asked. Recorded verbatim in the transcript. Does not affect rule evaluation."
+    }
+  },
+  "examples": [
+    {
+      "inputs": { "some_relevant_fact": true },
+      "action": "screen a new feature before launch"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/public-query-response.schema.json",
+  "title": "NOMOS Public Query Response",
+  "description": "Response body from POST /query, and from GET /queries/{query_id} (NOMOS-SPEC-005 §1-2) — the sealed, permanent transcript of a public query.",
+  "type": "object",
+  "required": [
+    "verdict",
+    "verdict_description",
+    "matched_rule_id",
+    "open_higher_priority_count",
+    "query_id",
+    "audit_hash",
+    "queried_at",
+    "latency_ms"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": ["AUTHORIZED", "DENIED", "ESCALATED"],
+      "description": "The authority's own verdict, verbatim. AUTHORIZED = permitted. DENIED = a blocking rule matched, MUST NOT proceed. ESCALATED = no rule reached a definitive outcome, or human review is explicitly required."
+    },
+    "verdict_description": {
+      "type": "string",
+      "description": "Human-readable explanation. SHOULD name the matched rule."
+    },
+    "matched_rule_id": {
+      "type": ["string", "null"],
+      "description": "The rule that decided the verdict, if any. null when a default/catch-all outcome applied."
+    },
+    "open_higher_priority_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "How many rules of strictly higher priority than the matched rule evaluated to unknown (neither definitively true nor false) given the supplied inputs, computed once at the moment of evaluation. 0 means every higher-priority rule was fully resolved. See NOMOS-SPEC-005 §1.4. Excluded from audit_hash."
+    },
+    "query_id": {
+      "type": "string",
+      "description": "Permanent, unguessable, addressable transcript identifier. A bearer capability to this specific past query."
+    },
+    "audit_hash": {
+      "type": "string",
+      "description": "Content hash over { query_id, seal_hash, inputs, verdict, queried_at } (NOMOS-SPEC-005 §2.2). Independently re-computable without calling the runtime."
+    },
+    "queried_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of evaluation."
+    },
+    "latency_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Wall-clock evaluation time in milliseconds."
+    }
+  },
+  "examples": [
+    {
+      "verdict": "DENIED",
+      "verdict_description": "Rule \"Prohibition: circumvention of international obligations\" (rule-018-2) triggered. The authority denies this action.",
+      "matched_rule_id": "rule-018-2",
+      "open_higher_priority_count": 0,
+      "query_id": "qry_d369dea8561b36133d40",
+      "audit_hash": "8c51992191da2f7b6e4a1c0d9f3e5a7b2c4d6e8f0a1b3c5d7e9f1a3b5c7d9e1f",
+      "queried_at": "2026-07-22T10:00:00.000Z",
+      "latency_ms": 42
+    }
+  ]
+}
