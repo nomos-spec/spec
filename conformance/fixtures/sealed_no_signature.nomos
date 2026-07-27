@@ -1,7 +1,7 @@
 {
   "nomos_version": "1.0.0",
   "meta": {
-    "artifact_id": "conformance_declared_v1",
+    "artifact_id": "conformance_null_signature_v1",
     "name": "Conformance Test Policy",
     "version": "1.0.0",
     "verification_tier": "compiled",
@@ -106,7 +106,7 @@
       "role": "Test Fixture",
       "timestamp": "2026-06-11T10:00:00.000Z"
     },
-    "signature": "00ea9055a14d4d12a4fe530efb1e58a45853020be187541b0eb5596573cf5fa2",
+    "signature": null,
     "signature_algorithm": "HMAC-SHA256"
   }
 }

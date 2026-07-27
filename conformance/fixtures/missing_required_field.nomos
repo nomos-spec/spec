@@ -1,25 +1,73 @@
 {
-  "artifact_id": "conformance_missing_field_v1",
-  "version": "1.0.0",
-  "spec_version": "NOMOS-SPEC-001",
-  "confidence": "DECLARED",
-  "rules": [],
-  "contradiction_report": {
-    "contradiction_count": 0,
-    "contradictions": []
+  "nomos_version": "1.0.0",
+  "meta": {
+    "artifact_id": "conformance_missing_field_v1",
+    "name": "conformance_missing_field_v1",
+    "version": "1.0.0",
+    "verification_tier": "compiled",
+    "owner": {
+      "org_name": "NOMOS Conformance Suite",
+      "org_id": "nomos-spec",
+      "contact": "conformance@nomosprotocol.com"
+    }
   },
-  "readiness": {
-    "lis": 0.9,
-    "drs": null,
-    "res": 0.1,
-    "gms": 0.5,
-    "ari": 0.65,
-    "autonomy_band": "bounded"
+  "data_contract": {
+    "inputs": {},
+    "required_fields": [],
+    "provenance": {
+      "allowed_sources": [],
+      "verification_methods": []
+    },
+    "confidence_policy": {
+      "min_confidence_for_autonomy": 0.9,
+      "min_confidence_per_field": {},
+      "on_low_confidence": "escalate"
+    }
+  },
+  "logic": {
+    "variables": {},
+    "decisions": [],
+    "resolution": {
+      "conflict_policy": "first_match",
+      "tie_breaker": "deny_wins"
+    }
+  },
+  "governance": {
+    "constraints": [],
+    "escalations": [],
+    "roles": [],
+    "compliance": {
+      "requirements": [],
+      "logging_level": "standard",
+      "retention_days": 365
+    }
+  },
+  "execution": {
+    "actions": {},
+    "connectors": []
+  },
+  "audit": {
+    "event_schema": {
+      "type": "nomos.audit.v1",
+      "fields": []
+    },
+    "emit_on": [],
+    "redaction": {
+      "pii_fields": [],
+      "strategy": "remove"
+    }
   },
   "seal": {
-    "algorithm": "HMAC-SHA256",
-    "ts": "2026-06-11T10:00:00.000Z",
+    "status": "sealed",
     "hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    "sig": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    "canonicalization": "JCS",
+    "signed_by": {
+      "name": "NOMOS Conformance Suite",
+      "org_id": "nomos-spec",
+      "role": "Test Fixture",
+      "timestamp": "2026-06-11T10:00:00.000Z"
+    },
+    "signature": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "signature_algorithm": "HMAC-SHA256"
   }
 }

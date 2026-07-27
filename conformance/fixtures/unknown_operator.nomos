@@ -1,45 +1,99 @@
 {
-  "artifact_id": "conformance_unknown_op_v1",
-  "version": "1.0.0",
-  "spec_version": "NOMOS-SPEC-001",
-  "confidence": "DECLARED",
-  "conflict_resolution": "first_match",
-  "domain": {
+  "nomos_version": "1.0.0",
+  "meta": {
+    "artifact_id": "conformance_unknown_op_v1",
     "name": "Unknown Operator Test",
-    "organization": "NOMOS Conformance Suite",
-    "effective_date": "2026-01-01"
-  },
-  "rules": [
-    {
-      "id": "rule_001",
-      "text": "Rule using an operator not defined in SPEC-001 §4.2.",
-      "condition": {
-        "op": "fuzzy_match",
-        "field": "user_status",
-        "value": "approv"
-      },
-      "action": "ALLOW",
-      "priority": 10,
-      "source": "policy",
-      "confidence": 0.5
+    "version": "1.0.0",
+    "verification_tier": "compiled",
+    "owner": {
+      "org_name": "NOMOS Conformance Suite",
+      "org_id": "nomos-spec",
+      "contact": "conformance@nomosprotocol.com"
     }
-  ],
-  "contradiction_report": {
-    "contradiction_count": 0,
-    "contradictions": []
   },
-  "readiness": {
-    "lis": 0.6,
-    "drs": null,
-    "res": 0.2,
-    "gms": 0.5,
-    "ari": 0.55,
-    "autonomy_band": "bounded"
+  "scope": {
+    "workflow": {
+      "domain": "Unknown Operator Test",
+      "workflow_name": "Unknown Operator Test",
+      "workflow_key": "conformance_unknown_op_v1",
+      "intent": "Conformance fixture"
+    },
+    "boundaries": {
+      "in_scope": [],
+      "out_of_scope": [],
+      "assumptions": []
+    }
+  },
+  "data_contract": {
+    "inputs": {},
+    "required_fields": [],
+    "provenance": {
+      "allowed_sources": [],
+      "verification_methods": []
+    },
+    "confidence_policy": {
+      "min_confidence_for_autonomy": 0.9,
+      "min_confidence_per_field": {},
+      "on_low_confidence": "escalate"
+    }
+  },
+  "logic": {
+    "variables": {},
+    "decisions": [
+      {
+        "id": "rule_001",
+        "description": "Rule using an operator not defined in SPEC-001 \u00a74.2.",
+        "when": "fuzzy_match(user_status, \"approv\")",
+        "then": [
+          {
+            "type": "allow"
+          }
+        ],
+        "else": [],
+        "priority": 10
+      }
+    ],
+    "resolution": {
+      "conflict_policy": "first_match",
+      "tie_breaker": "deny_wins"
+    }
+  },
+  "governance": {
+    "constraints": [],
+    "escalations": [],
+    "roles": [],
+    "compliance": {
+      "requirements": [],
+      "logging_level": "standard",
+      "retention_days": 365
+    }
+  },
+  "execution": {
+    "actions": {},
+    "connectors": []
+  },
+  "audit": {
+    "event_schema": {
+      "type": "nomos.audit.v1",
+      "fields": []
+    },
+    "emit_on": [],
+    "redaction": {
+      "pii_fields": [],
+      "strategy": "remove"
+    }
   },
   "seal": {
-    "algorithm": "HMAC-SHA256",
-    "ts": "2026-06-11T10:00:00.000Z",
+    "status": "sealed",
     "hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-    "sig": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    "canonicalization": "JCS",
+    "signed_by": {
+      "name": "NOMOS Conformance Suite",
+      "org_id": "nomos-spec",
+      "role": "Test Fixture",
+      "timestamp": "2026-06-11T10:00:00.000Z"
+    },
+    "signature": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "signature_algorithm": "HMAC-SHA256"
   }
 }

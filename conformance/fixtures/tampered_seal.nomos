@@ -1,45 +1,99 @@
 {
-  "artifact_id": "conformance_tampered_v1",
-  "version": "1.0.0",
-  "spec_version": "NOMOS-SPEC-001",
-  "confidence": "DECLARED",
-  "conflict_resolution": "first_match",
-  "domain": {
+  "nomos_version": "1.0.0",
+  "meta": {
+    "artifact_id": "conformance_tampered_v1",
     "name": "Tampered Seal Test",
-    "organization": "NOMOS Conformance Suite",
-    "effective_date": "2026-01-01"
-  },
-  "rules": [
-    {
-      "id": "rule_001",
-      "text": "This rule was injected after sealing.",
-      "condition": {
-        "op": "eq",
-        "field": "user_status",
-        "value": "approved"
-      },
-      "action": "ALLOW",
-      "priority": 10,
-      "source": "policy",
-      "confidence": 0.99
+    "version": "1.0.0",
+    "verification_tier": "compiled",
+    "owner": {
+      "org_name": "NOMOS Conformance Suite",
+      "org_id": "nomos-spec",
+      "contact": "conformance@nomosprotocol.com"
     }
-  ],
-  "contradiction_report": {
-    "contradiction_count": 0,
-    "contradictions": []
   },
-  "readiness": {
-    "lis": 0.95,
-    "drs": null,
-    "res": 0.05,
-    "gms": 0.6,
-    "ari": 0.72,
-    "autonomy_band": "autonomous"
+  "scope": {
+    "workflow": {
+      "domain": "Tampered Seal Test",
+      "workflow_name": "Tampered Seal Test",
+      "workflow_key": "conformance_tampered_v1",
+      "intent": "Conformance fixture"
+    },
+    "boundaries": {
+      "in_scope": [],
+      "out_of_scope": [],
+      "assumptions": []
+    }
+  },
+  "data_contract": {
+    "inputs": {},
+    "required_fields": [],
+    "provenance": {
+      "allowed_sources": [],
+      "verification_methods": []
+    },
+    "confidence_policy": {
+      "min_confidence_for_autonomy": 0.9,
+      "min_confidence_per_field": {},
+      "on_low_confidence": "escalate"
+    }
+  },
+  "logic": {
+    "variables": {},
+    "decisions": [
+      {
+        "id": "rule_001",
+        "description": "This rule was injected after sealing.",
+        "when": "user_status == \"approved\"",
+        "then": [
+          {
+            "type": "allow"
+          }
+        ],
+        "else": [],
+        "priority": 10
+      }
+    ],
+    "resolution": {
+      "conflict_policy": "first_match",
+      "tie_breaker": "deny_wins"
+    }
+  },
+  "governance": {
+    "constraints": [],
+    "escalations": [],
+    "roles": [],
+    "compliance": {
+      "requirements": [],
+      "logging_level": "standard",
+      "retention_days": 365
+    }
+  },
+  "execution": {
+    "actions": {},
+    "connectors": []
+  },
+  "audit": {
+    "event_schema": {
+      "type": "nomos.audit.v1",
+      "fields": []
+    },
+    "emit_on": [],
+    "redaction": {
+      "pii_fields": [],
+      "strategy": "remove"
+    }
   },
   "seal": {
-    "algorithm": "HMAC-SHA256",
-    "ts": "2026-06-11T10:00:00.000Z",
+    "status": "sealed",
     "hash": "0000000000000000000000000000000000000000000000000000000000000000",
-    "sig": "0000000000000000000000000000000000000000000000000000000000000000"
+    "canonicalization": "JCS",
+    "signed_by": {
+      "name": "NOMOS Conformance Suite",
+      "org_id": "nomos-spec",
+      "role": "Test Fixture",
+      "timestamp": "2026-06-11T10:00:00.000Z"
+    },
+    "signature": "0000000000000000000000000000000000000000000000000000000000000000",
+    "signature_algorithm": "HMAC-SHA256"
   }
 }

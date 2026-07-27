@@ -46,6 +46,15 @@ as editorial errata, because it changes what a conformant producer or runtime mu
   `verify.py`'s HMAC check now falls back from `seal.sig` to `seal.signature` — it previously
   only checked the legacy `sig` field name, unlike `verify.ts`/`cli/nomos.ts`, so it silently
   failed to verify any seal using the newer field name.
+- `conformance/` — all 12 test vectors and 6 fixtures converted to the corrected structure;
+  `run.ts`'s in-process evaluator rewritten around the real Nomos-Expr v1 parser instead of
+  the condition-tree walker; `schema/execution-response.schema.json` corrected (`verdict:
+  "proceed"/"escalate"/"deny"` was never real — the real `/api/v1/verify` response uses
+  `outcome: "auto_approved"/"auto_rejected"/"escalated"`, and `contradictions` is always an
+  empty array in the current implementation, not a live count). Added a new fixture,
+  `sealed_no_signature.nomos`, and test `P2-neg`, asserting that `status: "sealed"` with
+  `signature: null` is detectable as non-conformant — the exact defect this spec version
+  exists to correct, now directly covered by the conformance suite itself.
 
 ### Corrected (non-breaking, real-vs-documented gaps found during this pass)
 

@@ -1,46 +1,122 @@
 {
   "id": "v07",
   "category": "missing_context",
-  "description": "data_contract declares required fields; context is missing one — expect data_contract_violation error",
+  "description": "data_contract declares required fields; context is missing one \u2014 expect data_contract_violation error",
   "artifact": {
-    "artifact_id": "vec_v07",
-    "version": "1.0.0",
-    "spec_version": "NOMOS-SPEC-001",
-    "confidence": "DECLARED",
-    "conflict_resolution": "first_match",
-    "domain": { "name": "Vector Test v07" },
+    "nomos_version": "1.0.0",
+    "meta": {
+      "artifact_id": "vec_v07",
+      "name": "Vector Test v07",
+      "version": "1.0.0",
+      "verification_tier": "compiled",
+      "owner": {
+        "org_name": "NOMOS Conformance Suite",
+        "org_id": "nomos-spec",
+        "contact": "conformance@nomosprotocol.com"
+      }
+    },
+    "scope": {
+      "workflow": {
+        "domain": "Vector Test v07",
+        "workflow_name": "Vector Test v07",
+        "workflow_key": "vec_v07",
+        "intent": "Conformance vector"
+      },
+      "boundaries": {
+        "in_scope": [],
+        "out_of_scope": [],
+        "assumptions": []
+      }
+    },
     "data_contract": {
-      "required_fields": ["credit_score", "amount"],
+      "required_fields": [
+        "credit_score",
+        "amount"
+      ],
       "field_types": {
         "credit_score": "number",
         "amount": "number"
+      },
+      "inputs": {},
+      "provenance": {
+        "allowed_sources": [],
+        "verification_methods": []
+      },
+      "confidence_policy": {
+        "min_confidence_for_autonomy": 0.9,
+        "min_confidence_per_field": {},
+        "on_low_confidence": "escalate"
       }
     },
-    "rules": [
-      {
-        "id": "R1",
-        "text": "High credit scores are approved.",
-        "condition": { "op": "gte", "field": "credit_score", "value": 700 },
-        "action": "ALLOW",
-        "priority": 10,
-        "source": "policy",
-        "confidence": 1.0
+    "logic": {
+      "variables": {},
+      "decisions": [
+        {
+          "id": "R1",
+          "description": "High credit scores are approved.",
+          "when": "credit_score >= 700",
+          "then": [
+            {
+              "type": "allow"
+            }
+          ],
+          "else": [],
+          "priority": 10
+        }
+      ],
+      "resolution": {
+        "conflict_policy": "first_match",
+        "tie_breaker": "deny_wins"
       }
-    ],
-    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
-    "readiness": { "lis": 1.0, "drs": null, "res": 0.0, "gms": 1.0, "ari": 0.85, "autonomy_band": "autonomous" },
+    },
+    "governance": {
+      "constraints": [],
+      "escalations": [],
+      "roles": [],
+      "compliance": {
+        "requirements": [],
+        "logging_level": "standard",
+        "retention_days": 365
+      }
+    },
+    "execution": {
+      "actions": {},
+      "connectors": []
+    },
+    "audit": {
+      "event_schema": {
+        "type": "nomos.audit.v1",
+        "fields": []
+      },
+      "emit_on": [],
+      "redaction": {
+        "pii_fields": [],
+        "strategy": "remove"
+      }
+    },
     "seal": {
-      "algorithm": "HMAC-SHA256",
-      "ts": "2026-06-11T00:00:00.000Z",
+      "status": "sealed",
       "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+      "canonicalization": "JCS",
+      "signed_by": {
+        "name": "NOMOS Conformance Suite",
+        "org_id": "nomos-spec",
+        "role": "Test Fixture",
+        "timestamp": "2026-06-11T00:00:00.000Z"
+      },
+      "signature": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "signature_algorithm": "HMAC-SHA256"
     }
   },
-  "context": { "credit_score": 720 },
+  "context": {
+    "credit_score": 720
+  },
   "expected": {
     "verdict": null,
     "error": "data_contract_violation",
-    "missing_fields": ["amount"],
+    "missing_fields": [
+      "amount"
+    ],
     "note": "'amount' is declared in required_fields but absent from context. Runtime must reject before evaluation."
   }
 }

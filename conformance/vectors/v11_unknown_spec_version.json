@@ -1,28 +1,97 @@
 {
   "id": "v11",
   "category": "seal_security",
-  "description": "Artifact declares an unrecognised spec_version — runtime MUST refuse execution",
+  "description": "Artifact declares an unrecognised nomos_version \u2014 runtime MUST refuse execution",
   "artifact": {
-    "artifact_id": "vec_v11",
-    "version": "1.0.0",
-    "spec_version": "NOMOS-SPEC-999",
-    "confidence": "DECLARED",
-    "conflict_resolution": "first_match",
-    "domain": { "name": "Vector Test v11" },
-    "rules": [],
-    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
-    "readiness": { "lis": 1.0, "drs": null, "res": 0.0, "gms": 1.0, "ari": 0.85, "autonomy_band": "autonomous" },
+    "nomos_version": "999.0.0",
+    "meta": {
+      "artifact_id": "vec_v11",
+      "name": "Vector Test v11",
+      "version": "1.0.0",
+      "verification_tier": "compiled",
+      "owner": {
+        "org_name": "NOMOS Conformance Suite",
+        "org_id": "nomos-spec",
+        "contact": "conformance@nomosprotocol.com"
+      }
+    },
+    "scope": {
+      "workflow": {
+        "domain": "Vector Test v11",
+        "workflow_name": "Vector Test v11",
+        "workflow_key": "vec_v11",
+        "intent": "Conformance vector"
+      },
+      "boundaries": {
+        "in_scope": [],
+        "out_of_scope": [],
+        "assumptions": []
+      }
+    },
+    "data_contract": {
+      "inputs": {},
+      "required_fields": [],
+      "provenance": {
+        "allowed_sources": [],
+        "verification_methods": []
+      },
+      "confidence_policy": {
+        "min_confidence_for_autonomy": 0.9,
+        "min_confidence_per_field": {},
+        "on_low_confidence": "escalate"
+      }
+    },
+    "logic": {
+      "variables": {},
+      "decisions": [],
+      "resolution": {
+        "conflict_policy": "first_match",
+        "tie_breaker": "deny_wins"
+      }
+    },
+    "governance": {
+      "constraints": [],
+      "escalations": [],
+      "roles": [],
+      "compliance": {
+        "requirements": [],
+        "logging_level": "standard",
+        "retention_days": 365
+      }
+    },
+    "execution": {
+      "actions": {},
+      "connectors": []
+    },
+    "audit": {
+      "event_schema": {
+        "type": "nomos.audit.v1",
+        "fields": []
+      },
+      "emit_on": [],
+      "redaction": {
+        "pii_fields": [],
+        "strategy": "remove"
+      }
+    },
     "seal": {
-      "algorithm": "HMAC-SHA256",
-      "ts": "2026-06-11T00:00:00.000Z",
+      "status": "sealed",
       "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+      "canonicalization": "JCS",
+      "signed_by": {
+        "name": "NOMOS Conformance Suite",
+        "org_id": "nomos-spec",
+        "role": "Test Fixture",
+        "timestamp": "2026-06-11T00:00:00.000Z"
+      },
+      "signature": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "signature_algorithm": "HMAC-SHA256"
     }
   },
   "context": {},
   "expected": {
     "verdict": null,
-    "error": "spec_version_unsupported",
-    "note": "NOMOS-SPEC-999 is not a known spec version. Runtime MUST refuse per §3.3."
+    "error": "nomos_version_unsupported",
+    "note": "nomos_version 999.0.0 is not 1.0.0. Runtime MUST refuse per \u00a73.2."
   }
 }

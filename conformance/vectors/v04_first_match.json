@@ -1,44 +1,123 @@
 {
   "id": "v04",
   "category": "conflict_resolution",
-  "description": "Two rules both match; first_match mode — higher priority rule (R1) wins",
+  "description": "Two rules both match; first_match mode \u2014 higher priority rule (R1) wins",
   "artifact": {
-    "artifact_id": "vec_v04",
-    "version": "1.0.0",
-    "spec_version": "NOMOS-SPEC-001",
-    "confidence": "DECLARED",
-    "conflict_resolution": "first_match",
-    "domain": { "name": "Vector Test v04" },
-    "rules": [
-      {
-        "id": "R1",
-        "text": "High-value transactions are denied (priority 20 — evaluated first).",
-        "condition": { "op": "gt", "field": "amount", "value": 5000 },
-        "action": "DENY",
-        "priority": 20,
-        "source": "policy",
-        "confidence": 1.0
-      },
-      {
-        "id": "R2",
-        "text": "All transactions from approved users are allowed (priority 10 — evaluated second).",
-        "condition": { "op": "eq", "field": "user_status", "value": "approved" },
-        "action": "ALLOW",
-        "priority": 10,
-        "source": "policy",
-        "confidence": 1.0
+    "nomos_version": "1.0.0",
+    "meta": {
+      "artifact_id": "vec_v04",
+      "name": "Vector Test v04",
+      "version": "1.0.0",
+      "verification_tier": "compiled",
+      "owner": {
+        "org_name": "NOMOS Conformance Suite",
+        "org_id": "nomos-spec",
+        "contact": "conformance@nomosprotocol.com"
       }
-    ],
-    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
-    "readiness": { "lis": 0.9, "drs": null, "res": 0.05, "gms": 1.0, "ari": 0.80, "autonomy_band": "autonomous" },
+    },
+    "scope": {
+      "workflow": {
+        "domain": "Vector Test v04",
+        "workflow_name": "Vector Test v04",
+        "workflow_key": "vec_v04",
+        "intent": "Conformance vector"
+      },
+      "boundaries": {
+        "in_scope": [],
+        "out_of_scope": [],
+        "assumptions": []
+      }
+    },
+    "data_contract": {
+      "inputs": {},
+      "required_fields": [],
+      "provenance": {
+        "allowed_sources": [],
+        "verification_methods": []
+      },
+      "confidence_policy": {
+        "min_confidence_for_autonomy": 0.9,
+        "min_confidence_per_field": {},
+        "on_low_confidence": "escalate"
+      }
+    },
+    "logic": {
+      "variables": {},
+      "decisions": [
+        {
+          "id": "R1",
+          "description": "High-value transactions are denied (priority 20 \u2014 evaluated first).",
+          "when": "amount > 5000",
+          "then": [
+            {
+              "type": "block",
+              "reason": "High-value transactions are denied (priority 20 \u2014 evaluated first)."
+            }
+          ],
+          "else": [],
+          "priority": 20
+        },
+        {
+          "id": "R2",
+          "description": "All transactions from approved users are allowed (priority 10 \u2014 evaluated second).",
+          "when": "user_status == \"approved\"",
+          "then": [
+            {
+              "type": "allow"
+            }
+          ],
+          "else": [],
+          "priority": 10
+        }
+      ],
+      "resolution": {
+        "conflict_policy": "first_match",
+        "tie_breaker": "deny_wins"
+      }
+    },
+    "governance": {
+      "constraints": [],
+      "escalations": [],
+      "roles": [],
+      "compliance": {
+        "requirements": [],
+        "logging_level": "standard",
+        "retention_days": 365
+      }
+    },
+    "execution": {
+      "actions": {},
+      "connectors": []
+    },
+    "audit": {
+      "event_schema": {
+        "type": "nomos.audit.v1",
+        "fields": []
+      },
+      "emit_on": [],
+      "redaction": {
+        "pii_fields": [],
+        "strategy": "remove"
+      }
+    },
     "seal": {
-      "algorithm": "HMAC-SHA256",
-      "ts": "2026-06-11T00:00:00.000Z",
+      "status": "sealed",
       "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+      "canonicalization": "JCS",
+      "signed_by": {
+        "name": "NOMOS Conformance Suite",
+        "org_id": "nomos-spec",
+        "role": "Test Fixture",
+        "timestamp": "2026-06-11T00:00:00.000Z"
+      },
+      "signature": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "signature_algorithm": "HMAC-SHA256"
     }
   },
-  "context": { "amount": 8000, "user_status": "approved" },
+  "context": {
+    "amount": 8000,
+    "user_status": "approved"
+  },
   "expected": {
     "verdict": "DENY",
     "matched_rule_id": "R1",

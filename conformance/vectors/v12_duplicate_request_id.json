@@ -1,36 +1,110 @@
 {
   "id": "v12",
   "category": "seal_security",
-  "description": "Same request_id sent twice — second call must return cached verdict with cached:true and no new audit entry",
+  "description": "Same request_id sent twice \u2014 second call must return cached verdict with cached:true and no new audit entry",
   "artifact": {
-    "artifact_id": "vec_v12",
-    "version": "1.0.0",
-    "spec_version": "NOMOS-SPEC-001",
-    "confidence": "DECLARED",
-    "conflict_resolution": "first_match",
-    "domain": { "name": "Vector Test v12" },
-    "rules": [
-      {
-        "id": "R1",
-        "text": "Approved users are allowed.",
-        "condition": { "op": "eq", "field": "user_status", "value": "approved" },
-        "action": "ALLOW",
-        "priority": 10,
-        "source": "policy",
-        "confidence": 1.0
+    "nomos_version": "1.0.0",
+    "meta": {
+      "artifact_id": "vec_v12",
+      "name": "Vector Test v12",
+      "version": "1.0.0",
+      "verification_tier": "compiled",
+      "owner": {
+        "org_name": "NOMOS Conformance Suite",
+        "org_id": "nomos-spec",
+        "contact": "conformance@nomosprotocol.com"
       }
-    ],
-    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
-    "readiness": { "lis": 1.0, "drs": null, "res": 0.0, "gms": 1.0, "ari": 0.85, "autonomy_band": "autonomous" },
+    },
+    "scope": {
+      "workflow": {
+        "domain": "Vector Test v12",
+        "workflow_name": "Vector Test v12",
+        "workflow_key": "vec_v12",
+        "intent": "Conformance vector"
+      },
+      "boundaries": {
+        "in_scope": [],
+        "out_of_scope": [],
+        "assumptions": []
+      }
+    },
+    "data_contract": {
+      "inputs": {},
+      "required_fields": [],
+      "provenance": {
+        "allowed_sources": [],
+        "verification_methods": []
+      },
+      "confidence_policy": {
+        "min_confidence_for_autonomy": 0.9,
+        "min_confidence_per_field": {},
+        "on_low_confidence": "escalate"
+      }
+    },
+    "logic": {
+      "variables": {},
+      "decisions": [
+        {
+          "id": "R1",
+          "description": "Approved users are allowed.",
+          "when": "user_status == \"approved\"",
+          "then": [
+            {
+              "type": "allow"
+            }
+          ],
+          "else": [],
+          "priority": 10
+        }
+      ],
+      "resolution": {
+        "conflict_policy": "first_match",
+        "tie_breaker": "deny_wins"
+      }
+    },
+    "governance": {
+      "constraints": [],
+      "escalations": [],
+      "roles": [],
+      "compliance": {
+        "requirements": [],
+        "logging_level": "standard",
+        "retention_days": 365
+      }
+    },
+    "execution": {
+      "actions": {},
+      "connectors": []
+    },
+    "audit": {
+      "event_schema": {
+        "type": "nomos.audit.v1",
+        "fields": []
+      },
+      "emit_on": [],
+      "redaction": {
+        "pii_fields": [],
+        "strategy": "remove"
+      }
+    },
     "seal": {
-      "algorithm": "HMAC-SHA256",
-      "ts": "2026-06-11T00:00:00.000Z",
+      "status": "sealed",
       "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+      "canonicalization": "JCS",
+      "signed_by": {
+        "name": "NOMOS Conformance Suite",
+        "org_id": "nomos-spec",
+        "role": "Test Fixture",
+        "timestamp": "2026-06-11T00:00:00.000Z"
+      },
+      "signature": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "signature_algorithm": "HMAC-SHA256"
     }
   },
   "request_id": "550e8400-e29b-41d4-a716-446655440000",
-  "context": { "user_status": "approved" },
+  "context": {
+    "user_status": "approved"
+  },
   "expected": {
     "first_call": {
       "verdict": "ALLOW",
@@ -43,6 +117,6 @@
       "audit_entry_created": false
     },
     "error": null,
-    "note": "Per §6.5 the runtime MUST return cached:true on the second call and MUST NOT create a second audit trail entry."
+    "note": "Per \u00a76.5 the runtime MUST return cached:true on the second call and MUST NOT create a second audit trail entry."
   }
 }

@@ -2,36 +2,30 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nomosprotocol.com/schema/execution-response.schema.json",
   "title": "NOMOS Execution Response",
-  "description": "Response body from POST /api/v1/verify — the verdict returned after evaluating a decision context",
+  "description": "Response body from POST /api/v1/verify (§6.2) — the verdict returned after evaluating a decision context. NOMOS-SPEC-001 v2.0.0 corrected this to match the real response: v1.1.0 documented a verdict enum ('proceed'/'escalate'/'deny') and required fields ('request_id', 'ts', 'contradictions' as a count) that no real endpoint ever returned.",
   "type": "object",
   "required": [
-    "verdict",
     "allowed",
+    "outcome",
     "artifact_id",
-    "artifact_version",
-    "request_id",
-    "ts",
-    "audit_hash",
+    "artifact_name",
+    "verdict_description",
+    "audit_record",
     "contradictions"
   ],
-  "additionalProperties": false,
   "properties": {
-    "verdict": {
-      "type": "string",
-      "enum": ["proceed", "escalate", "deny"],
-      "description": "The enforcement outcome. 'proceed' = ALLOW, 'escalate' = ESCALATE, 'deny' = DENY."
-    },
     "allowed": {
       "type": "boolean",
-      "description": "True if verdict is 'proceed', false otherwise. Convenience field."
+      "description": "True only for an AUTHORIZED/auto_approved outcome."
     },
     "outcome": {
       "type": "string",
-      "description": "Optional machine-readable label describing the specific outcome (e.g. 'auto_approved', 'manual_review_required'). Derived from matched rule metadata."
+      "enum": ["auto_approved", "auto_rejected", "escalated"],
+      "description": "The real verdict vocabulary — not 'proceed'/'escalate'/'deny' as v1.1.0 claimed."
     },
-    "rule": {
+    "rule_reference": {
       "type": "string",
-      "description": "ID of the primary rule that determined the verdict."
+      "description": "ID of the primary rule that determined the outcome."
     },
     "rule_description": {
       "type": "string",
@@ -40,41 +34,32 @@
     "matched_rules": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "IDs of all rules that matched the context. May contain more than one entry in collect_and_resolve mode."
+      "description": "IDs of all rules that matched the context."
     },
     "artifact_id": {
       "type": "string",
       "description": "ID of the artifact that was evaluated."
     },
-    "artifact_version": {
+    "artifact_name": {
       "type": "string",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$",
-      "description": "Version of the artifact that was evaluated."
+      "description": "Human-readable name of the artifact that was evaluated."
     },
-    "confidence": {
+    "verdict_description": {
       "type": "string",
-      "enum": ["DECLARED", "VALIDATED", "CERTIFIED"],
-      "description": "Confidence tier of the evaluated artifact."
-    },
-    "request_id": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Echo of the request_id from the execution request."
-    },
-    "ts": {
-      "type": "string",
-      "format": "date-time",
-      "description": "ISO 8601 UTC timestamp of verdict emission."
+      "description": "Human-readable explanation of the outcome."
     },
     "audit_hash": {
       "type": "string",
-      "pattern": "^[0-9a-f]+$",
-      "description": "Hash-chain value linking this verdict to the previous verdict for this artifact. SHA-256 of (previous_audit_hash || request_id || verdict || ts)."
+      "description": "Content hash of the verdict record — see the evaluator's own audit_hash field."
+    },
+    "audit_record": {
+      "type": "string",
+      "description": "Same value as audit_hash under a second key name — a real, harmless redundancy in the reference implementation, not two independent hashes."
     },
     "contradictions": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Number of contradictions present in the evaluated artifact. Surfaced on every response per §9.1."
+      "type": "array",
+      "items": {},
+      "description": "Always an empty array in the current reference implementation — reserved for future use, not a live contradiction count as v1.1.0 claimed."
     },
     "reason": {
       "type": "string",
@@ -126,34 +111,28 @@
   },
   "examples": [
     {
-      "verdict": "proceed",
       "allowed": true,
       "outcome": "auto_approved",
-      "rule": "auto_approval_threshold",
+      "rule_reference": "rule_005",
       "rule_description": "Automatic approval when credit_score >= 720 and income_to_repayment_ratio >= 2.5",
-      "matched_rules": ["rule_005"],
       "artifact_id": "pub_lending_v1",
-      "artifact_version": "1.0.0",
-      "confidence": "DECLARED",
-      "request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-      "ts": "2026-06-11T10:00:00Z",
+      "artifact_name": "Consumer Loan Approval",
+      "verdict_description": "Rule \"rule_005\" matched. The authority permits this action.",
       "audit_hash": "a3f9c1d2e4b5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1",
-      "contradictions": 0
+      "audit_record": "a3f9c1d2e4b5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1",
+      "contradictions": []
     },
     {
-      "verdict": "escalate",
       "allowed": false,
-      "outcome": "manual_review_required",
-      "rule": "credit_threshold_not_met",
+      "outcome": "escalated",
+      "rule_reference": "rule_003",
       "rule_description": "Applications with credit_score < 720 require human officer review before approval",
-      "matched_rules": ["rule_003"],
       "artifact_id": "pub_lending_v1",
-      "artifact_version": "1.0.0",
-      "confidence": "DECLARED",
-      "request_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-      "ts": "2026-06-11T10:00:01Z",
+      "artifact_name": "Consumer Loan Approval",
+      "verdict_description": "Rule \"rule_003\" triggered. The authority requires human review before this action can proceed.",
       "audit_hash": "b7e2f4a1c3d8e5b2f9a6c3d0e7f4a1b8c5d2e9f6a3b0c7d4e1f8a5b2c9d6e3f0",
-      "contradictions": 0
+      "audit_record": "b7e2f4a1c3d8e5b2f9a6c3d0e7f4a1b8c5d2e9f6a3b0c7d4e1f8a5b2c9d6e3f0",
+      "contradictions": []
     }
   ]
 }

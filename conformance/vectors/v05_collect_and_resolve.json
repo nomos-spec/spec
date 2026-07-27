@@ -1,57 +1,129 @@
 {
   "id": "v05",
   "category": "conflict_resolution",
-  "description": "collect_and_resolve: DENY + ALLOW both match — DENY wins (DENY > ESCALATE > ALLOW)",
+  "description": "collect_and_resolve: DENY + ALLOW both match \u2014 DENY wins (DENY > ESCALATE > ALLOW)",
   "artifact": {
-    "artifact_id": "vec_v05",
-    "version": "1.0.0",
-    "spec_version": "NOMOS-SPEC-001",
-    "confidence": "DECLARED",
-    "conflict_resolution": "collect_and_resolve",
-    "domain": { "name": "Vector Test v05" },
-    "rules": [
-      {
-        "id": "R1",
-        "text": "Sanctioned regions are denied.",
-        "condition": { "op": "eq", "field": "country_code", "value": "XX" },
-        "action": "DENY",
-        "priority": 10,
-        "source": "policy",
-        "confidence": 1.0
-      },
-      {
-        "id": "R2",
-        "text": "Verified KYC customers are allowed.",
-        "condition": { "op": "eq", "field": "kyc_verified", "value": true },
-        "action": "ALLOW",
-        "priority": 10,
-        "source": "policy",
-        "confidence": 1.0
+    "nomos_version": "1.0.0",
+    "meta": {
+      "artifact_id": "vec_v05",
+      "name": "Vector Test v05",
+      "version": "1.0.0",
+      "verification_tier": "compiled",
+      "owner": {
+        "org_name": "NOMOS Conformance Suite",
+        "org_id": "nomos-spec",
+        "contact": "conformance@nomosprotocol.com"
       }
-    ],
-    "contradiction_report": {
-      "contradiction_count": 1,
-      "contradictions": [
-        {
-          "type": "rule_collision",
-          "rule_ids": ["R1", "R2"],
-          "description": "Sanctioned-country denial conflicts with KYC approval for customers in country XX who pass KYC.",
-          "severity": "high"
-        }
-      ]
     },
-    "readiness": { "lis": 0.75, "drs": null, "res": 0.2, "gms": 0.8, "ari": 0.62, "autonomy_band": "autonomous" },
+    "scope": {
+      "workflow": {
+        "domain": "Vector Test v05",
+        "workflow_name": "Vector Test v05",
+        "workflow_key": "vec_v05",
+        "intent": "Conformance vector"
+      },
+      "boundaries": {
+        "in_scope": [],
+        "out_of_scope": [],
+        "assumptions": []
+      }
+    },
+    "data_contract": {
+      "inputs": {},
+      "required_fields": [],
+      "provenance": {
+        "allowed_sources": [],
+        "verification_methods": []
+      },
+      "confidence_policy": {
+        "min_confidence_for_autonomy": 0.9,
+        "min_confidence_per_field": {},
+        "on_low_confidence": "escalate"
+      }
+    },
+    "logic": {
+      "variables": {},
+      "decisions": [
+        {
+          "id": "R1",
+          "description": "Sanctioned regions are denied.",
+          "when": "country_code == \"XX\"",
+          "then": [
+            {
+              "type": "block",
+              "reason": "Sanctioned regions are denied."
+            }
+          ],
+          "else": [],
+          "priority": 10
+        },
+        {
+          "id": "R2",
+          "description": "Verified KYC customers are allowed.",
+          "when": "kyc_verified == true",
+          "then": [
+            {
+              "type": "allow"
+            }
+          ],
+          "else": [],
+          "priority": 10
+        }
+      ],
+      "resolution": {
+        "conflict_policy": "collect_and_resolve",
+        "tie_breaker": "deny_wins"
+      }
+    },
+    "governance": {
+      "constraints": [],
+      "escalations": [],
+      "roles": [],
+      "compliance": {
+        "requirements": [],
+        "logging_level": "standard",
+        "retention_days": 365
+      }
+    },
+    "execution": {
+      "actions": {},
+      "connectors": []
+    },
+    "audit": {
+      "event_schema": {
+        "type": "nomos.audit.v1",
+        "fields": []
+      },
+      "emit_on": [],
+      "redaction": {
+        "pii_fields": [],
+        "strategy": "remove"
+      }
+    },
     "seal": {
-      "algorithm": "HMAC-SHA256",
-      "ts": "2026-06-11T00:00:00.000Z",
+      "status": "sealed",
       "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+      "canonicalization": "JCS",
+      "signed_by": {
+        "name": "NOMOS Conformance Suite",
+        "org_id": "nomos-spec",
+        "role": "Test Fixture",
+        "timestamp": "2026-06-11T00:00:00.000Z"
+      },
+      "signature": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "signature_algorithm": "HMAC-SHA256"
     }
   },
-  "context": { "country_code": "XX", "kyc_verified": true },
+  "context": {
+    "country_code": "XX",
+    "kyc_verified": true
+  },
   "expected": {
     "verdict": "DENY",
-    "matched_rule_ids": ["R1", "R2"],
+    "matched_rule_ids": [
+      "R1",
+      "R2"
+    ],
     "error": null,
     "note": "Both rules match. collect_and_resolve applies DENY > ESCALATE > ALLOW, so DENY wins."
   }

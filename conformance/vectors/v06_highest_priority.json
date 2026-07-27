@@ -1,53 +1,135 @@
 {
   "id": "v06",
   "category": "conflict_resolution",
-  "description": "highest_priority: three rules all match — only the one with the highest priority value applies",
+  "description": "highest_priority: three rules all match \u2014 only the one with the highest priority value applies",
   "artifact": {
-    "artifact_id": "vec_v06",
-    "version": "1.0.0",
-    "spec_version": "NOMOS-SPEC-001",
-    "confidence": "DECLARED",
-    "conflict_resolution": "highest_priority",
-    "domain": { "name": "Vector Test v06" },
-    "rules": [
-      {
-        "id": "R1",
-        "text": "Emergency override — always allow (priority 100).",
-        "condition": { "op": "exists", "field": "request_type" },
-        "action": "ALLOW",
-        "priority": 100,
-        "source": "policy",
-        "confidence": 1.0
-      },
-      {
-        "id": "R2",
-        "text": "Normal processing — escalate for review (priority 50).",
-        "condition": { "op": "exists", "field": "request_type" },
-        "action": "ESCALATE",
-        "priority": 50,
-        "source": "policy",
-        "confidence": 1.0
-      },
-      {
-        "id": "R3",
-        "text": "Low-priority catch-all — deny (priority 10).",
-        "condition": { "op": "exists", "field": "request_type" },
-        "action": "DENY",
-        "priority": 10,
-        "source": "policy",
-        "confidence": 1.0
+    "nomos_version": "1.0.0",
+    "meta": {
+      "artifact_id": "vec_v06",
+      "name": "Vector Test v06",
+      "version": "1.0.0",
+      "verification_tier": "compiled",
+      "owner": {
+        "org_name": "NOMOS Conformance Suite",
+        "org_id": "nomos-spec",
+        "contact": "conformance@nomosprotocol.com"
       }
-    ],
-    "contradiction_report": { "contradiction_count": 0, "contradictions": [] },
-    "readiness": { "lis": 0.8, "drs": null, "res": 0.1, "gms": 0.9, "ari": 0.75, "autonomy_band": "autonomous" },
+    },
+    "scope": {
+      "workflow": {
+        "domain": "Vector Test v06",
+        "workflow_name": "Vector Test v06",
+        "workflow_key": "vec_v06",
+        "intent": "Conformance vector"
+      },
+      "boundaries": {
+        "in_scope": [],
+        "out_of_scope": [],
+        "assumptions": []
+      }
+    },
+    "data_contract": {
+      "inputs": {},
+      "required_fields": [],
+      "provenance": {
+        "allowed_sources": [],
+        "verification_methods": []
+      },
+      "confidence_policy": {
+        "min_confidence_for_autonomy": 0.9,
+        "min_confidence_per_field": {},
+        "on_low_confidence": "escalate"
+      }
+    },
+    "logic": {
+      "variables": {},
+      "decisions": [
+        {
+          "id": "R1",
+          "description": "Emergency override \u2014 always allow (priority 100).",
+          "when": "exists(request_type)",
+          "then": [
+            {
+              "type": "allow"
+            }
+          ],
+          "else": [],
+          "priority": 100
+        },
+        {
+          "id": "R2",
+          "description": "Normal processing \u2014 escalate for review (priority 50).",
+          "when": "exists(request_type)",
+          "then": [
+            {
+              "type": "escalate",
+              "escalation_id": "R2_escalation"
+            }
+          ],
+          "else": [],
+          "priority": 50
+        },
+        {
+          "id": "R3",
+          "description": "Low-priority catch-all \u2014 deny (priority 10).",
+          "when": "exists(request_type)",
+          "then": [
+            {
+              "type": "block",
+              "reason": "Low-priority catch-all \u2014 deny (priority 10)."
+            }
+          ],
+          "else": [],
+          "priority": 10
+        }
+      ],
+      "resolution": {
+        "conflict_policy": "highest_priority",
+        "tie_breaker": "deny_wins"
+      }
+    },
+    "governance": {
+      "constraints": [],
+      "escalations": [],
+      "roles": [],
+      "compliance": {
+        "requirements": [],
+        "logging_level": "standard",
+        "retention_days": 365
+      }
+    },
+    "execution": {
+      "actions": {},
+      "connectors": []
+    },
+    "audit": {
+      "event_schema": {
+        "type": "nomos.audit.v1",
+        "fields": []
+      },
+      "emit_on": [],
+      "redaction": {
+        "pii_fields": [],
+        "strategy": "remove"
+      }
+    },
     "seal": {
-      "algorithm": "HMAC-SHA256",
-      "ts": "2026-06-11T00:00:00.000Z",
+      "status": "sealed",
       "hash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-      "sig":  "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+      "canonicalization": "JCS",
+      "signed_by": {
+        "name": "NOMOS Conformance Suite",
+        "org_id": "nomos-spec",
+        "role": "Test Fixture",
+        "timestamp": "2026-06-11T00:00:00.000Z"
+      },
+      "signature": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "signature_algorithm": "HMAC-SHA256"
     }
   },
-  "context": { "request_type": "standard" },
+  "context": {
+    "request_type": "standard"
+  },
   "expected": {
     "verdict": "ALLOW",
     "matched_rule_id": "R1",
