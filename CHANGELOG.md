@@ -7,6 +7,36 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-002 v1.2.0] — 2026-07-27 (Correction)
+
+### Why
+
+NOMOS-SPEC-001 v2.0.0 (below) removed the `spec_version` field, which §3 of
+NOMOS-SPEC-002 v1.1.0 depended on: it required producers to set
+`spec_version: "NOMOS-SPEC-002"` when `agents` was present, and required a
+NOMOS-SPEC-001-only runtime to detect that value and refuse with
+`spec_version_unsupported`. With `spec_version` gone, that detection mechanism
+had nothing left to hook into. Flagged as an explicit, unresolved gap in the
+NOMOS-SPEC-001 v2.0.0 release; resolved here now that the fix is a NOMOS-SPEC-002
+decision to make, not a NOMOS-SPEC-001 one.
+
+### Changed
+
+- **§3 Artifact Extension** — detection moved from a `spec_version` value to
+  the structural presence of a non-empty `agents` field. `agents` absent or
+  `{}` → any conformant runtime may execute directly (unchanged permissive
+  default). `agents` present and non-empty → a runtime without the
+  NOMOS-SPEC-002 guard MUST refuse and return `agents_manifest_unsupported`
+  (replacing `spec_version_unsupported`) rather than execute and silently drop
+  every constraint the artifact declares. The safety property this section
+  exists for — a runtime can't silently ignore a real `agents` manifest — is
+  unchanged; only the mechanism moved from a version string neither side still
+  emits to a field a runtime already has to inspect to know whether to run the
+  guard at all.
+- Updated `Extends: NOMOS-SPEC-001 v1.1.0` → `v2.0.0` in the header.
+
+---
+
 ## [NOMOS-SPEC-001 v2.0.0] — 2026-07-27 (Breaking correction)
 
 ### Why

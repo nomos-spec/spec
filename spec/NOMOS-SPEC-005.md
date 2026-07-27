@@ -2,10 +2,9 @@
 
 **Status:** Draft
 **Version:** 1.5.0
-**Extends:** NOMOS-SPEC-001 v1.0.0
+**Extends:** NOMOS-SPEC-001 v2.0.0
 **Published:** 2026-07-22
-**Authors:** SafeHaven LLC / NOMOS Protocol Working Group
-**spec_version string:** `"NOMOS-SPEC-005"`
+**Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
 
 ---
 

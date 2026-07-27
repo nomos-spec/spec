@@ -29,10 +29,10 @@ Skip seal verification (`insecure_no_verify` mode) for vectors that use the publ
 | v05 | conflict_resolution | `collect_and_resolve`: DENY+ALLOW → DENY wins |
 | v06 | conflict_resolution | `highest_priority`: three rules, only top priority applies |
 | v07 | missing_context | `data_contract` required field absent → `data_contract_violation` error |
-| v08 | missing_context | Unknown operator → ESCALATE with `reason: "unsupported_operator"` |
+| v08 | missing_context | Decision calls an unrecognised function (Nomos-Expr v1 has no extensible named-operator concept) → ESCALATE with `reason: "unsupported_operator"` |
 | v09 | missing_context | AND branch: only left matches → rule does NOT fire |
 | v10 | seal_security | All-zero hash/sig (tampered artifact) → `seal_verification_failed` |
-| v11 | seal_security | Unknown `spec_version` → `spec_version_unsupported` error |
+| v11 | seal_security | Unknown `nomos_version` → `nomos_version_unsupported` error |
 | v12 | seal_security | Duplicate `request_id` within dedup window → `cached: true`, no new audit entry |
 
 ---

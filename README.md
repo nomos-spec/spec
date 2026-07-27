@@ -308,7 +308,7 @@ See `spec/NOMOS-SPEC-004.md` for the full specification.
 
 ## Versioning
 
-This repository tracks the NOMOS artifact format specification. Backward-incompatible changes increment the spec version (NOMOS-SPEC-002, etc.). The `spec_version` field inside every artifact records which version it was sealed against.
+This repository tracks the NOMOS artifact format specification. Backward-incompatible changes increment the spec version (NOMOS-SPEC-002, etc.). Every artifact carries a fixed `nomos_version` (currently `"1.0.0"`) identifying the base container format (NOMOS-SPEC-001 §3.2); extensions like NOMOS-SPEC-002's `agents` manifest are detected structurally, by the presence of their own field, not by a separate per-extension version marker.
 
 | Spec | Status | Summary |
 |------|--------|---------|

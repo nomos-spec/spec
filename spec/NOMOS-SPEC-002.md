@@ -1,12 +1,11 @@
 # NOMOS-SPEC-002: Multi-Agent Governance Extension
 
 **Status:** Active  
-**Version:** 1.1.0  
-**Extends:** NOMOS-SPEC-001 v1.1.0  
+**Version:** 1.2.0  
+**Extends:** NOMOS-SPEC-001 v2.0.0  
 **Published:** 2026-06-05  
-**Updated:** 2026-06-21  
-**Authors:** SafeHaven LLC / NOMOS Protocol Working Group  
-**spec_version string:** `"NOMOS-SPEC-002"`
+**Updated:** 2026-07-27  
+**Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
 
 ---
 
@@ -133,20 +132,30 @@ optional top-level field:
 }
 ```
 
-The `spec_version` field MUST be set to `"NOMOS-SPEC-002"` when the `agents`
-field is present and non-empty. A NOMOS-SPEC-001 runtime that encounters
-`spec_version: "NOMOS-SPEC-002"` MUST refuse to execute and return a
-`spec_version_unsupported` error, per NOMOS-SPEC-001 §3.3.
+There is no separate version marker for this extension — NOMOS-SPEC-001 v2.0.0
+fixed `nomos_version` to a single protocol version (`"1.0.0"`, §3.2) shared by
+every artifact, extended or not. A runtime detects NOMOS-SPEC-002 support
+requirements structurally, by the presence of the `agents` field itself:
 
-> **Editorial note (2026-07-27):** NOMOS-SPEC-001 v2.0.0 replaced the
-> `spec_version` field entirely with a fixed `nomos_version: "1.0.0"` protocol
-> version (§3.2) — there is no longer a per-extension `spec_version` value or a
-> `spec_version_unsupported` error in the base spec for this paragraph's
-> negotiation mechanism to hook into. This is a real, currently-unresolved
-> inconsistency between the two documents, not something fixed here — whether
-> NOMOS-SPEC-002 should instead gate on the *presence* of `agents` (which is
-> already how a runtime would detect it in practice) is a decision for
-> NOMOS-SPEC-002's own maintainers, out of scope for a NOMOS-SPEC-001 correction.
+- **`agents` absent, or present and empty (`{}`):** the artifact makes no
+  agent-authority claims. Any conformant NOMOS-SPEC-001 runtime — including one
+  with no NOMOS-SPEC-002 support at all — MAY execute it directly. This is the
+  permissive default described in the Abstract.
+- **`agents` present and non-empty:** the artifact declares real per-agent
+  permissions, deny lists, and constraints that a runtime MUST enforce before
+  rule evaluation (§3–§9). A runtime that does not implement this guard MUST
+  NOT execute the artifact as if `agents` were absent — doing so would silently
+  drop every `cannot_call` restriction and constraint the artifact declares.
+  It MUST instead refuse execution and return an error such as
+  `agents_manifest_unsupported`, naming the specific gap rather than a generic
+  version mismatch.
+
+This replaces this section's earlier `spec_version: "NOMOS-SPEC-002"` /
+`spec_version_unsupported` mechanism (pre-2026-07-27), which depended on a
+field NOMOS-SPEC-001 v2.0.0 no longer has. The safety property is unchanged —
+a runtime still cannot silently ignore a real `agents` manifest — only the
+detection mechanism moved from a version string to the field's own presence,
+which a runtime needed to inspect either way to know whether to run the guard.
 
 The `agents` field, when present, MUST be included in the seal hash
 computation. See §11.

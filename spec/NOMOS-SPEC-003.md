@@ -2,10 +2,9 @@
 
 **Status:** Active  
 **Version:** 1.3.1  
-**Extends:** NOMOS-SPEC-001 v1.0.0, NOMOS-SPEC-002 v1.1.0  
+**Extends:** NOMOS-SPEC-001 v2.0.0, NOMOS-SPEC-002 v1.2.0  
 **Published:** 2026-06-24  
-**Authors:** SafeHaven LLC / NOMOS Protocol Working Group  
-**spec_version string:** `"NOMOS-SPEC-003"`
+**Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
 
 ---
 
@@ -310,12 +309,12 @@ Example:
 
 ```json
 {
-  "verdict": "proceed",
   "allowed": true,
+  "outcome": "auto_approved",
   "artifact_id": "pub_lending_v1",
-  "ts": "2026-06-24T14:00:00Z",
   "audit_hash": "a3f9c1...",
-  "contradictions": 0,
+  "audit_record": "a3f9c1...",
+  "contradictions": [],
   "staleness_advisory": {
     "triangulated_at": "2026-05-30T09:41:00Z",
     "decisions_since_triangulation": 503,
@@ -550,15 +549,13 @@ the decision.
 
 ```json
 {
-  "verdict": "proceed",
   "allowed": true,
+  "outcome": "auto_approved",
   "artifact_id": "pub_lending_v1",
-  "artifact_version": "1.0.0",
-  "confidence": "VALIDATED",
-  "request_id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
-  "ts": "2026-06-24T14:00:00Z",
+  "artifact_name": "Consumer Loan Approval",
   "audit_hash": "c9d6e3f0a7b4c1d8e5f2a9b6c3d0e7f4a1b8c5d2e9f6a3b0c7d4e1f8a5b2c9d6",
-  "contradictions": 0,
+  "audit_record": "c9d6e3f0a7b4c1d8e5f2a9b6c3d0e7f4a1b8c5d2e9f6a3b0c7d4e1f8a5b2c9d6",
+  "contradictions": [],
   "staleness_advisory": {
     "triangulated_at": "2026-05-30T09:41:00Z",
     "decisions_since_triangulation": 503,
