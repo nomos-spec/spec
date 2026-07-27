@@ -65,6 +65,16 @@ All examples use JSON. String values MUST be UTF-8 encoded. All timestamps MUST 
 
 A `.nomos` file is a UTF-8 JSON document. The top-level object MUST contain the following fields:
 
+### 3.0 File Extension and Media Type
+
+A `.nomos` artifact SHOULD be saved with the `.nomos` file extension and served with media type
+`application/vnd.nomos+json` — a vendor-specific JSON media type, the same convention `.docx` and
+similar container formats use to be both a valid, generic JSON document and an unambiguously
+identifiable artifact type. Implementations MUST NOT serve or save a sealed artifact as a bare
+`.json` file (e.g. `artifact.nomos.json`) with generic `Content-Type: application/json` — doing so
+loses the distinction between "some JSON" and "a portable governance artifact" that this
+specification exists to establish.
+
 ```json
 {
   "artifact_id":   "<string>",

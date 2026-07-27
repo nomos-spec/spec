@@ -7,6 +7,18 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-001 §3.0] — 2026-07-27 (Clarification)
+
+### Added
+
+- **File extension and media type (§3.0)** — a `.nomos` artifact SHOULD use the `.nomos`
+  extension and media type `application/vnd.nomos+json`, not a bare `.json` file with generic
+  `Content-Type: application/json`. No change to artifact structure or sealing — this
+  clarifies delivery/storage convention only, prompted by a hosted implementation that was
+  serving sealed artifacts as `artifact.nomos.json` with `application/json`.
+
+---
+
 ## [NOMOS-SPEC-005 v1.5.0] — 2026-07-22 (Draft)
 
 A new, wholly optional capability area: querying **public** artifacts without
