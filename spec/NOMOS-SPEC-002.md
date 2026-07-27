@@ -123,12 +123,12 @@ optional top-level field:
 
 ```json
 {
-  "artifact_id": "...",
-  "spec_version": "NOMOS-SPEC-002",
+  "nomos_version": "1.0.0",
+  "meta": { "artifact_id": "...", ... },
   "agents": {
     "<agent-id>": { ... }
   },
-  "rules": [ ... ],
+  "logic": { "decisions": [ ... ] },
   "seal": { ... }
 }
 ```
@@ -137,6 +137,16 @@ The `spec_version` field MUST be set to `"NOMOS-SPEC-002"` when the `agents`
 field is present and non-empty. A NOMOS-SPEC-001 runtime that encounters
 `spec_version: "NOMOS-SPEC-002"` MUST refuse to execute and return a
 `spec_version_unsupported` error, per NOMOS-SPEC-001 §3.3.
+
+> **Editorial note (2026-07-27):** NOMOS-SPEC-001 v2.0.0 replaced the
+> `spec_version` field entirely with a fixed `nomos_version: "1.0.0"` protocol
+> version (§3.2) — there is no longer a per-extension `spec_version` value or a
+> `spec_version_unsupported` error in the base spec for this paragraph's
+> negotiation mechanism to hook into. This is a real, currently-unresolved
+> inconsistency between the two documents, not something fixed here — whether
+> NOMOS-SPEC-002 should instead gate on the *presence* of `agents` (which is
+> already how a runtime would detect it in practice) is a decision for
+> NOMOS-SPEC-002's own maintainers, out of scope for a NOMOS-SPEC-001 correction.
 
 The `agents` field, when present, MUST be included in the seal hash
 computation. See §11.
@@ -544,10 +554,12 @@ any future permission additions.
 
 ```json
 {
-  "artifact_id":  "art_1c76283d-fecc-4dd6-b33e-0e3a13407933",
-  "spec_version": "NOMOS-SPEC-002",
-  "version":      "1.0.0",
-  "confidence":   "CERTIFIED",
+  "nomos_version": "1.0.0",
+  "meta": {
+    "artifact_id": "art_1c76283d-fecc-4dd6-b33e-0e3a13407933",
+    "version": "1.0.0",
+    "verification_tier": "proven"
+  },
   "agents": {
     "loan-processor": {
       "display_name": "Loan Processing Agent",
@@ -562,12 +574,14 @@ any future permission additions.
       "audit_level":  "forensic"
     }
   },
-  "rules": [ "..." ],
+  "logic": { "decisions": [ "..." ] },
   "seal": {
-    "status":    "sealed",
-    "hash":      "2aaa093c9d96f86830c3472e967c3425420ff2fff16daf34b01a077fc7f027ad",
-    "algorithm": "SHA-256",
-    "sealed_at": "2026-06-05T14:34:26.988Z"
+    "status": "sealed",
+    "hash": "2aaa093c9d96f86830c3472e967c3425420ff2fff16daf34b01a077fc7f027ad",
+    "canonicalization": "JCS",
+    "signed_by": { "name": "...", "org_id": "...", "role": "...", "timestamp": "2026-06-05T14:34:26.988Z" },
+    "signature": "...",
+    "signature_algorithm": "Ed25519"
   }
 }
 ```
@@ -585,9 +599,9 @@ In this configuration:
 
 ```json
 {
-  "artifact_id":  "art_legacy_001",
-  "spec_version": "NOMOS-SPEC-001",
-  "rules": [ "..." ],
+  "nomos_version": "1.0.0",
+  "meta": { "artifact_id": "art_legacy_001", "version": "1.0.0" },
+  "logic": { "decisions": [ "..." ] },
   "seal": { "..." }
 }
 ```

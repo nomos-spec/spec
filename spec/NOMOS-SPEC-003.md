@@ -508,11 +508,10 @@ design, since historical verdicts are not secret. However:
 ```json
 {
   "id": "legacy_threshold",
-  "text": "Approve if amount <= 50000 (pre-2026 regulatory threshold)",
-  "condition": { "op": "lte", "field": "amount", "value": 50000 },
-  "action": "ALLOW",
+  "description": "Approve if amount <= 50000 (pre-2026 regulatory threshold)",
+  "when": "amount <= 50000",
+  "then": [{ "type": "allow" }],
   "priority": 10,
-  "source": "policy",
   "valid_until": "2026-01-01T00:00:00Z"
 }
 ```
@@ -520,11 +519,10 @@ design, since historical verdicts are not secret. However:
 ```json
 {
   "id": "updated_threshold",
-  "text": "Approve if amount <= 35000 (2026 regulatory threshold)",
-  "condition": { "op": "lte", "field": "amount", "value": 35000 },
-  "action": "ALLOW",
+  "description": "Approve if amount <= 35000 (2026 regulatory threshold)",
+  "when": "amount <= 35000",
+  "then": [{ "type": "allow" }],
   "priority": 10,
-  "source": "policy",
   "valid_from": "2026-01-01T00:00:00Z"
 }
 ```
