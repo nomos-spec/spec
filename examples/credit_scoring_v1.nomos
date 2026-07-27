@@ -175,7 +175,7 @@
       {
         "id": "R5",
         "description": "Employment gaps or self-employed applicants with less than 24 months tenure require income verification.",
-        "when": "(employment_status in [\"self_employed\", \"contract\", \"part_time\", \"unemployed\"] and months_at_employer < 24)",
+        "when": "(employment_status in \"self_employed,contract,part_time,unemployed\" and months_at_employer < 24)",
         "then": [
           {
             "type": "escalate",
@@ -194,7 +194,7 @@
       {
         "id": "R6",
         "description": "Prime applicants (score ≥ 700) with stable employment and annual income above $50k are auto-approved.",
-        "when": "(credit_score >= 700 and (employment_status in [\"full_time\", \"government\", \"military\"] and annual_income_usd >= 50000))",
+        "when": "(credit_score >= 700 and (employment_status in \"full_time,government,military\" and annual_income_usd >= 50000))",
         "then": [
           {
             "type": "allow"
@@ -249,7 +249,7 @@
       {
         "id": "R5_escalation",
         "role_required": "REVIEWER",
-        "trigger": "(employment_status in [\"self_employed\", \"contract\", \"part_time\", \"unemployed\"] and months_at_employer < 24)",
+        "trigger": "(employment_status in \"self_employed,contract,part_time,unemployed\" and months_at_employer < 24)",
         "payload": {
           "show": [
             "bankruptcy_history",
@@ -306,7 +306,7 @@
   },
   "seal": {
     "status": "sealed",
-    "hash": "1200f156d4c4a7c9f82bffa03c1f0d757c5b7e17780545ca8e033d1df6b43b8d",
+    "hash": "63fe35bc276c8c39aef4c8d1843a87c9dc2513070663b819b48d8ad7bd600e5e",
     "canonicalization": "JCS",
     "signed_by": {
       "name": "NOMOS Protocol Working Group (test key)",
@@ -314,7 +314,7 @@
       "role": "Example Publisher",
       "timestamp": "2026-01-15T10:30:00.000Z"
     },
-    "signature": "25c0597c6a377e0f21b8a9cad0e8884a46c2ec9458445c6a4d7bdbf53d47a50c",
+    "signature": "7e9138f09ed4927f9fafb3f3395a180e2c43b30ce4b85b4a20ee29e535f2b291",
     "signature_algorithm": "HMAC-SHA256"
   }
 }

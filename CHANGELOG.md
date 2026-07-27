@@ -7,6 +7,44 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-001 v2.1.0] — 2026-07-27 (Further correction to §4.1)
+
+### Why
+
+Asked to re-verify the v2.0.0 correction rather than trust it. Re-ran the corrected parser
+against all 701 decisions of the same live EU AI Act artifact used to verify v2.0.0, instead
+of the 8 hand-written examples checked the first time. Two decisions failed to parse:
+`training_compute_flops > 1e+25` (scientific notation) and `annex_iii_point between "2,8"`
+(the `between` operator, entirely undocumented). Reading `server/lib/rule-evaluator.ts`'s
+actual tokenizer directly (not inferring from `docs/goals.md`'s aspirational design, which is
+what v2.0.0's §4.1 was still built on) turned up three more real gaps: `in`/`contains` never
+accepted an array literal — `[...]` is not valid syntax in this language, full stop; the only
+two real functions are `exists()` and `matches()` (regex) — `len`, `lower`, and `startsWith`,
+all confidently documented in v2.0.0, are not implemented anywhere; and there is no arithmetic
+(`+`/`-`/`*`/`/` as binary operators do not exist — only as a number's sign or a scientific
+notation exponent).
+
+### Changed (breaking)
+
+- **§4.1** rewritten against the real tokenizer: added `between "low,high"` (inclusive range)
+  and scientific-notation numbers; changed `in`/`contains`/`between` to take a single
+  comma-joined quoted string, never `[...]`; removed arithmetic entirely; restricted functions
+  to `exists(field)` and `matches(field, "regex")`, removing `len`/`lower`/`startsWith`.
+- `cli/nomos.ts` and `conformance/run.ts`'s Nomos-Expr v1 tokenizer/parser (kept in sync)
+  updated identically.
+- All 8 `examples/*.nomos`: every `field in ["a", "b"]` converted to `field in "a,b"` and
+  re-sealed (the content, and therefore the hash, changed).
+
+### Verification
+
+Re-ran the exact check that caught this — all 701 decisions of the live EU AI Act artifact
+now parse with zero errors (previously 2 failures), including live evaluation checks of
+`between` and scientific-notation comparisons against real inputs, not just successful
+parsing. Schema validation, `verify.py`/`verify.ts`/`cli/nomos.ts`, and the conformance suite
+(23/23) all re-confirmed passing after the change.
+
+---
+
 ## [NOMOS-SPEC-002 v1.2.0] — 2026-07-27 (Correction)
 
 ### Why

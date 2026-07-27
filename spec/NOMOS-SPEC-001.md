@@ -1,7 +1,7 @@
 # NOMOS-SPEC-001: Governance Artifact Protocol
 
 **Status:** Active  
-**Version:** 2.0.0  
+**Version:** 2.1.0  
 **Published:** 2026-01-15  
 **Updated:** 2026-07-27  
 **Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
@@ -17,6 +17,8 @@ The goals are reproducibility (identical inputs produce identical outputs), audi
 Sealed artifacts may be distributed and verified independently of the producing platform. The official TypeScript SDK (`@nomosprotocol/sdk`) and the NOMOS Exchange provide reference implementations of the distribution and execution layers described in this specification.
 
 **2.0.0 is a breaking correction, not an addition.** §3 and §4 of v1.1.0 described an artifact structure and condition format that did not match any artifact ever produced by a conformant implementation — an EU AI Act artifact sealed and published on the reference deployment failed validation against v1.1.0's own `schema/artifact.schema.json`. This version replaces §3 and §4 with the structure real conformant producers actually emit, verified directly against a live sealed artifact. §5 through §12 are corrected in smaller, targeted ways — most of that content was already accurate; see the CHANGELOG for the exact line-level diff. Per `DEPRECATION.md` principle 2, this is why the version increments rather than being published as editorial errata: §3/§4 changes alter what a conformant producer or runtime must accept.
+
+**2.1.0 corrects §4.1 further**, found by re-running the corrected parser against all 701 decisions of the same live artifact rather than trusting the first pass: two decisions failed to parse. The cause was real gaps carried over from v1.1.0's design, not introduced by 2.0.0 — `in`/`contains`/`between` never took an array literal (`[...]` is not valid syntax in the real language at all), `between` and scientific-notation numbers were real and undocumented, and only `exists`/`matches` are real functions (`len`/`lower`/`startsWith` are not implemented anywhere). §4.1 and the reference tooling now match `server/lib/rule-evaluator.ts` exactly, re-verified with zero parse errors across all 701 real decisions.
 
 ---
 
@@ -260,7 +262,7 @@ A runtime MUST verify `required_fields` from §3.5 before evaluating `logic.deci
 
 ### 4.1 Condition strings
 
-Each decision's `when` field (§4.2) is a **string** in a small, deterministic expression language — not a condition-tree object. Expressions MUST be pure: no network calls, no randomness, no side effects.
+Each decision's `when` field (§4.2) is a **string** in a small, deterministic expression language — not a condition-tree object. Expressions MUST be pure: no network calls, no randomness, no side effects. This section is normative against the reference implementation's actual parser (`server/lib/rule-evaluator.ts`), re-verified directly against all 701 decisions of a real, live sealed artifact — not against an idealized design that was never implemented.
 
 Supported syntax:
 
@@ -268,11 +270,20 @@ Supported syntax:
 |---|---|---|
 | Boolean | `and`, `or`, `not` | `a > 5 and b == "x"` |
 | Comparison | `==`, `!=`, `>`, `>=`, `<`, `<=` | `invoice_amount > 25000` |
-| Set membership | `in`, `contains` | `item_type in ["reference", "periodical"]` |
-| Arithmetic | `+`, `-`, `*`, `/` | `amount * 0.1 > fee_cap` |
-| Functions | `exists(x)`, `len(x)`, `lower(x)`, `startsWith(a, b)` | `exists(vendor_risk_score)` |
+| Membership | `in "v1,v2,v3"` | `item_type in "reference,periodical"` |
+| Substring | `contains` (case-insensitive) | `applicant_notes contains "flagged"` |
+| Range | `between "low,high"` (inclusive) | `annex_iii_point between "2,8"` |
+| Functions | `exists(field)`, `matches(field, "regex")` | `exists(vendor_risk_score)` |
 
 A sentinel condition `"always == true"` is used for unconditional decisions.
+
+**`in`, `contains`, and `between` all take a single quoted string on the right-hand side, not an array literal** — `[...]` is not valid syntax in this language; multiple values are comma-joined inside one string (`"MoE,US"`, `"2,8"`) and split by the runtime before comparison. `in` and `between` split and compare exactly on `,`; `contains` does not split — it tests its whole right-hand string as one case-insensitive substring.
+
+**Numbers MAY use scientific notation** (`1e+25`, `2.5E-10`) — real extracted thresholds (e.g. compute-FLOPs limits) routinely need it.
+
+**There is no arithmetic.** `+`, `-`, `*`, `/` as binary infix operators between two values are not part of this language — only `-` as a numeric literal's sign, and `+`/`-` inside a scientific-notation exponent, are recognized. A threshold requiring arithmetic (e.g. `amount * 0.1 > fee_cap`) MUST be pre-computed into a single comparable field by the producer, not expressed inline.
+
+**Only `exists` and `matches` are real functions.** `exists(field)` takes one argument and is true iff the field is present and non-null. `matches(field, "pattern")` takes two arguments and evaluates a JavaScript-flavor regular expression against the field's string value. No other function name (`len`, `lower`, `startsWith`, or anything else) is implemented — a `when` string that calls one fails to parse.
 
 A runtime MUST parse and evaluate these expressions deterministically: identical inputs against an identical `when` string MUST always produce the same boolean result. A runtime MUST NOT fail silently on an unparseable expression — it MUST return an evaluation error that the calling API surface (§6) reports to the caller.
 

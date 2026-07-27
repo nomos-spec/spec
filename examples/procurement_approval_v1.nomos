@@ -81,7 +81,7 @@
       {
         "id": "R1",
         "description": "IT security or legal categories always require VP sign-off regardless of amount.",
-        "when": "category in [\"it_security\", \"legal_services\", \"data_privacy\"]",
+        "when": "category in \"it_security,legal_services,data_privacy\"",
         "then": [
           {
             "type": "escalate",
@@ -203,7 +203,7 @@
       {
         "id": "R1_escalation",
         "role_required": "REVIEWER",
-        "trigger": "category in [\"it_security\", \"legal_services\", \"data_privacy\"]",
+        "trigger": "category in \"it_security,legal_services,data_privacy\"",
         "payload": {
           "show": [
             "category"
@@ -297,7 +297,7 @@
   },
   "seal": {
     "status": "sealed",
-    "hash": "cbd83c4283f2141e712aad6d198771aa4e7ec5eb6311e2690583561c9d8c61d2",
+    "hash": "525a6bffb18df2389ec479fe03b5d72910c72bb37a150bfc0a5ae193721db566",
     "canonicalization": "JCS",
     "signed_by": {
       "name": "NOMOS Protocol Working Group (test key)",
@@ -305,7 +305,7 @@
       "role": "Example Publisher",
       "timestamp": "2026-01-15T10:30:00.000Z"
     },
-    "signature": "be7f8d7c6d3bf200900ae81cb8611aa5e54fc2ea7e541772447fb9b41d387cc8",
+    "signature": "1aca1de415bdd8067e741839e4445ac67a5e3e69b105eed736f7d8f1e8ffa0a0",
     "signature_algorithm": "HMAC-SHA256"
   }
 }

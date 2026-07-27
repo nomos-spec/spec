@@ -192,7 +192,7 @@
       {
         "id": "triage_005",
         "description": "Patients with documented penicillin allergy must not be prescribed amoxicillin.",
-        "when": "(allergies in [\"penicillin\"] and prescribed_drug == \"amoxicillin\")",
+        "when": "(allergies in \"penicillin\" and prescribed_drug == \"amoxicillin\")",
         "then": [
           {
             "type": "block",
@@ -306,7 +306,7 @@
   },
   "seal": {
     "status": "sealed",
-    "hash": "2e4c7d686f9307386a76d343c8e8a69879d596ebf4073254ac9e2384fc121e54",
+    "hash": "c3392765d86122fc527902fc5daef24010ddf4710842cad2f6c3c8edcc238d1e",
     "canonicalization": "JCS",
     "signed_by": {
       "name": "NOMOS Protocol Working Group (test key)",
@@ -314,7 +314,7 @@
       "role": "Example Publisher",
       "timestamp": "2026-01-15T10:30:00.000Z"
     },
-    "signature": "ee90b39a9f693306ec90f26a07c0e61dbc601e5b82196de7d8de95d5f5e46331",
+    "signature": "44c54db630ada8efbd5a03a34014c71fa05357e2eff5ebbcd7f83f7191c609fe",
     "signature_algorithm": "HMAC-SHA256"
   }
 }

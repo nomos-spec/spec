@@ -92,7 +92,7 @@
       {
         "id": "R1",
         "description": "Properties in FEMA flood zone A or V require underwriter review regardless of other factors — catastrophic loss exposure.",
-        "when": "flood_zone in [\"A\", \"AE\", \"AH\", \"AO\", \"AR\", \"V\", \"VE\"]",
+        "when": "flood_zone in \"A,AE,AH,AO,AR,V,VE\"",
         "then": [
           {
             "type": "escalate",
@@ -168,7 +168,7 @@
       {
         "id": "R5",
         "description": "Mobile homes and manufactured housing are ineligible for standard property coverage.",
-        "when": "property_type in [\"mobile_home\", \"manufactured_housing\", \"modular_home\"]",
+        "when": "property_type in \"mobile_home,manufactured_housing,modular_home\"",
         "then": [
           {
             "type": "block",
@@ -187,7 +187,7 @@
       {
         "id": "R6",
         "description": "Standard residential property meeting all other criteria is approved.",
-        "when": "property_type in [\"single_family\", \"condo\", \"townhouse\", \"multi_family_2_4\"]",
+        "when": "property_type in \"single_family,condo,townhouse,multi_family_2_4\"",
         "then": [
           {
             "type": "allow"
@@ -214,7 +214,7 @@
       {
         "id": "R1_escalation",
         "role_required": "REVIEWER",
-        "trigger": "flood_zone in [\"A\", \"AE\", \"AH\", \"AO\", \"AR\", \"V\", \"VE\"]",
+        "trigger": "flood_zone in \"A,AE,AH,AO,AR,V,VE\"",
         "payload": {
           "show": [
             "flood_zone"
@@ -295,7 +295,7 @@
   },
   "seal": {
     "status": "sealed",
-    "hash": "b84e88df8a48f9e9e811dd369c96eb70ca741eed3f9905f11d71f6cfdc89013b",
+    "hash": "953beafa3f72d1d50894687dd93965b80948f940a28099330f7a4f042132aa6f",
     "canonicalization": "JCS",
     "signed_by": {
       "name": "NOMOS Protocol Working Group (test key)",
@@ -303,7 +303,7 @@
       "role": "Example Publisher",
       "timestamp": "2026-01-15T10:30:00.000Z"
     },
-    "signature": "55cf43009ae8efe825c6a224d064db6e2474ae7a3739f96114e2a6182ba6e23f",
+    "signature": "c040cb58611fa926ecdf809ec6f76eb76809e2c26aa2a8e6999b83f5f151008e",
     "signature_algorithm": "HMAC-SHA256"
   }
 }

@@ -110,7 +110,7 @@
       {
         "id": "rule_002",
         "description": "Reference materials and periodicals may not be borrowed; in-library use only.",
-        "when": "item_type in [\"reference\", \"periodical\"]",
+        "when": "item_type in \"reference,periodical\"",
         "then": [
           {
             "type": "block",
@@ -268,7 +268,7 @@
   },
   "seal": {
     "status": "sealed",
-    "hash": "adc9ed98ce6300fe3337a048d8ca94e973cbf3daa20859ade0aa9119a9acf7a7",
+    "hash": "b41761d0dd3c3bd7880c85cb1aa5f55b4ef964b4d1cd2ec32be5e78fe6b00f04",
     "canonicalization": "JCS",
     "signed_by": {
       "name": "NOMOS Protocol Working Group (test key)",
@@ -276,7 +276,7 @@
       "role": "Example Publisher",
       "timestamp": "2026-01-15T10:30:00.000Z"
     },
-    "signature": "bd0d5158989b5f249118f86a7c0062bd7f010c57caf65450ecd88158cf0587d4",
+    "signature": "a2963fdef1db8c5954dc322eeab5bfb83d1bac161b321148c13f1f9effd4cfa2",
     "signature_algorithm": "HMAC-SHA256"
   }
 }

@@ -87,7 +87,7 @@
       {
         "id": "R1",
         "description": "Content in prohibited categories is removed immediately — no appeal path.",
-        "when": "content_category in [\"csam\", \"terrorism_incitement\", \"weapons_trafficking\", \"human_trafficking\"]",
+        "when": "content_category in \"csam,terrorism_incitement,weapons_trafficking,human_trafficking\"",
         "then": [
           {
             "type": "block",
@@ -125,7 +125,7 @@
       {
         "id": "R3",
         "description": "Content flagged as potentially harmful — not in absolute prohibition list — requires human review.",
-        "when": "content_category in [\"violence_graphic\", \"hate_speech_possible\", \"self_harm_adjacent\", \"misinformation_possible\"]",
+        "when": "content_category in \"violence_graphic,hate_speech_possible,self_harm_adjacent,misinformation_possible\"",
         "then": [
           {
             "type": "escalate",
@@ -163,7 +163,7 @@
       {
         "id": "R5",
         "description": "Verified creators publishing standard content not in any sensitive category are auto-approved.",
-        "when": "(is_verified_creator == true and not (content_category in [\"csam\", \"terrorism_incitement\", \"weapons_trafficking\", \"human_trafficking\", \"violence_graphic\", \"hate_speech_possible\", \"self_harm_adjacent\", \"misinformation_possible\", \"adult_legal\"]))",
+        "when": "(is_verified_creator == true and not (content_category in \"csam,terrorism_incitement,weapons_trafficking,human_trafficking,violence_graphic,hate_speech_possible,self_harm_adjacent,misinformation_possible,adult_legal\"))",
         "then": [
           {
             "type": "allow"
@@ -221,7 +221,7 @@
       {
         "id": "R3_escalation",
         "role_required": "REVIEWER",
-        "trigger": "content_category in [\"violence_graphic\", \"hate_speech_possible\", \"self_harm_adjacent\", \"misinformation_possible\"]",
+        "trigger": "content_category in \"violence_graphic,hate_speech_possible,self_harm_adjacent,misinformation_possible\"",
         "payload": {
           "show": [
             "content_category",
@@ -289,7 +289,7 @@
   },
   "seal": {
     "status": "sealed",
-    "hash": "0889604486f39eadbcafb11583ffb7ccf1183f7f5b333b479e6f9d506694c2e2",
+    "hash": "c3ff17465877e2774c6f82e5febb5fbe6b52877ddf92304463be01f6abc1be20",
     "canonicalization": "JCS",
     "signed_by": {
       "name": "NOMOS Protocol Working Group (test key)",
@@ -297,7 +297,7 @@
       "role": "Example Publisher",
       "timestamp": "2026-01-15T10:30:00.000Z"
     },
-    "signature": "45918016156f1de98fba329d2d1393c0f3a6fdec3a96299d7a72b22383808cf6",
+    "signature": "d456fc49da7a9719a78cdab84cce480a237134d482590d124601e7e7604815a6",
     "signature_algorithm": "HMAC-SHA256"
   }
 }

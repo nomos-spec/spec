@@ -131,7 +131,7 @@
       {
         "id": "R3",
         "description": "Non-compliant devices are denied access to anything above public classification.",
-        "when": "(device_compliant == false and not (resource_classification in [\"public\", \"unclassified\"]))",
+        "when": "(device_compliant == false and not (resource_classification in \"public,unclassified\"))",
         "then": [
           {
             "type": "block",
@@ -150,7 +150,7 @@
       {
         "id": "R4",
         "description": "Confidential resources require MFA verification.",
-        "when": "(resource_classification in [\"confidential\", \"restricted\", \"top_secret\"] and mfa_verified == false)",
+        "when": "(resource_classification in \"confidential,restricted,top_secret\" and mfa_verified == false)",
         "then": [
           {
             "type": "block",
@@ -169,7 +169,7 @@
       {
         "id": "R5",
         "description": "Roles with read-only access to restricted data require manager approval for write operations.",
-        "when": "role in [\"analyst\", \"auditor\", \"external_contractor\"]",
+        "when": "role in \"analyst,auditor,external_contractor\"",
         "then": [
           {
             "type": "escalate",
@@ -188,7 +188,7 @@
       {
         "id": "R6",
         "description": "Admin and engineer roles with MFA on compliant devices are granted access.",
-        "when": "(role in [\"admin\", \"engineer\", \"senior_engineer\", \"platform_team\"] and (mfa_verified == true and device_compliant == true))",
+        "when": "(role in \"admin,engineer,senior_engineer,platform_team\" and (mfa_verified == true and device_compliant == true))",
         "then": [
           {
             "type": "allow"
@@ -227,7 +227,7 @@
       {
         "id": "R5_escalation",
         "role_required": "REVIEWER",
-        "trigger": "role in [\"analyst\", \"auditor\", \"external_contractor\"]",
+        "trigger": "role in \"analyst,auditor,external_contractor\"",
         "payload": {
           "show": [
             "role",
@@ -284,7 +284,7 @@
   },
   "seal": {
     "status": "sealed",
-    "hash": "a04c836b7e3e96c057ffb7da01767cfe24e0e9fb5ea5bae1d6da4c10a186bb77",
+    "hash": "d1c7a520794f6e50621041b1f1082ad3968b2ecffbbc294aac23fa728b84b976",
     "canonicalization": "JCS",
     "signed_by": {
       "name": "NOMOS Protocol Working Group (test key)",
@@ -292,7 +292,7 @@
       "role": "Example Publisher",
       "timestamp": "2026-01-15T10:30:00.000Z"
     },
-    "signature": "08e4a1de0bd9bce6b0187c442cb3702ae01eb4a06bfb3839dc1eaba539268582",
+    "signature": "be084b2a1d59c750a6414e6f5c9a73723e5f85b86e87b3a6d3cc862d85d1e33b",
     "signature_algorithm": "HMAC-SHA256"
   }
 }

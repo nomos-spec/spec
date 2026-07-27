@@ -106,15 +106,17 @@ function jcsCanonicalize(obj: Record<string, JsonValue>): Buffer {
 }
 
 // ─── Nomos-Expr v1 — tokenizer + recursive-descent evaluator (spec §4.1) ─────
-// Grammar (lowest to highest precedence):
+// This mirrors server/lib/rule-evaluator.ts's real tokenizeWhenString/parseWhenTokens —
+// not an idealized design. In particular: no arithmetic; in/contains/between take a single
+// quoted string (not an array literal); only exists()/matches() are real functions; numbers
+// may use scientific notation. Grammar (lowest to highest precedence):
 //   expr        := orExpr
 //   orExpr      := andExpr ( 'or' andExpr )*
 //   andExpr     := notExpr ( 'and' notExpr )*
 //   notExpr     := 'not' notExpr | comparison
-//   comparison  := arith ( ('==' | '!=' | '>=' | '<=' | '>' | '<' | 'in' | 'contains') arith )?
-//   arith       := term ( ('+' | '-') term )*
-//   term        := factor ( ('*' | '/') factor )*
-//   factor      := NUMBER | STRING | 'true' | 'false' | 'null' | array | IDENT('(' args ')')? | '(' expr ')'
+//   comparison  := primary ( ('==' | '!=' | '>=' | '<=' | '>' | '<') primary
+//                          | 'in' STRING | 'contains' STRING | 'between' STRING )?
+//   primary     := NUMBER | STRING | 'true' | 'false' | 'null' | IDENT('(' args ')')? | '(' expr ')'
 
 type Token = { type: string; value: string };
 
@@ -129,30 +131,39 @@ function tokenize(src: string): Token[] {
       const quote = c;
       let j = i + 1;
       let s = "";
-      while (j < src.length && src[j] !== quote) { s += src[j]; j++; }
+      while (j < src.length && src[j] !== quote) {
+        if (src[j] === "\\" && j + 1 < src.length) { s += src[j + 1]; j += 2; continue; }
+        s += src[j]; j++;
+      }
       tokens.push({ type: "string", value: s });
       i = j + 1;
       continue;
     }
-    if (/[0-9]/.test(c) || (c === "-" && /[0-9]/.test(src[i + 1] ?? "") && (tokens.length === 0 || ["(", ",", "[", "op"].includes(tokens[tokens.length - 1].type) === false))) {
-      let j = i;
-      let s = "";
+    if (/[0-9]/.test(c) || (c === "-" && /[0-9]/.test(src[i + 1] ?? ""))) {
+      let j = i; let s = "";
       if (src[j] === "-") { s += "-"; j++; }
       while (j < src.length && /[0-9.]/.test(src[j])) { s += src[j]; j++; }
+      // Scientific notation, e.g. 1e+25 / 2.5E-10 — real production data uses this for
+      // large numeric thresholds (FLOPs counts). Mirrors rule-evaluator.ts exactly.
+      if (j < src.length && (src[j] === "e" || src[j] === "E")) {
+        let k = j + 1; let exp = src[j];
+        if (k < src.length && (src[k] === "+" || src[k] === "-")) { exp += src[k]; k++; }
+        if (k < src.length && /[0-9]/.test(src[k])) {
+          while (k < src.length && /[0-9]/.test(src[k])) { exp += src[k]; k++; }
+          s += exp; j = k;
+        }
+      }
       tokens.push({ type: "number", value: s });
       i = j;
       continue;
     }
     const two = src.slice(i, i + 2);
     if (twoChar.includes(two)) { tokens.push({ type: "op", value: two }); i += 2; continue; }
-    if ("+-*/><(),[]".includes(c)) { tokens.push({ type: "op", value: c }); i++; continue; }
+    if ("><(),".includes(c)) { tokens.push({ type: "op", value: c }); i++; continue; }
     if (/[A-Za-z_.]/.test(c)) {
-      let j = i;
-      let s = "";
+      let j = i; let s = "";
       while (j < src.length && /[A-Za-z0-9_.]/.test(src[j])) { s += src[j]; j++; }
-      tokens.push({ type: "ident", value: s });
-      i = j;
-      continue;
+      tokens.push({ type: "ident", value: s }); i = j; continue;
     }
     throw new Error(`Nomos-Expr: unexpected character '${c}' at position ${i}`);
   }
@@ -190,11 +201,11 @@ class ExprParser {
   }
 
   private comparison(): JsonValue {
-    const left = this.arith();
+    const left = this.primary();
     const t = this.peek();
-    if (t && (t.type === "op" && ["==", "!=", ">", ">=", "<", "<="].includes(t.value))) {
+    if (t && t.type === "op" && ["==", "!=", ">", ">=", "<", "<="].includes(t.value)) {
       this.next();
-      const right = this.arith();
+      const right = this.primary();
       switch (t.value) {
         case "==": return jsEq(left, right);
         case "!=": return !jsEq(left, right);
@@ -204,43 +215,33 @@ class ExprParser {
         case "<=": return typeof left === "number" && typeof right === "number" && left <= right;
       }
     }
+    // in / contains / between all take a single comma-joined STRING on the right —
+    // never an array literal ([...] is not valid syntax in this language).
     if (this.isKeyword("in")) {
       this.next();
-      const right = this.arith();
-      return Array.isArray(right) && right.some(v => jsEq(v, left));
+      const right = this.primary();
+      if (typeof right !== "string") throw new Error("Nomos-Expr: 'in' requires a quoted string, e.g. field in \"a,b,c\"");
+      const list = right.split(",").map(s => s.trim());
+      return list.map(String).includes(String(left));
     }
     if (this.isKeyword("contains")) {
       this.next();
-      const right = this.arith();
-      return Array.isArray(left) && left.some(v => jsEq(v, right));
+      const right = this.primary();
+      if (typeof right !== "string") throw new Error("Nomos-Expr: 'contains' requires a quoted string");
+      return typeof left === "string" && left.toLowerCase().includes(right.toLowerCase());
+    }
+    if (this.isKeyword("between")) {
+      this.next();
+      const right = this.primary();
+      if (typeof right !== "string") throw new Error("Nomos-Expr: 'between' requires a quoted string, e.g. field between \"2,8\"");
+      const parts = right.split(",").map(s => parseFloat(s.trim()));
+      if (parts.length !== 2 || parts.some(isNaN) || typeof left !== "number") return false;
+      return left >= parts[0] && left <= parts[1];
     }
     return left;
   }
 
-  private arith(): JsonValue {
-    let left = this.term();
-    while (this.peek()?.type === "op" && ["+", "-"].includes(this.peek()!.value)) {
-      const op = this.next().value;
-      const right = this.term();
-      if (typeof left === "number" && typeof right === "number") left = op === "+" ? left + right : left - right;
-      else if (op === "+" && typeof left === "string") left = left + String(right);
-      else throw new Error(`Nomos-Expr: '${op}' requires numeric operands`);
-    }
-    return left;
-  }
-
-  private term(): JsonValue {
-    let left = this.factor();
-    while (this.peek()?.type === "op" && ["*", "/"].includes(this.peek()!.value)) {
-      const op = this.next().value;
-      const right = this.factor();
-      if (typeof left !== "number" || typeof right !== "number") throw new Error(`Nomos-Expr: '${op}' requires numeric operands`);
-      left = op === "*" ? left * right : left / right;
-    }
-    return left;
-  }
-
-  private factor(): JsonValue {
+  private primary(): JsonValue {
     const t = this.peek();
     if (!t) throw new Error("Nomos-Expr: unexpected end of expression");
 
@@ -252,22 +253,12 @@ class ExprParser {
       this.expectOp(")");
       return v;
     }
-    if (t.type === "op" && t.value === "[") {
-      this.next();
-      const items: JsonValue[] = [];
-      if (!(this.peek()?.type === "op" && this.peek()!.value === "]")) {
-        items.push(this.orExpr());
-        while (this.peek()?.type === "op" && this.peek()!.value === ",") { this.next(); items.push(this.orExpr()); }
-      }
-      this.expectOp("]");
-      return items;
-    }
     if (t.type === "ident") {
       this.next();
       if (t.value === "true") return true;
       if (t.value === "false") return false;
       if (t.value === "null") return null;
-      // Function call?
+      // Function call? Only exists()/matches() are real (rule-evaluator.ts parseComparison).
       if (this.peek()?.type === "op" && this.peek()!.value === "(") {
         this.next();
         const args: JsonValue[] = [];
@@ -291,11 +282,18 @@ class ExprParser {
 
   private callFunction(name: string, args: JsonValue[]): JsonValue {
     switch (name) {
-      case "exists":     return args[0] !== undefined && args[0] !== null;
-      case "len":        return Array.isArray(args[0]) || typeof args[0] === "string" ? (args[0] as string | JsonValue[]).length : 0;
-      case "lower":      return typeof args[0] === "string" ? args[0].toLowerCase() : args[0];
-      case "startsWith": return typeof args[0] === "string" && typeof args[1] === "string" && args[0].startsWith(args[1]);
-      default: throw new Error(`Nomos-Expr: unknown function '${name}'`);
+      case "exists":
+        if (args.length !== 1) throw new Error(`Nomos-Expr: 'exists' expects 1 argument, got ${args.length}`);
+        return args[0] !== undefined && args[0] !== null;
+      case "matches": {
+        if (args.length !== 2) throw new Error(`Nomos-Expr: 'matches' expects 2 arguments, got ${args.length}`);
+        const [str, pattern] = args;
+        if (typeof str !== "string" || typeof pattern !== "string") throw new Error("Nomos-Expr: 'matches' requires string arguments");
+        return new RegExp(pattern).test(str);
+      }
+      // Nothing else is real — no len/lower/startsWith. A rule calling one fails to parse,
+      // exactly as it would against the real evaluator (fail closed, don't guess).
+      default: throw new Error(`Nomos-Expr: unknown function '${name}' — unsupported operator`);
     }
   }
 }
