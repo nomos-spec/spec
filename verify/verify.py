@@ -91,17 +91,21 @@ def verify_artifact(artifact_path: str, seal_key: Optional[bytes], pubkey_pem: O
         artifact = json.load(f)
 
     seal = artifact.get("seal") or {}
+    meta = artifact.get("meta") or {}
     alg = seal.get("signature_algorithm") or seal.get("algorithm") or ""
     print(f"\nVerifying: {artifact_path}")
-    print(f"  artifact_id : {artifact.get('artifact_id')}")
-    print(f"  version     : {artifact.get('version')}")
+    print(f"  artifact_id : {meta.get('artifact_id')}")
+    print(f"  version     : {meta.get('version')}")
     print(f"  algorithm   : {alg}    kid={seal.get('kid', '—')}")
 
     if not seal or seal.get("status") == "draft":
         _fail("Artifact is not sealed")
 
     # --- 1. Integrity: recompute the canonical payload hash (offline, no key) ---
-    payload = {k: v for k, v in artifact.items() if k != "seal"}
+    # Excludes both `seal` (can't cover itself) and `attestations` (NOMOS-SPEC-004 —
+    # added after sealing by third parties; including them would break every seal
+    # the moment an attestation is added or revoked). See spec §8.2.
+    payload = {k: v for k, v in artifact.items() if k not in ("seal", "attestations")}
     computed_hash = hashlib.sha256(jcs_canonicalize(payload)).hexdigest()
     stored_hash = seal.get("hash", "")
     if computed_hash != stored_hash:
@@ -116,11 +120,11 @@ def verify_artifact(artifact_path: str, seal_key: Optional[bytes], pubkey_pem: O
     else:
         _fail(f"Unsupported seal algorithm: {alg!r}")
 
-    # --- 3. Advisory: contradictions + readiness ---
-    count = artifact.get("contradiction_report", {}).get("contradiction_count", 0)
-    print(f"  [WARN] {count} contradiction(s) at seal time." if count else "  [OK] No contradictions.")
-    r = artifact.get("readiness", {})
-    print(f"  [OK] Readiness: ARI={r.get('ari', 'N/A')}  band={r.get('autonomy_band', 'N/A')}")
+    # --- 3. Advisory: verification tier + conflicts at seal time ---
+    print(f"  [OK] Verification tier: {meta.get('verification_tier', 'N/A')}")
+    review = (artifact.get("provenance") or {}).get("review_summary") or {}
+    pending = review.get("pending_at_seal", 0)
+    print(f"  [WARN] {pending} unresolved conflict(s) at seal time." if pending else "  [OK] No unresolved conflicts recorded at seal time.")
 
     print("\nResult: VALID\n")
 
@@ -154,7 +158,8 @@ def _verify_hmac(seal: dict, computed_hash: str, seal_key: Optional[bytes]) -> N
         print("         Pass --key to verify, or re-seal with an Ed25519 key for public verifiability.")
         return
     computed_sig = hmac.new(seal_key, computed_hash.encode("ascii"), hashlib.sha256).hexdigest()
-    if not hmac.compare_digest(computed_sig, seal.get("sig", "")):
+    stored_sig = seal.get("sig") or seal.get("signature") or ""
+    if not hmac.compare_digest(computed_sig, stored_sig):
         _fail("HMAC signature mismatch — wrong key or tampered hash field.")
     print("  [OK] HMAC signature verified (symmetric — required the shared secret).")
 

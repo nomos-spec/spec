@@ -1,192 +1,298 @@
 {
-  "artifact_id": "access_control_v1",
-  "version": "1.0.0",
-  "spec_version": "NOMOS-SPEC-001",
-  "confidence": "DECLARED",
-  "conflict_resolution": "highest_priority",
-  "domain": {
+  "nomos_version": "1.0.0",
+  "meta": {
+    "artifact_id": "access_control_v1",
     "name": "Zero-Trust Access Control",
-    "organization": "Example Enterprise IT",
-    "effective_date": "2026-01-01",
-    "jurisdiction": "generic",
-    "tags": ["iam", "access-control", "zero-trust", "security"]
+    "version": "1.0.0",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "owner": {
+      "org_name": "Example Enterprise IT",
+      "org_id": "example-enterprise-it",
+      "contact": "governance@example.com"
+    },
+    "tags": [
+      "iam",
+      "access-control",
+      "zero-trust",
+      "security"
+    ],
+    "description": "Illustrative example artifact for NOMOS-SPEC-001 — Zero-Trust Access Control",
+    "industry": "iam",
+    "jurisdictions": [
+      "generic"
+    ],
+    "verification_tier": "compiled"
+  },
+  "scope": {
+    "workflow": {
+      "domain": "Zero-Trust Access Control",
+      "workflow_name": "Zero-Trust Access Control",
+      "workflow_key": "access_control_v1",
+      "intent": "Illustrative decision logic for Zero-Trust Access Control"
+    },
+    "boundaries": {
+      "in_scope": [
+        "Zero-Trust Access Control"
+      ],
+      "out_of_scope": [],
+      "assumptions": []
+    }
   },
   "data_contract": {
-    "required_fields": ["role", "resource_classification", "network_zone", "mfa_verified", "device_compliant"],
-    "field_types": {
-      "role": "string",
-      "resource_classification": "string",
-      "network_zone": "string",
-      "mfa_verified": "boolean",
-      "device_compliant": "boolean"
+    "inputs": {
+      "role": {
+        "type": "string",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "resource_classification": {
+        "type": "string",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "network_zone": {
+        "type": "string",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "device_compliant": {
+        "type": "boolean",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "mfa_verified": {
+        "type": "boolean",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      }
+    },
+    "required_fields": [
+      "role",
+      "resource_classification",
+      "network_zone",
+      "device_compliant",
+      "mfa_verified"
+    ],
+    "provenance": {
+      "allowed_sources": [
+        "example"
+      ],
+      "verification_methods": [
+        "none"
+      ]
+    },
+    "confidence_policy": {
+      "min_confidence_for_autonomy": 0.9,
+      "min_confidence_per_field": {},
+      "on_low_confidence": "escalate"
     }
   },
-  "rules": [
-    {
-      "id": "R1",
-      "text": "Emergency break-glass access by security-ops is always escalated for live audit — even to restricted resources.",
-      "condition": {
-        "op": "eq",
-        "field": "role",
-        "value": "security_ops_breakglass"
-      },
-      "action": "ESCALATE",
-      "priority": 200,
-      "source": "policy",
-      "confidence": 1.0,
-      "metadata": {
-        "section": "7.1 Break-Glass Procedure",
-        "page": 24,
-        "tags": ["break-glass", "emergency", "audit"]
-      }
-    },
-    {
-      "id": "R2",
-      "text": "Access to top-secret resources is denied from outside the corporate network regardless of role.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "eq",
-          "field": "resource_classification",
-          "value": "top_secret"
-        },
-        "right": {
-          "op": "neq",
-          "field": "network_zone",
-          "value": "corporate_lan"
-        }
-      },
-      "action": "DENY",
-      "priority": 150,
-      "source": "policy",
-      "confidence": 0.99,
-      "metadata": {
-        "section": "4.2 Network Zone Restrictions",
-        "page": 14,
-        "tags": ["top-secret", "network", "denial"]
-      }
-    },
-    {
-      "id": "R3",
-      "text": "Non-compliant devices are denied access to anything above public classification.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "eq",
-          "field": "device_compliant",
-          "value": false
-        },
-        "right": {
-          "op": "nin",
-          "field": "resource_classification",
-          "value": ["public", "unclassified"]
-        }
-      },
-      "action": "DENY",
-      "priority": 140,
-      "source": "policy",
-      "confidence": 0.97,
-      "metadata": {
-        "section": "3.1 Device Compliance",
-        "page": 9,
-        "tags": ["device", "compliance", "denial"]
-      }
-    },
-    {
-      "id": "R4",
-      "text": "Confidential resources require MFA verification.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "in",
-          "field": "resource_classification",
-          "value": ["confidential", "restricted", "top_secret"]
-        },
-        "right": {
-          "op": "eq",
-          "field": "mfa_verified",
-          "value": false
-        }
-      },
-      "action": "DENY",
-      "priority": 130,
-      "source": "policy",
-      "confidence": 0.99,
-      "metadata": {
-        "section": "2.3 MFA Requirements",
-        "page": 7,
-        "tags": ["mfa", "confidential"]
-      }
-    },
-    {
-      "id": "R5",
-      "text": "Roles with read-only access to restricted data require manager approval for write operations.",
-      "condition": {
-        "op": "in",
-        "field": "role",
-        "value": ["analyst", "auditor", "external_contractor"]
-      },
-      "action": "ESCALATE",
-      "priority": 80,
-      "source": "policy",
-      "confidence": 0.92,
-      "metadata": {
-        "section": "5.3 Role-Based Escalation",
-        "page": 18,
-        "tags": ["rbac", "escalation"]
-      }
-    },
-    {
-      "id": "R6",
-      "text": "Admin and engineer roles with MFA on compliant devices are granted access.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "in",
-          "field": "role",
-          "value": ["admin", "engineer", "senior_engineer", "platform_team"]
-        },
-        "right": {
-          "op": "and",
-          "left": {
-            "op": "eq",
-            "field": "mfa_verified",
-            "value": true
-          },
-          "right": {
-            "op": "eq",
-            "field": "device_compliant",
-            "value": true
+  "logic": {
+    "variables": {},
+    "decisions": [
+      {
+        "id": "R1",
+        "description": "Emergency break-glass access by security-ops is always escalated for live audit — even to restricted resources.",
+        "when": "role == \"security_ops_breakglass\"",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "R1_escalation"
           }
+        ],
+        "else": [],
+        "priority": 200,
+        "provenance": {
+          "source_id": "access_control_v1",
+          "source_name": "Zero-Trust Access Control",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
         }
       },
-      "action": "ALLOW",
-      "priority": 50,
-      "source": "policy",
-      "confidence": 0.96,
-      "metadata": {
-        "section": "5.1 Standard Access",
-        "page": 16,
-        "tags": ["rbac", "allow"]
+      {
+        "id": "R2",
+        "description": "Access to top-secret resources is denied from outside the corporate network regardless of role.",
+        "when": "(resource_classification == \"top_secret\" and network_zone != \"corporate_lan\")",
+        "then": [
+          {
+            "type": "block",
+            "reason": "Access to top-secret resources is denied from outside the corporate network regardless of role."
+          }
+        ],
+        "else": [],
+        "priority": 150,
+        "provenance": {
+          "source_id": "access_control_v1",
+          "source_name": "Zero-Trust Access Control",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "R3",
+        "description": "Non-compliant devices are denied access to anything above public classification.",
+        "when": "(device_compliant == false and not (resource_classification in [\"public\", \"unclassified\"]))",
+        "then": [
+          {
+            "type": "block",
+            "reason": "Non-compliant devices are denied access to anything above public classification."
+          }
+        ],
+        "else": [],
+        "priority": 140,
+        "provenance": {
+          "source_id": "access_control_v1",
+          "source_name": "Zero-Trust Access Control",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "R4",
+        "description": "Confidential resources require MFA verification.",
+        "when": "(resource_classification in [\"confidential\", \"restricted\", \"top_secret\"] and mfa_verified == false)",
+        "then": [
+          {
+            "type": "block",
+            "reason": "Confidential resources require MFA verification."
+          }
+        ],
+        "else": [],
+        "priority": 130,
+        "provenance": {
+          "source_id": "access_control_v1",
+          "source_name": "Zero-Trust Access Control",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "R5",
+        "description": "Roles with read-only access to restricted data require manager approval for write operations.",
+        "when": "role in [\"analyst\", \"auditor\", \"external_contractor\"]",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "R5_escalation"
+          }
+        ],
+        "else": [],
+        "priority": 80,
+        "provenance": {
+          "source_id": "access_control_v1",
+          "source_name": "Zero-Trust Access Control",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "R6",
+        "description": "Admin and engineer roles with MFA on compliant devices are granted access.",
+        "when": "(role in [\"admin\", \"engineer\", \"senior_engineer\", \"platform_team\"] and (mfa_verified == true and device_compliant == true))",
+        "then": [
+          {
+            "type": "allow"
+          }
+        ],
+        "else": [],
+        "priority": 50,
+        "provenance": {
+          "source_id": "access_control_v1",
+          "source_name": "Zero-Trust Access Control",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
       }
+    ],
+    "resolution": {
+      "conflict_policy": "collect_and_resolve",
+      "tie_breaker": "deny_wins"
     }
-  ],
-  "contradiction_report": {
-    "contradiction_count": 0,
-    "contradictions": []
   },
-  "readiness": {
-    "lis": 0.91,
-    "drs": null,
-    "res": 0.35,
-    "gms": 0.82,
-    "ari": 0.70,
-    "autonomy_band": "autonomous"
+  "governance": {
+    "constraints": [],
+    "escalations": [
+      {
+        "id": "R1_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "role == \"security_ops_breakglass\"",
+        "payload": {
+          "show": [
+            "role"
+          ],
+          "question": "Emergency break-glass access by security-ops is always escalated for live audit — even to restricted resources."
+        },
+        "sla_minutes": 1440
+      },
+      {
+        "id": "R5_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "role in [\"analyst\", \"auditor\", \"external_contractor\"]",
+        "payload": {
+          "show": [
+            "role",
+            "resource_classification",
+            "network_zone",
+            "device_compliant",
+            "mfa_verified"
+          ],
+          "question": "Roles with read-only access to restricted data require manager approval for write operations."
+        },
+        "sla_minutes": 1440
+      }
+    ],
+    "roles": [
+      {
+        "role_id": "REVIEWER",
+        "name": "Reviewer",
+        "authority_scope": [
+          "approve_escalation"
+        ]
+      }
+    ],
+    "compliance": {
+      "requirements": [],
+      "logging_level": "standard",
+      "retention_days": 365
+    }
+  },
+  "execution": {
+    "actions": {},
+    "connectors": []
+  },
+  "audit": {
+    "event_schema": {
+      "type": "nomos.audit.v1",
+      "fields": [
+        "artifact_id",
+        "decision_trace",
+        "constraint_trace",
+        "actions"
+      ]
+    },
+    "emit_on": [
+      "decision",
+      "constraint_violation",
+      "action",
+      "escalation",
+      "completion"
+    ],
+    "redaction": {
+      "pii_fields": [],
+      "strategy": "remove"
+    }
   },
   "seal": {
-    "algorithm": "HMAC-SHA256",
-    "ts": "2026-06-11T10:00:00.000Z",
-    "hash": "414498125bbd6710c1d79188bfd99e12ba1925b25dd34c93acba69262abb004f",
-    "sig":  "414498125bbd6710c1d79188bfd99e12ba1925b25dd34c93acba69262abb004f"
+    "status": "sealed",
+    "hash": "a04c836b7e3e96c057ffb7da01767cfe24e0e9fb5ea5bae1d6da4c10a186bb77",
+    "canonicalization": "JCS",
+    "signed_by": {
+      "name": "NOMOS Protocol Working Group (test key)",
+      "org_id": "nomos-spec",
+      "role": "Example Publisher",
+      "timestamp": "2026-01-15T10:30:00.000Z"
+    },
+    "signature": "08e4a1de0bd9bce6b0187c442cb3702ae01eb4a06bfb3839dc1eaba539268582",
+    "signature_algorithm": "HMAC-SHA256"
   }
 }

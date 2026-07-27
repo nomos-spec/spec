@@ -2,163 +2,257 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nomosprotocol.com/schema/artifact.schema.json",
   "title": "NOMOS Artifact",
-  "description": "A sealed .nomos governance artifact conforming to NOMOS-SPEC-001",
+  "description": "A sealed .nomos governance artifact conforming to NOMOS-SPEC-001 v2.0.0",
   "type": "object",
   "required": [
-    "artifact_id",
-    "version",
-    "spec_version",
-    "confidence",
-    "domain",
-    "rules",
-    "contradiction_report",
-    "readiness",
+    "nomos_version",
+    "meta",
+    "scope",
+    "data_contract",
+    "logic",
+    "governance",
+    "execution",
+    "audit",
     "seal"
   ],
-  "additionalProperties": false,
   "properties": {
-    "artifact_id": {
+    "nomos_version": {
       "type": "string",
-      "pattern": "^[a-z0-9_-]{1,128}$",
-      "description": "URL-safe identifier, unique within an organisation"
+      "const": "1.0.0"
     },
-    "version": {
-      "type": "string",
-      "pattern": "^\\d+\\.\\d+\\.\\d+$",
-      "description": "Semantic version (MAJOR.MINOR.PATCH)"
-    },
-    "spec_version": {
-      "type": "string",
-      "enum": ["NOMOS-SPEC-001", "NOMOS-SPEC-002", "NOMOS-SPEC-003", "NOMOS-SPEC-004"],
-      "description": "Protocol specification version this artifact conforms to"
-    },
-    "confidence": {
-      "type": "string",
-      "enum": ["DECLARED", "VALIDATED", "CERTIFIED"],
-      "description": "DECLARED = policy-only; VALIDATED = confirmed against behavioral data, contradiction detection passed; CERTIFIED = full triangulation and gap analysis passed"
-    },
-    "conflict_resolution": {
-      "type": "string",
-      "enum": ["first_match", "collect_and_resolve", "highest_priority"],
-      "default": "first_match",
-      "description": "How conflicting matching rules are resolved during execution"
-    },
-    "domain": {
+    "meta": {
       "type": "object",
-      "required": ["name"],
-      "additionalProperties": false,
+      "required": ["artifact_id", "version", "owner"],
       "properties": {
+        "artifact_id": { "type": "string" },
         "name": { "type": "string" },
-        "organization": { "type": "string" },
-        "effective_date": { "type": "string", "format": "date" },
-        "jurisdiction": { "type": "string" },
-        "tags": {
-          "type": "array",
-          "items": { "type": "string" }
-        }
-      }
-    },
-    "rules": {
-      "type": "array",
-      "items": { "$ref": "rule.schema.json" },
-      "description": "Ordered array of governance rules"
-    },
-    "contradiction_report": {
-      "type": "object",
-      "required": ["contradiction_count", "contradictions"],
-      "additionalProperties": false,
-      "properties": {
-        "contradiction_count": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "contradictions": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["type", "rule_ids", "description", "severity"],
-            "additionalProperties": false,
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": [
-                  "threshold_conflict",
-                  "role_conflict",
-                  "ghost_term",
-                  "rule_collision",
-                  "layer_divergence"
-                ]
-              },
-              "rule_ids": {
-                "type": "array",
-                "items": { "type": "string" }
-              },
-              "description": { "type": "string" },
-              "severity": {
-                "type": "string",
-                "enum": ["low", "medium", "high"]
-              }
-            }
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "owner": {
+          "type": "object",
+          "required": ["org_id", "contact"],
+          "properties": {
+            "org_name": { "type": "string" },
+            "org_id": { "type": "string" },
+            "contact": { "type": "string" }
           }
+        },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "description": { "type": "string" },
+        "industry": { "type": "string" },
+        "jurisdictions": { "type": "array", "items": { "type": "string" } },
+        "verification_tier": {
+          "type": "string",
+          "enum": ["compiled", "proven", "sovereign"],
+          "description": "Sealed-artifact tier (§5.1) — distinct from the DECLARED/VALIDATED/CERTIFIED confidence_band used by un-sealed public demo artifacts (§5.2)."
         }
       }
     },
-    "readiness": {
+    "scope": {
       "type": "object",
-      "required": ["lis", "res", "gms", "ari", "autonomy_band"],
-      "additionalProperties": false,
+      "required": ["workflow", "boundaries"],
       "properties": {
-        "lis": { "type": "number", "minimum": 0, "maximum": 1 },
-        "drs": {
-          "oneOf": [
-            { "type": "number", "minimum": 0, "maximum": 1 },
-            { "type": "null" }
-          ],
-          "description": "null for DECLARED artifacts; float for VALIDATED and CERTIFIED"
+        "workflow": {
+          "type": "object",
+          "properties": {
+            "domain": { "type": "string" },
+            "workflow_name": { "type": "string" },
+            "workflow_key": { "type": "string" },
+            "intent": { "type": "string" }
+          }
         },
-        "res": { "type": "number", "minimum": 0, "maximum": 1 },
-        "gms": { "type": "number", "minimum": 0, "maximum": 1 },
-        "ari": { "type": "number", "minimum": 0, "maximum": 1 },
-        "autonomy_band": {
-          "type": "string",
-          "enum": ["autonomous", "bounded", "human_governed"]
+        "boundaries": {
+          "type": "object",
+          "properties": {
+            "in_scope": { "type": "array", "items": { "type": "string" } },
+            "out_of_scope": { "type": "array", "items": { "type": "string" } },
+            "assumptions": { "type": "array", "items": { "type": "string" } }
+          }
         }
       }
     },
     "data_contract": {
       "type": "object",
-      "description": "Declares the minimum context fields required for evaluation (§3.9). Absence of any required_field triggers a data_contract_violation error.",
-      "additionalProperties": false,
+      "required": ["inputs", "required_fields"],
       "properties": {
-        "required_fields": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "Context field paths that MUST be present in every execution request"
-        },
-        "field_types": {
+        "inputs": {
           "type": "object",
           "additionalProperties": {
-            "type": "string",
-            "enum": ["string", "number", "boolean", "array", "object"]
-          },
-          "description": "Optional type hints per field — informational only; runtimes MUST NOT coerce values"
+            "type": "object",
+            "required": ["type", "required"],
+            "properties": {
+              "type": { "type": "string", "enum": ["string", "number", "integer", "boolean", "date", "datetime", "enum", "object", "array"] },
+              "description": { "type": "string" },
+              "required": { "type": "boolean" },
+              "enum": { "type": "array" },
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "source": { "type": "string" },
+              "verified": { "type": "boolean" }
+            }
+          }
+        },
+        "required_fields": { "type": "array", "items": { "type": "string" } },
+        "provenance": {
+          "type": "object",
+          "properties": {
+            "allowed_sources": { "type": "array", "items": { "type": "string" } },
+            "verification_methods": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "confidence_policy": {
+          "type": "object",
+          "properties": {
+            "min_confidence_for_autonomy": { "type": "number", "minimum": 0, "maximum": 1 },
+            "min_confidence_per_field": { "type": "object" },
+            "on_low_confidence": { "type": "string", "enum": ["block", "escalate", "defer"] }
+          }
+        }
+      }
+    },
+    "logic": {
+      "type": "object",
+      "required": ["decisions", "resolution"],
+      "properties": {
+        "variables": { "type": "object" },
+        "decisions": {
+          "type": "array",
+          "items": { "$ref": "rule.schema.json" }
+        },
+        "resolution": {
+          "type": "object",
+          "required": ["conflict_policy", "tie_breaker"],
+          "properties": {
+            "conflict_policy": { "type": "string", "enum": ["first_match", "highest_priority", "collect_and_resolve"] },
+            "tie_breaker": { "type": "string", "enum": ["deny_wins", "allow_wins", "escalate_wins"] }
+          }
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "required": ["constraints", "escalations", "roles", "compliance"],
+      "properties": {
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "type", "rule", "on_violation", "message"],
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "type": "string", "enum": ["budget", "privacy", "compliance", "risk", "data", "timing", "custom"] },
+              "rule": { "type": "string" },
+              "on_violation": { "type": "string", "enum": ["block", "escalate"] },
+              "message": { "type": "string" }
+            }
+          }
+        },
+        "escalations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "role_required", "trigger"],
+            "properties": {
+              "id": { "type": "string" },
+              "role_required": { "type": "string" },
+              "trigger": { "type": "string" },
+              "payload": { "type": "object" },
+              "sla_minutes": { "oneOf": [{ "type": "integer" }, { "type": "null" }] }
+            }
+          }
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["role_id", "name", "authority_scope"],
+            "properties": {
+              "role_id": { "type": "string" },
+              "name": { "type": "string" },
+              "authority_scope": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "compliance": {
+          "type": "object",
+          "properties": {
+            "requirements": { "type": "array", "items": { "type": "string" } },
+            "logging_level": { "type": "string", "enum": ["minimal", "standard", "forensic"] },
+            "retention_days": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "required": ["actions", "connectors"],
+      "properties": {
+        "actions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["type", "connector"],
+            "properties": {
+              "type": { "type": "string", "enum": ["api_call", "message", "record_write", "task_create", "webhook"] },
+              "connector": { "type": "string" },
+              "request": { "type": "object" },
+              "idempotency": {
+                "type": "object",
+                "properties": {
+                  "key": { "type": "string" },
+                  "strategy": { "type": "string", "enum": ["reject_duplicates", "safe_retry"] }
+                }
+              }
+            }
+          }
+        },
+        "connectors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "endpoint"],
+            "properties": {
+              "id": { "type": "string" },
+              "kind": { "type": "string", "enum": ["http", "queue", "database", "service"] },
+              "endpoint": { "type": "string" },
+              "auth": { "type": "object", "description": "MUST reference an external secret store — MUST NOT contain plaintext secrets" }
+            }
+          }
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "required": ["event_schema", "emit_on", "redaction"],
+      "properties": {
+        "event_schema": { "type": "object" },
+        "emit_on": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["decision", "constraint_violation", "action", "escalation", "completion"] }
+        },
+        "redaction": {
+          "type": "object",
+          "properties": {
+            "pii_fields": { "type": "array", "items": { "type": "string" } },
+            "strategy": { "type": "string", "enum": ["hash", "mask", "remove"] },
+            "hash_salt_ref": { "type": "string" }
+          }
         }
       }
     },
     "seal": {
       "type": "object",
-      "description": "The cryptographic seal (§8). Ed25519 (asymmetric) is RECOMMENDED and publicly verifiable; HMAC-SHA256 (symmetric) is legacy and not third-party verifiable.",
-      "oneOf": [
-        {
-          "title": "Asymmetric seal (RECOMMENDED, publicly verifiable)",
-          "required": ["signature_algorithm", "hash", "signed_by", "signature"],
-          "properties": {
-            "status": { "type": "string", "const": "sealed" },
-            "canonicalization": { "type": "string", "const": "JCS" },
-            "signature_algorithm": { "type": "string", "enum": ["Ed25519", "RS256", "ES256"] },
-            "kid": { "type": "string", "description": "Key id of the signing key; selects the public key at /.well-known/nomos-signing-keys" },
-            "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Lowercase hex SHA-256 of the canonical payload (excluding seal)" },
-            "signed_by": {
+      "description": "The cryptographic seal (§8). Ed25519 (asymmetric) is RECOMMENDED and publicly verifiable; HMAC-SHA256 (symmetric) is dev-fallback only and not third-party verifiable. status: 'sealed' with signature: null is NON-CONFORMANT (§3.10) — a hash-only artifact that never invoked the signing step.",
+      "required": ["status", "hash", "canonicalization"],
+      "properties": {
+        "status": { "type": "string", "enum": ["draft", "sealed"] },
+        "hash": { "oneOf": [{ "type": "string", "pattern": "^[0-9a-f]{64}$" }, { "type": "null" }] },
+        "canonicalization": { "type": "string", "const": "JCS" },
+        "signature_algorithm": { "type": "string", "enum": ["Ed25519", "RS256", "HMAC-SHA256"] },
+        "kid": { "type": "string" },
+        "signed_by": {
+          "oneOf": [
+            {
               "type": "object",
               "required": ["name", "org_id", "role", "timestamp"],
               "properties": {
@@ -168,75 +262,70 @@
                 "timestamp": { "type": "string", "format": "date-time" }
               }
             },
-            "signature": { "type": "string", "description": "base64 signature over JCS({hash, signed_by})" }
-          }
+            { "type": "null" }
+          ]
         },
+        "signature": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
+      },
+      "allOf": [
         {
-          "title": "Legacy HMAC seal (symmetric, not third-party verifiable)",
-          "required": ["hash"],
-          "properties": {
-            "status": { "type": "string", "const": "sealed" },
-            "canonicalization": { "type": "string", "const": "JCS" },
-            "algorithm": { "type": "string", "const": "HMAC-SHA256" },
-            "signature_algorithm": { "type": "string", "const": "HMAC-SHA256" },
-            "ts": { "type": "string", "format": "date-time" },
-            "signed_by": { "type": "object" },
-            "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-            "sig": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Lowercase hex HMAC-SHA256(SEAL_KEY, hash)" },
-            "signature": { "type": "string" }
-          }
+          "if": { "properties": { "status": { "const": "sealed" } } },
+          "then": { "required": ["signed_by", "signature"], "properties": { "signed_by": { "type": "object" }, "signature": { "type": "string" } } }
         }
       ]
+    },
+    "agents": {
+      "type": "object",
+      "description": "Multi-agent governance manifest (NOMOS-SPEC-002). Optional."
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Compilation lifecycle record — session id, source documents, review summary. Optional, additive."
     },
     "composition": {
       "type": "object",
       "description": "Composition provenance (NOMOS-SPEC-004 §1.3). Present on artifacts produced by extending a base artifact. Written before sealing and therefore covered by the seal.",
       "required": ["extends", "parent_rule_count", "inherited", "overridden", "removed", "local", "composed_at"],
-      "additionalProperties": false,
       "properties": {
         "extends": {
           "type": "object",
           "required": ["artifact_id", "version"],
-          "additionalProperties": false,
           "properties": {
             "artifact_id": { "type": "string" },
             "version": { "type": "string" },
-            "seal_hash": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "The base version's seal hash, pinning exactly what was inherited" }
+            "seal_hash": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
           }
         },
         "parent_rule_count": { "type": "integer", "minimum": 0 },
-        "inherited": { "type": "array", "items": { "type": "string" }, "description": "Base rule ids kept verbatim" },
-        "overridden": { "type": "array", "items": { "type": "string" }, "description": "Base rule ids replaced by a same-id child rule" },
-        "removed": { "type": "array", "items": { "type": "string" }, "description": "Base rule ids dropped" },
-        "local": { "type": "array", "items": { "type": "string" }, "description": "Child-only rule ids (no base counterpart)" },
+        "inherited": { "type": "array", "items": { "type": "string" } },
+        "overridden": { "type": "array", "items": { "type": "string" } },
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "local": { "type": "array", "items": { "type": "string" } },
         "composed_at": { "type": "string", "format": "date-time" },
         "warnings": { "type": "array", "items": { "type": "string" } }
       }
     },
     "attestations": {
       "type": "array",
-      "description": "Third-party co-signatures (NOMOS-SPEC-004 §2). Added AFTER sealing by parties other than the issuer, and EXCLUDED from the seal-hash computation — the seal covers the artifact minus both `seal` and `attestations`.",
+      "description": "Third-party co-signatures (NOMOS-SPEC-004 §2). Added AFTER sealing by parties other than the issuer, and EXCLUDED from the seal-hash computation.",
       "items": {
         "type": "object",
-        "required": ["attester", "statement", "artifact_hash", "artifact_version", "algorithm", "kid", "signature", "attested_at"],
-        "additionalProperties": false,
+        "required": ["attester", "statement", "artifact_hash", "algorithm", "kid", "signature", "attested_at"],
         "properties": {
           "attester": {
             "type": "object",
             "required": ["name", "org_id", "role"],
-            "additionalProperties": false,
             "properties": {
               "name": { "type": "string" },
               "org_id": { "type": "string" },
-              "role": { "type": "string", "description": "e.g. regulator | auditor | authority" }
+              "role": { "type": "string" }
             }
           },
           "statement": { "type": "string" },
-          "artifact_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "MUST equal the artifact's seal.hash (binds to this version)" },
-          "artifact_version": { "type": "string" },
+          "artifact_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
           "algorithm": { "type": "string", "const": "Ed25519" },
-          "kid": { "type": "string", "description": "Attester public-key id; resolves at /.well-known/nomos-signing-keys" },
-          "signature": { "type": "string", "description": "base64 Ed25519 over JCS({artifact_hash, artifact_version, attester, statement, attested_at})" },
+          "kid": { "type": "string" },
+          "signature": { "type": "string" },
           "attested_at": { "type": "string", "format": "date-time" },
           "revoked_at": { "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }] }
         }

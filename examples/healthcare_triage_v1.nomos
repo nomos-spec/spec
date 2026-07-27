@@ -1,191 +1,320 @@
 {
-  "artifact_id": "healthcare_triage_v1",
-  "version": "1.0.0",
-  "spec_version": "NOMOS-SPEC-001",
-  "confidence": "CERTIFIED",
-  "conflict_resolution": "collect_and_resolve",
-  "domain": {
+  "nomos_version": "1.0.0",
+  "meta": {
+    "artifact_id": "healthcare_triage_v1",
     "name": "Emergency Department Triage Protocol",
-    "organization": "Regional Health Network",
-    "effective_date": "2026-01-01",
-    "jurisdiction": "NHS England",
+    "version": "1.0.0",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "owner": {
+      "org_name": "Regional Health Network",
+      "org_id": "regional-health-network",
+      "contact": "governance@example.com"
+    },
     "tags": [
       "healthcare",
       "triage",
       "emergency",
       "clinical"
-    ]
+    ],
+    "description": "Illustrative example artifact for NOMOS-SPEC-001 — Emergency Department Triage Protocol",
+    "industry": "healthcare",
+    "jurisdictions": [
+      "NHS England"
+    ],
+    "verification_tier": "proven"
   },
-  "rules": [
-    {
-      "id": "triage_001",
-      "text": "Patients presenting with chest pain and SpO2 below 94% require immediate (P1) response.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "eq",
-          "field": "presenting_complaint",
-          "value": "chest_pain"
-        },
-        "right": {
-          "op": "lt",
-          "field": "spo2_percent",
-          "value": 94
-        }
-      },
-      "action": "ESCALATE",
-      "priority": 100,
-      "source": "policy",
-      "confidence": 0.99,
-      "metadata": {
-        "section": "4.1 Immediate Priority (P1)",
-        "page": 12,
-        "tags": [
-          "P1",
-          "cardiac",
-          "respiratory"
-        ]
-      }
+  "scope": {
+    "workflow": {
+      "domain": "Emergency Department Triage Protocol",
+      "workflow_name": "Emergency Department Triage Protocol",
+      "workflow_key": "healthcare_triage_v1",
+      "intent": "Illustrative decision logic for Emergency Department Triage Protocol"
     },
-    {
-      "id": "triage_002",
-      "text": "Patients with a NEWS2 score of 7 or above must be escalated to the rapid response team.",
-      "condition": {
-        "op": "gte",
-        "field": "news2_score",
-        "value": 7
-      },
-      "action": "ESCALATE",
-      "priority": 90,
-      "source": "policy",
-      "confidence": 0.97,
-      "metadata": {
-        "section": "4.2 Urgent Priority (P2) — NEWS2 escalation",
-        "page": 14,
-        "tags": [
-          "NEWS2",
-          "rapid-response"
-        ]
-      }
-    },
-    {
-      "id": "triage_003",
-      "text": "Ambulatory patients with NEWS2 below 3 and no red-flag symptoms may proceed to standard assessment.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "and",
-          "left": {
-            "op": "lt",
-            "field": "news2_score",
-            "value": 3
-          },
-          "right": {
-            "op": "eq",
-            "field": "ambulatory",
-            "value": true
-          }
-        },
-        "right": {
-          "op": "not",
-          "left": {
-            "op": "eq",
-            "field": "red_flag",
-            "value": true
-          }
-        }
-      },
-      "action": "ALLOW",
-      "priority": 10,
-      "source": "behavioral",
-      "confidence": 0.88,
-      "metadata": {
-        "section": "4.4 Standard Assessment",
-        "page": 18,
-        "tags": [
-          "standard",
-          "ambulatory"
-        ]
-      }
-    },
-    {
-      "id": "triage_004",
-      "text": "Paediatric patients under 2 years presenting with fever above 38.5°C require clinician review.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "lt",
-          "field": "patient_age_years",
-          "value": 2
-        },
-        "right": {
-          "op": "gt",
-          "field": "temperature_celsius",
-          "value": 38.5
-        }
-      },
-      "action": "ESCALATE",
-      "priority": 80,
-      "source": "policy",
-      "confidence": 0.96,
-      "metadata": {
-        "section": "6.1 Paediatric Triage",
-        "page": 24,
-        "tags": [
-          "paediatric",
-          "fever"
-        ]
-      }
-    },
-    {
-      "id": "triage_005",
-      "text": "Patients with documented penicillin allergy must not be prescribed amoxicillin.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "in",
-          "field": "allergies",
-          "value": [
-            "penicillin"
-          ]
-        },
-        "right": {
-          "op": "eq",
-          "field": "prescribed_drug",
-          "value": "amoxicillin"
-        }
-      },
-      "action": "DENY",
-      "priority": 95,
-      "source": "policy",
-      "confidence": 0.99,
-      "metadata": {
-        "section": "8.3 Allergy Contraindications",
-        "page": 31,
-        "tags": [
-          "allergy",
-          "contraindication",
-          "safety"
-        ]
-      }
+    "boundaries": {
+      "in_scope": [
+        "Emergency Department Triage Protocol"
+      ],
+      "out_of_scope": [],
+      "assumptions": []
     }
-  ],
-  "contradiction_report": {
-    "contradiction_count": 0,
-    "contradictions": []
   },
-  "readiness": {
-    "lis": 0.91,
-    "drs": 0.84,
-    "res": 0.21,
-    "gms": 0.88,
-    "ari": 0.79,
-    "autonomy_band": "autonomous"
+  "data_contract": {
+    "inputs": {
+      "presenting_complaint": {
+        "type": "string",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "spo2_percent": {
+        "type": "integer",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "news2_score": {
+        "type": "integer",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "ambulatory": {
+        "type": "boolean",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "red_flag": {
+        "type": "boolean",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "patient_age_years": {
+        "type": "integer",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "temperature_celsius": {
+        "type": "number",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "allergies": {
+        "type": "string",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "prescribed_drug": {
+        "type": "string",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      }
+    },
+    "required_fields": [
+      "presenting_complaint",
+      "spo2_percent",
+      "news2_score",
+      "ambulatory",
+      "red_flag",
+      "patient_age_years",
+      "temperature_celsius",
+      "allergies",
+      "prescribed_drug"
+    ],
+    "provenance": {
+      "allowed_sources": [
+        "example"
+      ],
+      "verification_methods": [
+        "none"
+      ]
+    },
+    "confidence_policy": {
+      "min_confidence_for_autonomy": 0.9,
+      "min_confidence_per_field": {},
+      "on_low_confidence": "escalate"
+    }
+  },
+  "logic": {
+    "variables": {},
+    "decisions": [
+      {
+        "id": "triage_001",
+        "description": "Patients presenting with chest pain and SpO2 below 94% require immediate (P1) response.",
+        "when": "(presenting_complaint == \"chest_pain\" and spo2_percent < 94)",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "triage_001_escalation"
+          }
+        ],
+        "else": [],
+        "priority": 100,
+        "provenance": {
+          "source_id": "healthcare_triage_v1",
+          "source_name": "Emergency Department Triage Protocol",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "triage_002",
+        "description": "Patients with a NEWS2 score of 7 or above must be escalated to the rapid response team.",
+        "when": "news2_score >= 7",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "triage_002_escalation"
+          }
+        ],
+        "else": [],
+        "priority": 90,
+        "provenance": {
+          "source_id": "healthcare_triage_v1",
+          "source_name": "Emergency Department Triage Protocol",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "triage_003",
+        "description": "Ambulatory patients with NEWS2 below 3 and no red-flag symptoms may proceed to standard assessment.",
+        "when": "((news2_score < 3 and ambulatory == true) and not (red_flag == true))",
+        "then": [
+          {
+            "type": "allow"
+          }
+        ],
+        "else": [],
+        "priority": 10,
+        "provenance": {
+          "source_id": "healthcare_triage_v1",
+          "source_name": "Emergency Department Triage Protocol",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "triage_004",
+        "description": "Paediatric patients under 2 years presenting with fever above 38.5°C require clinician review.",
+        "when": "(patient_age_years < 2 and temperature_celsius > 38.5)",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "triage_004_escalation"
+          }
+        ],
+        "else": [],
+        "priority": 80,
+        "provenance": {
+          "source_id": "healthcare_triage_v1",
+          "source_name": "Emergency Department Triage Protocol",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "triage_005",
+        "description": "Patients with documented penicillin allergy must not be prescribed amoxicillin.",
+        "when": "(allergies in [\"penicillin\"] and prescribed_drug == \"amoxicillin\")",
+        "then": [
+          {
+            "type": "block",
+            "reason": "Patients with documented penicillin allergy must not be prescribed amoxicillin."
+          }
+        ],
+        "else": [],
+        "priority": 95,
+        "provenance": {
+          "source_id": "healthcare_triage_v1",
+          "source_name": "Emergency Department Triage Protocol",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      }
+    ],
+    "resolution": {
+      "conflict_policy": "collect_and_resolve",
+      "tie_breaker": "deny_wins"
+    }
+  },
+  "governance": {
+    "constraints": [],
+    "escalations": [
+      {
+        "id": "triage_001_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "(presenting_complaint == \"chest_pain\" and spo2_percent < 94)",
+        "payload": {
+          "show": [
+            "presenting_complaint",
+            "spo2_percent"
+          ],
+          "question": "Patients presenting with chest pain and SpO2 below 94% require immediate (P1) response."
+        },
+        "sla_minutes": 1440
+      },
+      {
+        "id": "triage_002_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "news2_score >= 7",
+        "payload": {
+          "show": [
+            "presenting_complaint",
+            "spo2_percent",
+            "news2_score"
+          ],
+          "question": "Patients with a NEWS2 score of 7 or above must be escalated to the rapid response team."
+        },
+        "sla_minutes": 1440
+      },
+      {
+        "id": "triage_004_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "(patient_age_years < 2 and temperature_celsius > 38.5)",
+        "payload": {
+          "show": [
+            "presenting_complaint",
+            "spo2_percent",
+            "news2_score",
+            "ambulatory",
+            "red_flag",
+            "patient_age_years",
+            "temperature_celsius"
+          ],
+          "question": "Paediatric patients under 2 years presenting with fever above 38.5°C require clinician review."
+        },
+        "sla_minutes": 1440
+      }
+    ],
+    "roles": [
+      {
+        "role_id": "REVIEWER",
+        "name": "Reviewer",
+        "authority_scope": [
+          "approve_escalation"
+        ]
+      }
+    ],
+    "compliance": {
+      "requirements": [],
+      "logging_level": "standard",
+      "retention_days": 365
+    }
+  },
+  "execution": {
+    "actions": {},
+    "connectors": []
+  },
+  "audit": {
+    "event_schema": {
+      "type": "nomos.audit.v1",
+      "fields": [
+        "artifact_id",
+        "decision_trace",
+        "constraint_trace",
+        "actions"
+      ]
+    },
+    "emit_on": [
+      "decision",
+      "constraint_violation",
+      "action",
+      "escalation",
+      "completion"
+    ],
+    "redaction": {
+      "pii_fields": [],
+      "strategy": "remove"
+    }
   },
   "seal": {
-    "algorithm": "HMAC-SHA256",
-    "ts": "2026-01-15T11:00:00.000Z",
-    "hash": "6c1c97ad265de39d4bc47120203e2c06679e94d205cab04611ca8703086d1735",
-    "sig": "13e841d9f41a22e828f7527537b9dbec925dbfb124e3e46562a5eac3b0aba711"
+    "status": "sealed",
+    "hash": "2e4c7d686f9307386a76d343c8e8a69879d596ebf4073254ac9e2384fc121e54",
+    "canonicalization": "JCS",
+    "signed_by": {
+      "name": "NOMOS Protocol Working Group (test key)",
+      "org_id": "nomos-spec",
+      "role": "Example Publisher",
+      "timestamp": "2026-01-15T10:30:00.000Z"
+    },
+    "signature": "ee90b39a9f693306ec90f26a07c0e61dbc601e5b82196de7d8de95d5f5e46331",
+    "signature_algorithm": "HMAC-SHA256"
   }
 }

@@ -7,6 +7,71 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-001 v2.0.0] — 2026-07-27 (Breaking correction)
+
+### Why
+
+An EU AI Act artifact sealed and published on the reference deployment (nomosprotocol.com)
+failed validation against this repo's own `schema/artifact.schema.json`. Investigation found
+that §3 (Artifact Structure) and §4 (Rule Expression Language) of v1.1.0 described a structure
+— top-level `artifact_id`/`version`/`rules`/`domain`/`confidence`/`readiness`/
+`contradiction_report`, and a condition-tree object (`{op, field, value, left, right}`) — that
+no conformant producer had ever actually emitted. It was written independently of the fielded
+implementation and never reconciled against it. This release replaces §3/§4 with the structure
+real sealed artifacts actually have, verified directly against the live artifact that failed.
+Per `DEPRECATION.md` principle 2, this increments the spec version rather than being published
+as editorial errata, because it changes what a conformant producer or runtime must accept.
+
+### Changed (breaking)
+
+- **§3 Artifact Structure** — top-level keys are now `nomos_version, meta, scope, data_contract,
+  logic, governance, execution, audit, seal` (plus optional `agents`, `provenance`,
+  `attestations`). The v1.1.0 shape (`artifact_id, version, spec_version, confidence, domain,
+  rules, contradiction_report, readiness, seal`) is no longer the schema this repo validates
+  against.
+- **§4 Rule Expression Language** — a decision's `when` is a Nomos-Expr v1 **string**
+  (`"invoice_amount > 25000"`), not a condition-tree object. Outcomes are a `then`/`else` array
+  of typed objects (`allow | block | escalate | set | emit | action`), not a single
+  `action: "ALLOW"|"DENY"|"ESCALATE"` field. §4.5 documents the old tree format as a deprecated,
+  internal-only representation — conformant producers MUST NOT emit it.
+- `schema/artifact.schema.json`, `schema/rule.schema.json` — rewritten to match.
+- All 8 `examples/*.nomos` — rewritten to the new structure and properly re-sealed
+  (HMAC-SHA256, the same published test key documented in the README: `deadbeef…`).
+- `verify.py`, `verify.ts`, `cli/nomos.ts` — updated wherever they read the artifact's own
+  structure (`meta.artifact_id`/`meta.version` instead of top-level; hash computation now
+  additionally excludes `attestations`, not just `seal`, per §8.2 — a real, separate bug found
+  during this pass, since an artifact with any attestation would previously fail integrity
+  verification for a reason unrelated to tampering). `cli/nomos.ts`'s `exec` command now
+  includes a real Nomos-Expr v1 tokenizer/evaluator in place of the old condition-tree walker.
+  `verify.py`'s HMAC check now falls back from `seal.sig` to `seal.signature` — it previously
+  only checked the legacy `sig` field name, unlike `verify.ts`/`cli/nomos.ts`, so it silently
+  failed to verify any seal using the newer field name.
+
+### Corrected (non-breaking, real-vs-documented gaps found during this pass)
+
+- **§6** — the `ExecutionReceipt` response documented in v1.1.0 is real and matches
+  `POST /api/nomos/execute` (Domain execution) almost field-for-field; it was NOT rewritten.
+  What was corrected: the endpoint citation in §6.1 (v1.1.0 attributed this receipt to
+  `/api/v1/verify-decision`, which is a separate, real endpoint with its own different response
+  shape — both are now documented, distinctly, in §6.1/§6.2). §6.9 (idempotency) previously
+  asserted `correlation_id`-based response caching that does not exist in either
+  implementation — now disclosed as a known gap rather than documented as working behavior.
+- **§5** — `DECLARED/VALIDATED/CERTIFIED/PROVEN/SOVEREIGN` and `compiled/proven/sovereign` are
+  two separate, real, non-interchangeable vocabularies (public demo artifacts vs. sealed
+  Studio/Exchange artifacts respectively) that v1.1.0 conflated into one five-tier ARI-gated
+  system. Both are now documented as what they actually are.
+- **§7** — the audit-trail hash formula is now `SHA-256(previousHash + "|" + JCS(eventData) +
+  "|" + timestamp)`, matching `server/lib/decision-audit.ts` in the reference deployment;
+  v1.1.0's formula (`SHA-256(entry_id || artifact_id || ts || verdict || prev_hash)`) did not
+  match any real implementation.
+- **§11** — the reference deployment's two execution APIs use two different, real error-code
+  vocabularies (one has no machine-readable `code` field at all). v1.1.0's unified error catalog
+  didn't match either; both are now documented separately, honestly, as inconsistent.
+- **§12.3** — `pub_lending_v1` is `DECLARED` tier in the real public-artifact registry, not
+  `PROVEN` as v1.1.0's table claimed. The full, real five-artifact list is now given.
+
+---
+
 ## [NOMOS-SPEC-001 §3.0] — 2026-07-27 (Clarification)
 
 ### Added

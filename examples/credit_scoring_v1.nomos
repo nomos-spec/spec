@@ -1,195 +1,320 @@
 {
-  "artifact_id": "credit_scoring_v1",
-  "version": "2.1.0",
-  "spec_version": "NOMOS-SPEC-001",
-  "confidence": "CERTIFIED",
-  "conflict_resolution": "collect_and_resolve",
-  "domain": {
+  "nomos_version": "1.0.0",
+  "meta": {
+    "artifact_id": "credit_scoring_v1",
     "name": "Consumer Credit Scoring Decision",
-    "organization": "Example Digital Bank",
-    "effective_date": "2026-01-01",
-    "jurisdiction": "generic",
-    "tags": ["credit", "banking", "fintech", "consumer"]
+    "version": "2.1.0",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "owner": {
+      "org_name": "Example Digital Bank",
+      "org_id": "example-digital-bank",
+      "contact": "governance@example.com"
+    },
+    "tags": [
+      "credit",
+      "banking",
+      "fintech",
+      "consumer"
+    ],
+    "description": "Illustrative example artifact for NOMOS-SPEC-001 — Consumer Credit Scoring Decision",
+    "industry": "credit",
+    "jurisdictions": [
+      "generic"
+    ],
+    "verification_tier": "proven"
+  },
+  "scope": {
+    "workflow": {
+      "domain": "Consumer Credit Scoring Decision",
+      "workflow_name": "Consumer Credit Scoring Decision",
+      "workflow_key": "credit_scoring_v1",
+      "intent": "Illustrative decision logic for Consumer Credit Scoring Decision"
+    },
+    "boundaries": {
+      "in_scope": [
+        "Consumer Credit Scoring Decision"
+      ],
+      "out_of_scope": [],
+      "assumptions": []
+    }
   },
   "data_contract": {
+    "inputs": {
+      "bankruptcy_history": {
+        "type": "boolean",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "credit_score": {
+        "type": "integer",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "existing_debt_usd": {
+        "type": "integer",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "employment_status": {
+        "type": "string",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "months_at_employer": {
+        "type": "integer",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "annual_income_usd": {
+        "type": "integer",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      }
+    },
     "required_fields": [
-      "credit_score", "annual_income_usd", "existing_debt_usd",
-      "employment_status", "months_at_employer", "bankruptcy_history"
+      "bankruptcy_history",
+      "credit_score",
+      "existing_debt_usd",
+      "employment_status",
+      "months_at_employer",
+      "annual_income_usd"
     ],
-    "field_types": {
-      "credit_score": "number",
-      "annual_income_usd": "number",
-      "existing_debt_usd": "number",
-      "employment_status": "string",
-      "months_at_employer": "number",
-      "bankruptcy_history": "boolean"
+    "provenance": {
+      "allowed_sources": [
+        "example"
+      ],
+      "verification_methods": [
+        "none"
+      ]
+    },
+    "confidence_policy": {
+      "min_confidence_for_autonomy": 0.9,
+      "min_confidence_per_field": {},
+      "on_low_confidence": "escalate"
     }
   },
-  "rules": [
-    {
-      "id": "R1",
-      "text": "Active or undischarged bankruptcy is an absolute bar to credit.",
-      "condition": {
-        "op": "eq",
-        "field": "bankruptcy_history",
-        "value": true
-      },
-      "action": "DENY",
-      "priority": 200,
-      "source": "policy",
-      "confidence": 1.0,
-      "metadata": {
-        "section": "2.1 Hard Exclusions",
-        "page": 3,
-        "tags": ["bankruptcy", "hard-denial"]
-      }
-    },
-    {
-      "id": "R2",
-      "text": "Credit score below 580 falls below minimum underwriting threshold.",
-      "condition": {
-        "op": "lt",
-        "field": "credit_score",
-        "value": 580
-      },
-      "action": "DENY",
-      "priority": 180,
-      "source": "policy",
-      "confidence": 0.99,
-      "metadata": {
-        "section": "2.2 Score Floor",
-        "page": 4,
-        "tags": ["credit-score", "hard-denial"]
-      }
-    },
-    {
-      "id": "R3",
-      "text": "Debt-to-income ratio exceeding 50% indicates insufficient repayment capacity.",
-      "condition": {
-        "op": "gt",
-        "field": "existing_debt_usd",
-        "value": 0
-      },
-      "action": "ESCALATE",
-      "priority": 150,
-      "source": "behavioral",
-      "confidence": 0.87,
-      "metadata": {
-        "section": "3.1 Debt Service Capacity",
-        "page": 7,
-        "tags": ["dti", "escalation"]
-      }
-    },
-    {
-      "id": "R4",
-      "text": "Applicants with near-prime scores (580–649) require manual underwriting review.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "gte",
-          "field": "credit_score",
-          "value": 580
-        },
-        "right": {
-          "op": "lt",
-          "field": "credit_score",
-          "value": 650
-        }
-      },
-      "action": "ESCALATE",
-      "priority": 140,
-      "source": "policy",
-      "confidence": 0.94,
-      "metadata": {
-        "section": "3.2 Near-Prime Band",
-        "page": 8,
-        "tags": ["near-prime", "manual-review"]
-      }
-    },
-    {
-      "id": "R5",
-      "text": "Employment gaps or self-employed applicants with less than 24 months tenure require income verification.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "in",
-          "field": "employment_status",
-          "value": ["self_employed", "contract", "part_time", "unemployed"]
-        },
-        "right": {
-          "op": "lt",
-          "field": "months_at_employer",
-          "value": 24
-        }
-      },
-      "action": "ESCALATE",
-      "priority": 120,
-      "source": "policy",
-      "confidence": 0.91,
-      "metadata": {
-        "section": "3.3 Employment Stability",
-        "page": 9,
-        "tags": ["employment", "income-verification"]
-      }
-    },
-    {
-      "id": "R6",
-      "text": "Prime applicants (score ≥ 700) with stable employment and annual income above $50k are auto-approved.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "gte",
-          "field": "credit_score",
-          "value": 700
-        },
-        "right": {
-          "op": "and",
-          "left": {
-            "op": "in",
-            "field": "employment_status",
-            "value": ["full_time", "government", "military"]
-          },
-          "right": {
-            "op": "gte",
-            "field": "annual_income_usd",
-            "value": 50000
-          }
-        }
-      },
-      "action": "ALLOW",
-      "priority": 50,
-      "source": "policy",
-      "confidence": 0.96,
-      "metadata": {
-        "section": "4.1 Auto-Approval Criteria",
-        "page": 12,
-        "tags": ["prime", "auto-approval"]
-      }
-    }
-  ],
-  "contradiction_report": {
-    "contradiction_count": 1,
-    "contradictions": [
+  "logic": {
+    "variables": {},
+    "decisions": [
       {
-        "type": "layer_divergence",
-        "rule_ids": ["R3"],
-        "description": "R3 escalates all applicants with any existing debt — behavioral data shows 72% of approved customers carry some existing debt, making R3 overly broad. Consider threshold-based condition.",
-        "severity": "medium"
+        "id": "R1",
+        "description": "Active or undischarged bankruptcy is an absolute bar to credit.",
+        "when": "bankruptcy_history == true",
+        "then": [
+          {
+            "type": "block",
+            "reason": "Active or undischarged bankruptcy is an absolute bar to credit."
+          }
+        ],
+        "else": [],
+        "priority": 200,
+        "provenance": {
+          "source_id": "credit_scoring_v1",
+          "source_name": "Consumer Credit Scoring Decision",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "R2",
+        "description": "Credit score below 580 falls below minimum underwriting threshold.",
+        "when": "credit_score < 580",
+        "then": [
+          {
+            "type": "block",
+            "reason": "Credit score below 580 falls below minimum underwriting threshold."
+          }
+        ],
+        "else": [],
+        "priority": 180,
+        "provenance": {
+          "source_id": "credit_scoring_v1",
+          "source_name": "Consumer Credit Scoring Decision",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "R3",
+        "description": "Debt-to-income ratio exceeding 50% indicates insufficient repayment capacity.",
+        "when": "existing_debt_usd > 0",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "R3_escalation"
+          }
+        ],
+        "else": [],
+        "priority": 150,
+        "provenance": {
+          "source_id": "credit_scoring_v1",
+          "source_name": "Consumer Credit Scoring Decision",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "R4",
+        "description": "Applicants with near-prime scores (580–649) require manual underwriting review.",
+        "when": "(credit_score >= 580 and credit_score < 650)",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "R4_escalation"
+          }
+        ],
+        "else": [],
+        "priority": 140,
+        "provenance": {
+          "source_id": "credit_scoring_v1",
+          "source_name": "Consumer Credit Scoring Decision",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "R5",
+        "description": "Employment gaps or self-employed applicants with less than 24 months tenure require income verification.",
+        "when": "(employment_status in [\"self_employed\", \"contract\", \"part_time\", \"unemployed\"] and months_at_employer < 24)",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "R5_escalation"
+          }
+        ],
+        "else": [],
+        "priority": 120,
+        "provenance": {
+          "source_id": "credit_scoring_v1",
+          "source_name": "Consumer Credit Scoring Decision",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "R6",
+        "description": "Prime applicants (score ≥ 700) with stable employment and annual income above $50k are auto-approved.",
+        "when": "(credit_score >= 700 and (employment_status in [\"full_time\", \"government\", \"military\"] and annual_income_usd >= 50000))",
+        "then": [
+          {
+            "type": "allow"
+          }
+        ],
+        "else": [],
+        "priority": 50,
+        "provenance": {
+          "source_id": "credit_scoring_v1",
+          "source_name": "Consumer Credit Scoring Decision",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
       }
-    ]
+    ],
+    "resolution": {
+      "conflict_policy": "collect_and_resolve",
+      "tie_breaker": "deny_wins"
+    }
   },
-  "readiness": {
-    "lis": 0.82,
-    "drs": 0.79,
-    "res": 0.25,
-    "gms": 0.88,
-    "ari": 0.74,
-    "autonomy_band": "autonomous"
+  "governance": {
+    "constraints": [],
+    "escalations": [
+      {
+        "id": "R3_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "existing_debt_usd > 0",
+        "payload": {
+          "show": [
+            "bankruptcy_history",
+            "credit_score",
+            "existing_debt_usd"
+          ],
+          "question": "Debt-to-income ratio exceeding 50% indicates insufficient repayment capacity."
+        },
+        "sla_minutes": 1440
+      },
+      {
+        "id": "R4_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "(credit_score >= 580 and credit_score < 650)",
+        "payload": {
+          "show": [
+            "bankruptcy_history",
+            "credit_score",
+            "existing_debt_usd"
+          ],
+          "question": "Applicants with near-prime scores (580–649) require manual underwriting review."
+        },
+        "sla_minutes": 1440
+      },
+      {
+        "id": "R5_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "(employment_status in [\"self_employed\", \"contract\", \"part_time\", \"unemployed\"] and months_at_employer < 24)",
+        "payload": {
+          "show": [
+            "bankruptcy_history",
+            "credit_score",
+            "existing_debt_usd",
+            "employment_status",
+            "months_at_employer"
+          ],
+          "question": "Employment gaps or self-employed applicants with less than 24 months tenure require income verification."
+        },
+        "sla_minutes": 1440
+      }
+    ],
+    "roles": [
+      {
+        "role_id": "REVIEWER",
+        "name": "Reviewer",
+        "authority_scope": [
+          "approve_escalation"
+        ]
+      }
+    ],
+    "compliance": {
+      "requirements": [],
+      "logging_level": "standard",
+      "retention_days": 365
+    }
+  },
+  "execution": {
+    "actions": {},
+    "connectors": []
+  },
+  "audit": {
+    "event_schema": {
+      "type": "nomos.audit.v1",
+      "fields": [
+        "artifact_id",
+        "decision_trace",
+        "constraint_trace",
+        "actions"
+      ]
+    },
+    "emit_on": [
+      "decision",
+      "constraint_violation",
+      "action",
+      "escalation",
+      "completion"
+    ],
+    "redaction": {
+      "pii_fields": [],
+      "strategy": "remove"
+    }
   },
   "seal": {
-    "algorithm": "HMAC-SHA256",
-    "ts": "2026-06-11T10:00:00.000Z",
-    "hash": "d98209aa1df212a285fe50f8e2a82adaf8fde4b2c83774a83e99565b8739e2e9",
-    "sig":  "d98209aa1df212a285fe50f8e2a82adaf8fde4b2c83774a83e99565b8739e2e9"
+    "status": "sealed",
+    "hash": "1200f156d4c4a7c9f82bffa03c1f0d757c5b7e17780545ca8e033d1df6b43b8d",
+    "canonicalization": "JCS",
+    "signed_by": {
+      "name": "NOMOS Protocol Working Group (test key)",
+      "org_id": "nomos-spec",
+      "role": "Example Publisher",
+      "timestamp": "2026-01-15T10:30:00.000Z"
+    },
+    "signature": "25c0597c6a377e0f21b8a9cad0e8884a46c2ec9458445c6a4d7bdbf53d47a50c",
+    "signature_algorithm": "HMAC-SHA256"
   }
 }

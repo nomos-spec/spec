@@ -1,169 +1,303 @@
 {
-  "artifact_id": "content_moderation_v1",
-  "version": "1.0.0",
-  "spec_version": "NOMOS-SPEC-001",
-  "confidence": "DECLARED",
-  "conflict_resolution": "first_match",
-  "domain": {
+  "nomos_version": "1.0.0",
+  "meta": {
+    "artifact_id": "content_moderation_v1",
     "name": "User-Generated Content Moderation",
-    "organization": "Example Platform Inc.",
-    "effective_date": "2026-01-01",
-    "jurisdiction": "generic",
-    "tags": ["trust-safety", "content", "moderation", "platform"]
+    "version": "1.0.0",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "owner": {
+      "org_name": "Example Platform Inc.",
+      "org_id": "example-platform-inc-",
+      "contact": "governance@example.com"
+    },
+    "tags": [
+      "trust-safety",
+      "content",
+      "moderation",
+      "platform"
+    ],
+    "description": "Illustrative example artifact for NOMOS-SPEC-001 — User-Generated Content Moderation",
+    "industry": "trust-safety",
+    "jurisdictions": [
+      "generic"
+    ],
+    "verification_tier": "compiled"
+  },
+  "scope": {
+    "workflow": {
+      "domain": "User-Generated Content Moderation",
+      "workflow_name": "User-Generated Content Moderation",
+      "workflow_key": "content_moderation_v1",
+      "intent": "Illustrative decision logic for User-Generated Content Moderation"
+    },
+    "boundaries": {
+      "in_scope": [
+        "User-Generated Content Moderation"
+      ],
+      "out_of_scope": [],
+      "assumptions": []
+    }
   },
   "data_contract": {
-    "required_fields": ["content_category", "account_age_days", "prior_violations", "is_verified_creator"],
-    "field_types": {
-      "content_category": "string",
-      "account_age_days": "number",
-      "prior_violations": "number",
-      "is_verified_creator": "boolean"
+    "inputs": {
+      "content_category": {
+        "type": "string",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "prior_violations": {
+        "type": "integer",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "account_age_days": {
+        "type": "integer",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "is_verified_creator": {
+        "type": "boolean",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      }
+    },
+    "required_fields": [
+      "content_category",
+      "prior_violations",
+      "account_age_days",
+      "is_verified_creator"
+    ],
+    "provenance": {
+      "allowed_sources": [
+        "example"
+      ],
+      "verification_methods": [
+        "none"
+      ]
+    },
+    "confidence_policy": {
+      "min_confidence_for_autonomy": 0.9,
+      "min_confidence_per_field": {},
+      "on_low_confidence": "escalate"
     }
   },
-  "rules": [
-    {
-      "id": "R1",
-      "text": "Content in prohibited categories is removed immediately — no appeal path.",
-      "condition": {
-        "op": "in",
-        "field": "content_category",
-        "value": ["csam", "terrorism_incitement", "weapons_trafficking", "human_trafficking"]
-      },
-      "action": "DENY",
-      "priority": 200,
-      "source": "policy",
-      "confidence": 1.0,
-      "metadata": {
-        "section": "1.1 Absolute Prohibitions",
-        "page": 2,
-        "tags": ["prohibited", "removal", "legal"]
-      }
-    },
-    {
-      "id": "R2",
-      "text": "Accounts with 3 or more prior policy violations are placed in strict review for all content.",
-      "condition": {
-        "op": "gte",
-        "field": "prior_violations",
-        "value": 3
-      },
-      "action": "ESCALATE",
-      "priority": 150,
-      "source": "policy",
-      "confidence": 0.97,
-      "metadata": {
-        "section": "5.2 Repeat Violators",
-        "page": 18,
-        "tags": ["violations", "escalation", "repeat"]
-      }
-    },
-    {
-      "id": "R3",
-      "text": "Content flagged as potentially harmful — not in absolute prohibition list — requires human review.",
-      "condition": {
-        "op": "in",
-        "field": "content_category",
-        "value": ["violence_graphic", "hate_speech_possible", "self_harm_adjacent", "misinformation_possible"]
-      },
-      "action": "ESCALATE",
-      "priority": 120,
-      "source": "policy",
-      "confidence": 0.90,
-      "metadata": {
-        "section": "2.1 Sensitive Categories",
-        "page": 6,
-        "tags": ["sensitive", "review"]
-      }
-    },
-    {
-      "id": "R4",
-      "text": "New accounts (under 30 days old) posting adult-only content require age verification check.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "lt",
-          "field": "account_age_days",
-          "value": 30
-        },
-        "right": {
-          "op": "eq",
-          "field": "content_category",
-          "value": "adult_legal"
+  "logic": {
+    "variables": {},
+    "decisions": [
+      {
+        "id": "R1",
+        "description": "Content in prohibited categories is removed immediately — no appeal path.",
+        "when": "content_category in [\"csam\", \"terrorism_incitement\", \"weapons_trafficking\", \"human_trafficking\"]",
+        "then": [
+          {
+            "type": "block",
+            "reason": "Content in prohibited categories is removed immediately — no appeal path."
+          }
+        ],
+        "else": [],
+        "priority": 200,
+        "provenance": {
+          "source_id": "content_moderation_v1",
+          "source_name": "User-Generated Content Moderation",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
         }
       },
-      "action": "ESCALATE",
-      "priority": 100,
-      "source": "policy",
-      "confidence": 0.93,
-      "metadata": {
-        "section": "3.4 Age-Restricted Content",
-        "page": 11,
-        "tags": ["age-verification", "new-account"]
-      }
-    },
-    {
-      "id": "R5",
-      "text": "Verified creators publishing standard content not in any sensitive category are auto-approved.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "eq",
-          "field": "is_verified_creator",
-          "value": true
-        },
-        "right": {
-          "op": "nin",
-          "field": "content_category",
-          "value": ["csam", "terrorism_incitement", "weapons_trafficking", "human_trafficking",
-                    "violence_graphic", "hate_speech_possible", "self_harm_adjacent",
-                    "misinformation_possible", "adult_legal"]
+      {
+        "id": "R2",
+        "description": "Accounts with 3 or more prior policy violations are placed in strict review for all content.",
+        "when": "prior_violations >= 3",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "R2_escalation"
+          }
+        ],
+        "else": [],
+        "priority": 150,
+        "provenance": {
+          "source_id": "content_moderation_v1",
+          "source_name": "User-Generated Content Moderation",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
         }
       },
-      "action": "ALLOW",
-      "priority": 50,
-      "source": "policy",
-      "confidence": 0.95,
-      "metadata": {
-        "section": "4.1 Verified Creator Fast-Track",
-        "page": 13,
-        "tags": ["verified", "auto-approve"]
-      }
-    },
-    {
-      "id": "R6",
-      "text": "Standard content from accounts in good standing with no prior violations is allowed.",
-      "condition": {
-        "op": "eq",
-        "field": "prior_violations",
-        "value": 0
+      {
+        "id": "R3",
+        "description": "Content flagged as potentially harmful — not in absolute prohibition list — requires human review.",
+        "when": "content_category in [\"violence_graphic\", \"hate_speech_possible\", \"self_harm_adjacent\", \"misinformation_possible\"]",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "R3_escalation"
+          }
+        ],
+        "else": [],
+        "priority": 120,
+        "provenance": {
+          "source_id": "content_moderation_v1",
+          "source_name": "User-Generated Content Moderation",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
       },
-      "action": "ALLOW",
-      "priority": 10,
-      "source": "policy",
-      "confidence": 0.88,
-      "metadata": {
-        "section": "4.2 Standard Approval",
-        "page": 14,
-        "tags": ["standard", "approval"]
+      {
+        "id": "R4",
+        "description": "New accounts (under 30 days old) posting adult-only content require age verification check.",
+        "when": "(account_age_days < 30 and content_category == \"adult_legal\")",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "R4_escalation"
+          }
+        ],
+        "else": [],
+        "priority": 100,
+        "provenance": {
+          "source_id": "content_moderation_v1",
+          "source_name": "User-Generated Content Moderation",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "R5",
+        "description": "Verified creators publishing standard content not in any sensitive category are auto-approved.",
+        "when": "(is_verified_creator == true and not (content_category in [\"csam\", \"terrorism_incitement\", \"weapons_trafficking\", \"human_trafficking\", \"violence_graphic\", \"hate_speech_possible\", \"self_harm_adjacent\", \"misinformation_possible\", \"adult_legal\"]))",
+        "then": [
+          {
+            "type": "allow"
+          }
+        ],
+        "else": [],
+        "priority": 50,
+        "provenance": {
+          "source_id": "content_moderation_v1",
+          "source_name": "User-Generated Content Moderation",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "R6",
+        "description": "Standard content from accounts in good standing with no prior violations is allowed.",
+        "when": "prior_violations == 0",
+        "then": [
+          {
+            "type": "allow"
+          }
+        ],
+        "else": [],
+        "priority": 10,
+        "provenance": {
+          "source_id": "content_moderation_v1",
+          "source_name": "User-Generated Content Moderation",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
       }
+    ],
+    "resolution": {
+      "conflict_policy": "first_match",
+      "tie_breaker": "deny_wins"
     }
-  ],
-  "contradiction_report": {
-    "contradiction_count": 0,
-    "contradictions": []
   },
-  "readiness": {
-    "lis": 0.85,
-    "drs": null,
-    "res": 0.30,
-    "gms": 0.75,
-    "ari": 0.66,
-    "autonomy_band": "autonomous"
+  "governance": {
+    "constraints": [],
+    "escalations": [
+      {
+        "id": "R2_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "prior_violations >= 3",
+        "payload": {
+          "show": [
+            "content_category",
+            "prior_violations"
+          ],
+          "question": "Accounts with 3 or more prior policy violations are placed in strict review for all content."
+        },
+        "sla_minutes": 1440
+      },
+      {
+        "id": "R3_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "content_category in [\"violence_graphic\", \"hate_speech_possible\", \"self_harm_adjacent\", \"misinformation_possible\"]",
+        "payload": {
+          "show": [
+            "content_category",
+            "prior_violations"
+          ],
+          "question": "Content flagged as potentially harmful — not in absolute prohibition list — requires human review."
+        },
+        "sla_minutes": 1440
+      },
+      {
+        "id": "R4_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "(account_age_days < 30 and content_category == \"adult_legal\")",
+        "payload": {
+          "show": [
+            "content_category",
+            "prior_violations",
+            "account_age_days"
+          ],
+          "question": "New accounts (under 30 days old) posting adult-only content require age verification check."
+        },
+        "sla_minutes": 1440
+      }
+    ],
+    "roles": [
+      {
+        "role_id": "REVIEWER",
+        "name": "Reviewer",
+        "authority_scope": [
+          "approve_escalation"
+        ]
+      }
+    ],
+    "compliance": {
+      "requirements": [],
+      "logging_level": "standard",
+      "retention_days": 365
+    }
+  },
+  "execution": {
+    "actions": {},
+    "connectors": []
+  },
+  "audit": {
+    "event_schema": {
+      "type": "nomos.audit.v1",
+      "fields": [
+        "artifact_id",
+        "decision_trace",
+        "constraint_trace",
+        "actions"
+      ]
+    },
+    "emit_on": [
+      "decision",
+      "constraint_violation",
+      "action",
+      "escalation",
+      "completion"
+    ],
+    "redaction": {
+      "pii_fields": [],
+      "strategy": "remove"
+    }
   },
   "seal": {
-    "algorithm": "HMAC-SHA256",
-    "ts": "2026-06-11T10:00:00.000Z",
-    "hash": "01d8d6999a159505ab17e23040912e7547860666974a5d1d89cd406c75461156",
-    "sig":  "01d8d6999a159505ab17e23040912e7547860666974a5d1d89cd406c75461156"
+    "status": "sealed",
+    "hash": "0889604486f39eadbcafb11583ffb7ccf1183f7f5b333b479e6f9d506694c2e2",
+    "canonicalization": "JCS",
+    "signed_by": {
+      "name": "NOMOS Protocol Working Group (test key)",
+      "org_id": "nomos-spec",
+      "role": "Example Publisher",
+      "timestamp": "2026-01-15T10:30:00.000Z"
+    },
+    "signature": "45918016156f1de98fba329d2d1393c0f3a6fdec3a96299d7a72b22383808cf6",
+    "signature_algorithm": "HMAC-SHA256"
   }
 }

@@ -51,16 +51,20 @@ async function fetchPublicKey(baseUrl: string, kid?: string): Promise<string | n
 async function verifyArtifact(artifactPath: string, opts: { sealKey: Buffer | null; pubkeyPem: string | null; url: string | null }): Promise<void> {
   const artifact: any = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
   const seal = artifact.seal;
+  const meta = artifact.meta ?? {};
   const alg: string = seal?.signature_algorithm ?? seal?.algorithm ?? "";
   console.log(`\nVerifying: ${artifactPath}`);
-  console.log(`  artifact_id : ${artifact.artifact_id}`);
-  console.log(`  version     : ${artifact.version}`);
+  console.log(`  artifact_id : ${meta.artifact_id}`);
+  console.log(`  version     : ${meta.version}`);
   console.log(`  algorithm   : ${alg}    kid=${seal?.kid ?? "—"}`);
 
   if (!seal || seal.status === "draft") fail("Artifact is not sealed");
 
   // 1. Integrity — recompute the canonical hash (offline, no key)
-  const payload = Object.fromEntries(Object.entries(artifact).filter(([k]) => k !== "seal")) as Record<string, JsonValue>;
+  // Excludes both `seal` (can't cover itself) and `attestations` (NOMOS-SPEC-004 — added
+  // after sealing by third parties; including them would break the seal the moment an
+  // attestation is added or revoked). See spec §8.2.
+  const payload = Object.fromEntries(Object.entries(artifact).filter(([k]) => k !== "seal" && k !== "attestations")) as Record<string, JsonValue>;
   const computedHash = crypto.createHash("sha256").update(jcs(payload)).digest("hex");
   if (computedHash !== seal.hash) {
     fail(`Hash mismatch — payload modified after sealing.\n  stored  : ${seal.hash}\n  computed: ${computedHash}`);
@@ -90,11 +94,10 @@ async function verifyArtifact(artifactPath: string, opts: { sealKey: Buffer | nu
     fail(`Unsupported seal algorithm: ${JSON.stringify(alg)}`);
   }
 
-  // 3. Advisory
-  const count = artifact.contradiction_report?.contradiction_count ?? 0;
-  console.log(count > 0 ? `  [WARN] ${count} contradiction(s) at seal time.` : "  [OK] No contradictions.");
-  const r = artifact.readiness;
-  console.log(`  [OK] Readiness: ARI=${r?.ari ?? "N/A"}  band=${r?.autonomy_band ?? "N/A"}`);
+  // 3. Advisory — verification tier + conflicts at seal time
+  console.log(`  [OK] Verification tier: ${meta.verification_tier ?? "N/A"}`);
+  const pending = artifact.provenance?.review_summary?.pending_at_seal ?? 0;
+  console.log(pending > 0 ? `  [WARN] ${pending} unresolved conflict(s) at seal time.` : "  [OK] No unresolved conflicts recorded at seal time.");
   console.log("\nResult: VALID\n");
 }
 

@@ -1,58 +1,162 @@
 {
-  "artifact_id": "minimal_v1",
-  "version": "1.0.0",
-  "spec_version": "NOMOS-SPEC-001",
-  "confidence": "DECLARED",
-  "conflict_resolution": "first_match",
-  "domain": {
+  "nomos_version": "1.0.0",
+  "meta": {
+    "artifact_id": "minimal_v1",
     "name": "Minimal Example Policy",
-    "organization": "Example Organisation",
-    "effective_date": "2026-01-01"
-  },
-  "rules": [
-    {
-      "id": "rule_001",
-      "text": "Approved users may access the system.",
-      "condition": {
-        "op": "eq",
-        "field": "user_status",
-        "value": "approved"
-      },
-      "action": "ALLOW",
-      "priority": 10,
-      "source": "policy",
-      "confidence": 0.99
+    "version": "1.0.0",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "owner": {
+      "org_name": "Example Organisation",
+      "org_id": "example-organisation",
+      "contact": "governance@example.com"
     },
-    {
-      "id": "rule_002",
-      "text": "Suspended users are denied access.",
-      "condition": {
-        "op": "eq",
-        "field": "user_status",
-        "value": "suspended"
-      },
-      "action": "DENY",
-      "priority": 20,
-      "source": "policy",
-      "confidence": 0.99
-    }
-  ],
-  "contradiction_report": {
-    "contradiction_count": 0,
-    "contradictions": []
+    "tags": [],
+    "description": "Illustrative example artifact for NOMOS-SPEC-001 — Minimal Example Policy",
+    "industry": "general",
+    "jurisdictions": [],
+    "verification_tier": "compiled"
   },
-  "readiness": {
-    "lis": 0.95,
-    "drs": null,
-    "res": 0.05,
-    "gms": 0.6,
-    "ari": 0.72,
-    "autonomy_band": "autonomous"
+  "scope": {
+    "workflow": {
+      "domain": "Minimal Example Policy",
+      "workflow_name": "Minimal Example Policy",
+      "workflow_key": "minimal_v1",
+      "intent": "Illustrative decision logic for Minimal Example Policy"
+    },
+    "boundaries": {
+      "in_scope": [
+        "Minimal Example Policy"
+      ],
+      "out_of_scope": [],
+      "assumptions": []
+    }
+  },
+  "data_contract": {
+    "inputs": {
+      "user_status": {
+        "type": "string",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      }
+    },
+    "required_fields": [
+      "user_status"
+    ],
+    "provenance": {
+      "allowed_sources": [
+        "example"
+      ],
+      "verification_methods": [
+        "none"
+      ]
+    },
+    "confidence_policy": {
+      "min_confidence_for_autonomy": 0.9,
+      "min_confidence_per_field": {},
+      "on_low_confidence": "escalate"
+    }
+  },
+  "logic": {
+    "variables": {},
+    "decisions": [
+      {
+        "id": "rule_001",
+        "description": "Approved users may access the system.",
+        "when": "user_status == \"approved\"",
+        "then": [
+          {
+            "type": "allow"
+          }
+        ],
+        "else": [],
+        "priority": 10,
+        "provenance": {
+          "source_id": "minimal_v1",
+          "source_name": "Minimal Example Policy",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      },
+      {
+        "id": "rule_002",
+        "description": "Suspended users are denied access.",
+        "when": "user_status == \"suspended\"",
+        "then": [
+          {
+            "type": "block",
+            "reason": "Suspended users are denied access."
+          }
+        ],
+        "else": [],
+        "priority": 20,
+        "provenance": {
+          "source_id": "minimal_v1",
+          "source_name": "Minimal Example Policy",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
+      }
+    ],
+    "resolution": {
+      "conflict_policy": "first_match",
+      "tie_breaker": "deny_wins"
+    }
+  },
+  "governance": {
+    "constraints": [],
+    "escalations": [],
+    "roles": [
+      {
+        "role_id": "REVIEWER",
+        "name": "Reviewer",
+        "authority_scope": [
+          "approve_escalation"
+        ]
+      }
+    ],
+    "compliance": {
+      "requirements": [],
+      "logging_level": "standard",
+      "retention_days": 365
+    }
+  },
+  "execution": {
+    "actions": {},
+    "connectors": []
+  },
+  "audit": {
+    "event_schema": {
+      "type": "nomos.audit.v1",
+      "fields": [
+        "artifact_id",
+        "decision_trace",
+        "constraint_trace",
+        "actions"
+      ]
+    },
+    "emit_on": [
+      "decision",
+      "constraint_violation",
+      "action",
+      "escalation",
+      "completion"
+    ],
+    "redaction": {
+      "pii_fields": [],
+      "strategy": "remove"
+    }
   },
   "seal": {
-    "algorithm": "HMAC-SHA256",
-    "ts": "2026-01-15T12:00:00.000Z",
-    "hash": "2583efc6e37995b705c897ebedc1c1230d05b53efc6db93f619e7b074f6e357a",
-    "sig": "00ea9055a14d4d12a4fe530efb1e58a45853020be187541b0eb5596573cf5fa2"
+    "status": "sealed",
+    "hash": "c35cb1f2c20a7168192197d9cf525144871001d7a7fc9f185ad488749d73ccb7",
+    "canonicalization": "JCS",
+    "signed_by": {
+      "name": "NOMOS Protocol Working Group (test key)",
+      "org_id": "nomos-spec",
+      "role": "Example Publisher",
+      "timestamp": "2026-01-15T10:30:00.000Z"
+    },
+    "signature": "3dc5544c92564f2a15d5fa468c49132f1585e2622224fabc6e799ee4a806f4da",
+    "signature_algorithm": "HMAC-SHA256"
   }
 }

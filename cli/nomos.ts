@@ -23,38 +23,55 @@ import * as path from "path";
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [k: string]: JsonValue };
 
-interface ConditionNode {
-  op: string;
-  field?: string;
-  value?: JsonValue;
-  left?: ConditionNode;
-  right?: ConditionNode;
-  conditions?: ConditionNode[];
-  pattern?: string;
+interface Outcome {
+  type: "allow" | "block" | "escalate" | "set" | "emit" | "action";
+  [k: string]: JsonValue | undefined;
 }
 
-interface Rule {
+interface Decision {
   id: string;
-  text?: string;
-  condition: ConditionNode;
-  action: string;
+  description?: string;
+  when: string;
+  then: Outcome[];
+  else?: Outcome[];
   priority?: number;
-  confidence?: number;
-  metadata?: Record<string, JsonValue>;
+  provenance?: Record<string, JsonValue>;
+}
+
+interface Seal {
+  status?: "draft" | "sealed";
+  hash?: string | null;
+  canonicalization?: string;
+  signed_by?: { name: string; org_id: string; role: string; timestamp: string } | null;
+  signature?: string | null;
+  signature_algorithm?: string;
+  kid?: string;
+  algorithm?: string; // legacy field name for HMAC
+  sig?: string;       // legacy field name for HMAC signature
 }
 
 interface NomosArtifact {
-  artifact_id?: string;
-  version?: string;
-  spec_version?: string;
-  confidence?: string;
-  conflict_resolution?: string;
-  domain?: Record<string, JsonValue>;
-  rules?: Rule[];
+  nomos_version?: string;
+  meta?: {
+    artifact_id?: string;
+    name?: string;
+    version?: string;
+    verification_tier?: "compiled" | "proven" | "sovereign";
+    [k: string]: JsonValue | undefined;
+  };
+  scope?: Record<string, JsonValue>;
+  data_contract?: { required_fields?: string[]; [k: string]: JsonValue | undefined };
+  logic?: {
+    decisions?: Decision[];
+    resolution?: { conflict_policy?: string; tie_breaker?: string };
+    [k: string]: JsonValue | undefined;
+  };
+  governance?: Record<string, JsonValue>;
+  execution?: Record<string, JsonValue>;
+  audit?: Record<string, JsonValue>;
   agents?: Record<string, JsonValue>;
-  contradiction_report?: { contradiction_count?: number; contradictions?: JsonValue[] };
-  readiness?: { lis?: number; drs?: number | null; res?: number; gms?: number; ari?: number; autonomy_band?: string };
-  seal?: { algorithm: string; ts: string; hash: string; sig: string };
+  provenance?: { review_summary?: { pending_at_seal?: number; [k: string]: JsonValue | undefined }; [k: string]: JsonValue | undefined };
+  seal?: Seal;
   [key: string]: JsonValue | undefined;
 }
 
@@ -88,6 +105,221 @@ function jcsCanonicalize(obj: Record<string, JsonValue>): Buffer {
   return Buffer.from(jcsValue(obj), "utf8");
 }
 
+// ─── Nomos-Expr v1 — tokenizer + recursive-descent evaluator (spec §4.1) ─────
+// Grammar (lowest to highest precedence):
+//   expr        := orExpr
+//   orExpr      := andExpr ( 'or' andExpr )*
+//   andExpr     := notExpr ( 'and' notExpr )*
+//   notExpr     := 'not' notExpr | comparison
+//   comparison  := arith ( ('==' | '!=' | '>=' | '<=' | '>' | '<' | 'in' | 'contains') arith )?
+//   arith       := term ( ('+' | '-') term )*
+//   term        := factor ( ('*' | '/') factor )*
+//   factor      := NUMBER | STRING | 'true' | 'false' | 'null' | array | IDENT('(' args ')')? | '(' expr ')'
+
+type Token = { type: string; value: string };
+
+function tokenize(src: string): Token[] {
+  const tokens: Token[] = [];
+  let i = 0;
+  const twoChar = ["==", "!=", ">=", "<="];
+  while (i < src.length) {
+    const c = src[i];
+    if (/\s/.test(c)) { i++; continue; }
+    if (c === '"' || c === "'") {
+      const quote = c;
+      let j = i + 1;
+      let s = "";
+      while (j < src.length && src[j] !== quote) { s += src[j]; j++; }
+      tokens.push({ type: "string", value: s });
+      i = j + 1;
+      continue;
+    }
+    if (/[0-9]/.test(c) || (c === "-" && /[0-9]/.test(src[i + 1] ?? "") && (tokens.length === 0 || ["(", ",", "[", "op"].includes(tokens[tokens.length - 1].type) === false))) {
+      let j = i;
+      let s = "";
+      if (src[j] === "-") { s += "-"; j++; }
+      while (j < src.length && /[0-9.]/.test(src[j])) { s += src[j]; j++; }
+      tokens.push({ type: "number", value: s });
+      i = j;
+      continue;
+    }
+    const two = src.slice(i, i + 2);
+    if (twoChar.includes(two)) { tokens.push({ type: "op", value: two }); i += 2; continue; }
+    if ("+-*/><(),[]".includes(c)) { tokens.push({ type: "op", value: c }); i++; continue; }
+    if (/[A-Za-z_.]/.test(c)) {
+      let j = i;
+      let s = "";
+      while (j < src.length && /[A-Za-z0-9_.]/.test(src[j])) { s += src[j]; j++; }
+      tokens.push({ type: "ident", value: s });
+      i = j;
+      continue;
+    }
+    throw new Error(`Nomos-Expr: unexpected character '${c}' at position ${i}`);
+  }
+  return tokens;
+}
+
+class ExprParser {
+  private pos = 0;
+  constructor(private tokens: Token[], private input: Record<string, JsonValue>) {}
+
+  private peek(): Token | undefined { return this.tokens[this.pos]; }
+  private next(): Token { return this.tokens[this.pos++]; }
+  private isKeyword(word: string): boolean {
+    const t = this.peek();
+    return !!t && t.type === "ident" && t.value === word;
+  }
+
+  parse(): JsonValue { const v = this.orExpr(); if (this.pos < this.tokens.length) throw new Error(`Nomos-Expr: unexpected trailing token '${this.peek()!.value}'`); return v; }
+
+  private orExpr(): JsonValue {
+    let left = this.andExpr();
+    while (this.isKeyword("or")) { this.next(); const right = this.andExpr(); left = !!left || !!right; }
+    return left;
+  }
+
+  private andExpr(): JsonValue {
+    let left = this.notExpr();
+    while (this.isKeyword("and")) { this.next(); const right = this.notExpr(); left = !!left && !!right; }
+    return left;
+  }
+
+  private notExpr(): JsonValue {
+    if (this.isKeyword("not")) { this.next(); return !this.notExpr(); }
+    return this.comparison();
+  }
+
+  private comparison(): JsonValue {
+    const left = this.arith();
+    const t = this.peek();
+    if (t && (t.type === "op" && ["==", "!=", ">", ">=", "<", "<="].includes(t.value))) {
+      this.next();
+      const right = this.arith();
+      switch (t.value) {
+        case "==": return jsEq(left, right);
+        case "!=": return !jsEq(left, right);
+        case ">":  return typeof left === "number" && typeof right === "number" && left > right;
+        case ">=": return typeof left === "number" && typeof right === "number" && left >= right;
+        case "<":  return typeof left === "number" && typeof right === "number" && left < right;
+        case "<=": return typeof left === "number" && typeof right === "number" && left <= right;
+      }
+    }
+    if (this.isKeyword("in")) {
+      this.next();
+      const right = this.arith();
+      return Array.isArray(right) && right.some(v => jsEq(v, left));
+    }
+    if (this.isKeyword("contains")) {
+      this.next();
+      const right = this.arith();
+      return Array.isArray(left) && left.some(v => jsEq(v, right));
+    }
+    return left;
+  }
+
+  private arith(): JsonValue {
+    let left = this.term();
+    while (this.peek()?.type === "op" && ["+", "-"].includes(this.peek()!.value)) {
+      const op = this.next().value;
+      const right = this.term();
+      if (typeof left === "number" && typeof right === "number") left = op === "+" ? left + right : left - right;
+      else if (op === "+" && typeof left === "string") left = left + String(right);
+      else throw new Error(`Nomos-Expr: '${op}' requires numeric operands`);
+    }
+    return left;
+  }
+
+  private term(): JsonValue {
+    let left = this.factor();
+    while (this.peek()?.type === "op" && ["*", "/"].includes(this.peek()!.value)) {
+      const op = this.next().value;
+      const right = this.factor();
+      if (typeof left !== "number" || typeof right !== "number") throw new Error(`Nomos-Expr: '${op}' requires numeric operands`);
+      left = op === "*" ? left * right : left / right;
+    }
+    return left;
+  }
+
+  private factor(): JsonValue {
+    const t = this.peek();
+    if (!t) throw new Error("Nomos-Expr: unexpected end of expression");
+
+    if (t.type === "number") { this.next(); return parseFloat(t.value); }
+    if (t.type === "string") { this.next(); return t.value; }
+    if (t.type === "op" && t.value === "(") {
+      this.next();
+      const v = this.orExpr();
+      this.expectOp(")");
+      return v;
+    }
+    if (t.type === "op" && t.value === "[") {
+      this.next();
+      const items: JsonValue[] = [];
+      if (!(this.peek()?.type === "op" && this.peek()!.value === "]")) {
+        items.push(this.orExpr());
+        while (this.peek()?.type === "op" && this.peek()!.value === ",") { this.next(); items.push(this.orExpr()); }
+      }
+      this.expectOp("]");
+      return items;
+    }
+    if (t.type === "ident") {
+      this.next();
+      if (t.value === "true") return true;
+      if (t.value === "false") return false;
+      if (t.value === "null") return null;
+      // Function call?
+      if (this.peek()?.type === "op" && this.peek()!.value === "(") {
+        this.next();
+        const args: JsonValue[] = [];
+        if (!(this.peek()?.type === "op" && this.peek()!.value === ")")) {
+          args.push(this.orExpr());
+          while (this.peek()?.type === "op" && this.peek()!.value === ",") { this.next(); args.push(this.orExpr()); }
+        }
+        this.expectOp(")");
+        return this.callFunction(t.value, args);
+      }
+      // Field reference — dot path into `input`
+      return getFieldPath(this.input, t.value) as JsonValue;
+    }
+    throw new Error(`Nomos-Expr: unexpected token '${t.value}'`);
+  }
+
+  private expectOp(op: string): void {
+    const t = this.next();
+    if (!t || t.type !== "op" || t.value !== op) throw new Error(`Nomos-Expr: expected '${op}'`);
+  }
+
+  private callFunction(name: string, args: JsonValue[]): JsonValue {
+    switch (name) {
+      case "exists":     return args[0] !== undefined && args[0] !== null;
+      case "len":        return Array.isArray(args[0]) || typeof args[0] === "string" ? (args[0] as string | JsonValue[]).length : 0;
+      case "lower":      return typeof args[0] === "string" ? args[0].toLowerCase() : args[0];
+      case "startsWith": return typeof args[0] === "string" && typeof args[1] === "string" && args[0].startsWith(args[1]);
+      default: throw new Error(`Nomos-Expr: unknown function '${name}'`);
+    }
+  }
+}
+
+function jsEq(a: JsonValue, b: JsonValue): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function getFieldPath(obj: Record<string, JsonValue>, path: string): JsonValue | undefined {
+  const parts = path.split(".");
+  let cur: JsonValue | undefined = obj;
+  for (const p of parts) {
+    if (cur === undefined || cur === null || typeof cur !== "object" || Array.isArray(cur)) return undefined;
+    cur = (cur as Record<string, JsonValue>)[p];
+  }
+  return cur;
+}
+
+function evalExpr(src: string, input: Record<string, JsonValue>): boolean {
+  const tokens = tokenize(src);
+  const parser = new ExprParser(tokens, input);
+  return !!parser.parse();
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function loadArtifact(filePath: string): NomosArtifact {
@@ -117,38 +349,45 @@ function cmdValidate(filePath: string): void {
 
   let errors = 0;
 
-  const required = ["artifact_id", "version", "spec_version", "confidence", "rules", "seal"];
+  const required = ["nomos_version", "meta", "scope", "data_contract", "logic", "governance", "execution", "audit", "seal"];
   for (const field of required) {
     if (artifact[field] === undefined || artifact[field] === null) {
-      fail(`Missing required field: ${field}`); errors++;
+      fail(`Missing required top-level field: ${field}`); errors++;
     } else {
-      ok(`${field}: ${JSON.stringify(artifact[field]).slice(0, 60)}`);
+      ok(`${field}: present`);
     }
   }
 
-  if (artifact.rules !== undefined) {
-    if (!Array.isArray(artifact.rules)) {
-      fail("`rules` must be an array"); errors++;
+  if (artifact.meta && !artifact.meta.artifact_id) { fail("meta.artifact_id is missing"); errors++; }
+  if (artifact.meta && !artifact.meta.version) { fail("meta.version is missing"); errors++; }
+
+  const decisions = artifact.logic?.decisions;
+  if (decisions !== undefined) {
+    if (!Array.isArray(decisions)) {
+      fail("`logic.decisions` must be an array"); errors++;
     } else {
-      ok(`rules: ${artifact.rules.length} rule(s)`);
+      ok(`logic.decisions: ${decisions.length} decision(s)`);
       const ids = new Set<string>();
-      for (const rule of artifact.rules) {
-        if (!rule.id) { fail(`Rule missing id: ${JSON.stringify(rule).slice(0, 60)}`); errors++; }
-        else if (ids.has(rule.id)) { fail(`Duplicate rule id: ${rule.id}`); errors++; }
-        else ids.add(rule.id);
-        if (!rule.condition) { fail(`Rule ${rule.id} has no condition`); errors++; }
-        if (!rule.action) { fail(`Rule ${rule.id} has no action`); errors++; }
+      for (const d of decisions) {
+        if (!d.id) { fail(`Decision missing id: ${JSON.stringify(d).slice(0, 60)}`); errors++; }
+        else if (ids.has(d.id)) { fail(`Duplicate decision id: ${d.id}`); errors++; }
+        else ids.add(d.id);
+        if (typeof d.when !== "string") { fail(`Decision ${d.id} 'when' must be a Nomos-Expr v1 string, not a condition-tree object (see §4.5 — that format is deprecated)`); errors++; }
+        else {
+          try { tokenize(d.when); } catch (e: any) { fail(`Decision ${d.id} 'when' failed to tokenize: ${e.message}`); errors++; }
+        }
+        if (!Array.isArray(d.then) || d.then.length === 0) { fail(`Decision ${d.id} has no 'then' outcomes`); errors++; }
       }
     }
   }
 
-  if (artifact.spec_version && !["NOMOS-SPEC-001", "NOMOS-SPEC-002"].includes(artifact.spec_version as string)) {
-    warn(`Unrecognised spec_version: ${artifact.spec_version}`);
+  if (artifact.nomos_version && artifact.nomos_version !== "1.0.0") {
+    warn(`Unrecognised nomos_version: ${artifact.nomos_version}`);
   }
 
   console.log();
   if (errors === 0) {
-    console.log(C.green(`Result: VALID`) + ` — ${artifact.artifact_id}@${artifact.version}\n`);
+    console.log(C.green(`Result: VALID`) + ` — ${artifact.meta?.artifact_id}@${artifact.meta?.version}\n`);
   } else {
     console.log(C.red(`Result: INVALID`) + ` — ${errors} error(s)\n`);
     process.exit(1);
@@ -156,6 +395,9 @@ function cmdValidate(filePath: string): void {
 }
 
 // ─── VERIFY ───────────────────────────────────────────────────────────────────
+// Two independent checks: integrity (recompute the JCS/SHA-256 hash, excluding `seal` and
+// `attestations` — §8.2) and authenticity (Ed25519 against a public key, or legacy HMAC
+// against a shared secret — §8.3). Mirrors verify.ts/verify.py; kept in sync deliberately.
 
 function getSealKey(args: string[]): Buffer | null {
   for (let i = 0; i < args.length; i++) {
@@ -169,28 +411,30 @@ function getSealKey(args: string[]): Buffer | null {
   return env ? Buffer.from(env.trim(), "hex") : null;
 }
 
+function getArg(args: string[], flag: string): string | undefined {
+  const i = args.indexOf(flag);
+  return i !== -1 ? args[i + 1] : undefined;
+}
+
 function cmdVerify(filePath: string, args: string[]): void {
   const artifact = loadArtifact(filePath);
-  const sealKey = getSealKey(args);
   console.log(`\n${C.bold("Verify")} ${C.cyan(filePath)}\n`);
-  info(`artifact_id : ${artifact.artifact_id}`);
-  info(`version     : ${artifact.version}`);
-  info(`spec_version: ${artifact.spec_version}`);
-  info(`confidence  : ${artifact.confidence}`);
+  info(`artifact_id       : ${artifact.meta?.artifact_id}`);
+  info(`version           : ${artifact.meta?.version}`);
+  info(`verification_tier : ${artifact.meta?.verification_tier ?? "N/A"}`);
   console.log();
 
-  if (!artifact.seal) { fail("Missing seal block"); process.exit(1); }
-  const { hash: storedHash, sig: storedSig, algorithm } = artifact.seal;
+  const seal = artifact.seal;
+  if (!seal || seal.status !== "sealed") { fail("Artifact is not sealed"); process.exit(1); }
 
-  if (algorithm !== "HMAC-SHA256") { fail(`Unsupported algorithm: ${algorithm}`); process.exit(1); }
+  const alg = seal.signature_algorithm ?? seal.algorithm ?? "";
 
+  // 1. Integrity — excludes `seal` and `attestations` (added post-seal by third parties, §8.2)
   const payload = Object.fromEntries(
-    Object.entries(artifact).filter(([k]) => k !== "seal")
+    Object.entries(artifact).filter(([k]) => k !== "seal" && k !== "attestations")
   ) as Record<string, JsonValue>;
-
-  const canonical = jcsCanonicalize(payload);
-  const computedHash = crypto.createHash("sha256").update(canonical).digest("hex");
-
+  const computedHash = crypto.createHash("sha256").update(jcsCanonicalize(payload)).digest("hex");
+  const storedHash = seal.hash ?? "";
   if (computedHash !== storedHash) {
     fail(`Hash mismatch — artifact modified after sealing`);
     info(`  stored  : ${storedHash}`);
@@ -199,61 +443,46 @@ function cmdVerify(filePath: string, args: string[]): void {
   }
   ok(`Payload hash matches: ${computedHash.slice(0, 16)}…`);
 
-  if (!sealKey) {
-    warn("No seal key — signature not verified (pass --key or --key-env NOMOS_SEAL_KEY)");
-  } else {
-    const computedSig = crypto.createHmac("sha256", sealKey).update(computedHash, "ascii").digest("hex");
-    if (!crypto.timingSafeEqual(Buffer.from(computedSig, "hex"), Buffer.from(storedSig, "hex"))) {
-      fail("HMAC signature mismatch"); process.exit(1);
+  // 2. Authenticity
+  if (alg === "Ed25519" || alg === "RS256" || alg === "ES256") {
+    if (!seal.signature) { fail("status: sealed but signature is null — this artifact computed a hash but never invoked the signing step (non-conformant, §3.10)"); process.exit(1); }
+    const pubkeyPath = getArg(args, "--pubkey");
+    if (!pubkeyPath) { warn(`No --pubkey provided — cannot verify ${alg} signature offline. Fetch the key from /.well-known/nomos-signing-keys.`); }
+    else {
+      const pem = fs.readFileSync(path.resolve(pubkeyPath), "utf8");
+      const signed = jcsCanonicalize({ hash: seal.hash ?? null, signed_by: (seal.signed_by as unknown as JsonValue) ?? null });
+      const hashAlgo = alg === "Ed25519" ? null : "sha256";
+      const valid = crypto.verify(hashAlgo, signed, crypto.createPublicKey(pem), Buffer.from(seal.signature, "base64"));
+      if (!valid) { fail("Signature does not verify — forged, wrong key, or the seal was altered."); process.exit(1); }
+      ok(`${alg} signature verified against the published PUBLIC key.`);
     }
-    ok("HMAC signature verified");
+  } else if (alg === "HMAC-SHA256") {
+    const sealKey = getSealKey(args);
+    const storedSig = seal.sig ?? seal.signature ?? "";
+    if (!sealKey) {
+      warn("No seal key — signature not verified (pass --key or --key-env NOMOS_SEAL_KEY)");
+    } else if (!storedSig) {
+      fail("status: sealed but signature is null — this artifact computed a hash but never invoked the signing step (non-conformant, §3.10)"); process.exit(1);
+    } else {
+      const computedSig = crypto.createHmac("sha256", sealKey).update(computedHash, "ascii").digest("hex");
+      if (!crypto.timingSafeEqual(Buffer.from(computedSig, "hex"), Buffer.from(storedSig, "hex"))) {
+        fail("HMAC signature mismatch"); process.exit(1);
+      }
+      ok("HMAC signature verified");
+    }
+  } else {
+    fail(`Unsupported or missing seal algorithm: ${JSON.stringify(alg)}`); process.exit(1);
   }
 
-  const count = artifact.contradiction_report?.contradiction_count ?? 0;
-  if (count > 0) warn(`${count} contradiction(s) detected at seal time`);
-  else ok("No contradictions");
-
-  const r = artifact.readiness;
-  if (r) ok(`ARI=${r.ari ?? "N/A"}  band=${r.autonomy_band ?? "N/A"}`);
+  const pending = artifact.provenance?.review_summary?.pending_at_seal ?? 0;
+  if (pending > 0) warn(`${pending} unresolved conflict(s) at seal time`);
+  else ok("No unresolved conflicts recorded at seal time");
 
   console.log();
   console.log(C.green("Result: VALID\n"));
 }
 
 // ─── EXEC ─────────────────────────────────────────────────────────────────────
-
-function evalCondition(node: ConditionNode, input: Record<string, JsonValue>): boolean {
-  const { op } = node;
-
-  if (op === "and") {
-    if (node.conditions) return node.conditions.every(c => evalCondition(c, input));
-    return !!(node.left && node.right && evalCondition(node.left, input) && evalCondition(node.right, input));
-  }
-  if (op === "or") {
-    if (node.conditions) return node.conditions.some(c => evalCondition(c, input));
-    return !!(node.left && node.right && (evalCondition(node.left, input) || evalCondition(node.right, input)));
-  }
-  if (op === "not") {
-    const child = node.left ?? node.conditions?.[0];
-    return child ? !evalCondition(child, input) : false;
-  }
-
-  const fieldVal = node.field ? input[node.field] : undefined;
-
-  switch (op) {
-    case "eq":     return fieldVal === node.value;
-    case "neq":    return fieldVal !== node.value;
-    case "gt":     return typeof fieldVal === "number" && typeof node.value === "number" && fieldVal > node.value;
-    case "gte":    return typeof fieldVal === "number" && typeof node.value === "number" && fieldVal >= node.value;
-    case "lt":     return typeof fieldVal === "number" && typeof node.value === "number" && fieldVal < node.value;
-    case "lte":    return typeof fieldVal === "number" && typeof node.value === "number" && fieldVal <= node.value;
-    case "in":     return Array.isArray(node.value) && node.value.includes(fieldVal as JsonValue);
-    case "nin":    return Array.isArray(node.value) && !node.value.includes(fieldVal as JsonValue);
-    case "exists": return fieldVal !== undefined && fieldVal !== null;
-    case "regex":  return typeof fieldVal === "string" && typeof node.pattern === "string" && new RegExp(node.pattern).test(fieldVal);
-    default:       return false;
-  }
-}
 
 function cmdExec(filePath: string, args: string[]): void {
   const artifact = loadArtifact(filePath);
@@ -273,40 +502,39 @@ function cmdExec(filePath: string, args: string[]): void {
   }
 
   console.log(`\n${C.bold("Exec")} ${C.cyan(filePath)}\n`);
-  info(`artifact_id: ${artifact.artifact_id}@${artifact.version}`);
+  info(`artifact: ${artifact.meta?.artifact_id}@${artifact.meta?.version}`);
   info(`input: ${JSON.stringify(input)}`);
   console.log();
 
-  const rules = (artifact.rules ?? []).slice().sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
-  const resolution = artifact.conflict_resolution ?? "first_match";
-  const matched: { rule: Rule; result: boolean }[] = [];
+  const decisions = (artifact.logic?.decisions ?? []).slice().sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+  const resolution = artifact.logic?.resolution?.conflict_policy ?? "collect_and_resolve";
+  const matched: { decision: Decision; outcomes: Outcome[] }[] = [];
 
-  for (const rule of rules) {
-    const result = evalCondition(rule.condition, input);
-    if (result) matched.push({ rule, result });
-    info(`rule ${rule.id} (priority ${rule.priority ?? 0}): ${result ? C.green("match") : C.dim("no match")}`);
+  for (const d of decisions) {
+    let result: boolean;
+    try { result = evalExpr(d.when, input); }
+    catch (e: any) { fail(`decision ${d.id}: ${e.message}`); continue; }
+    const outcomes = result ? d.then : (d.else ?? []);
+    if (result || (d.else && d.else.length > 0)) matched.push({ decision: d, outcomes });
+    info(`decision ${d.id} (priority ${d.priority ?? 0}): ${result ? C.green("when matched") : C.dim("when false")}`);
+    if (resolution === "first_match" && result) break;
   }
 
   console.log();
 
-  if (matched.length === 0) {
-    console.log(C.yellow("Verdict: NO_MATCH") + " — no rule matched the input\n");
+  const firing = matched.filter(m => m.outcomes.length > 0);
+  if (firing.length === 0) {
+    console.log(C.yellow("Verdict: NO_OUTCOME") + " — no decision produced an outcome for this input\n");
     return;
   }
 
-  if (resolution === "first_match") {
-    const winner = matched[0].rule;
-    console.log(C.bold("Verdict: ") + C.cyan(winner.action));
-    info(`rule: ${winner.id}`);
-    if (winner.text) info(`text: ${winner.text}`);
-    console.log();
-  } else {
-    console.log(C.bold("Matched rules:"));
-    for (const { rule } of matched) {
-      console.log(`  ${C.cyan(rule.action.padEnd(12))} ${rule.id}  ${C.dim(rule.text ?? "")}`);
+  console.log(C.bold("Outcomes:"));
+  for (const { decision, outcomes } of firing) {
+    for (const o of outcomes) {
+      console.log(`  ${C.cyan(o.type.padEnd(10))} ${decision.id}  ${C.dim(decision.description ?? "")}`);
     }
-    console.log();
   }
+  console.log();
 }
 
 // ─── DIFF ─────────────────────────────────────────────────────────────────────
@@ -315,73 +543,55 @@ function cmdDiff(filePath1: string, filePath2: string): void {
   const a = loadArtifact(filePath1);
   const b = loadArtifact(filePath2);
   console.log(`\n${C.bold("Diff")}\n`);
-  info(`${C.dim("from")} ${a.artifact_id}@${a.version}`);
-  info(`${C.dim("to  ")} ${b.artifact_id}@${b.version}`);
+  info(`${C.dim("from")} ${a.meta?.artifact_id}@${a.meta?.version}`);
+  info(`${C.dim("to  ")} ${b.meta?.artifact_id}@${b.meta?.version}`);
   console.log();
 
   // Header fields
-  const headerFields = ["artifact_id", "version", "spec_version", "confidence", "conflict_resolution"] as const;
   let headerChanges = 0;
-  for (const f of headerFields) {
-    if (JSON.stringify(a[f]) !== JSON.stringify(b[f])) {
-      console.log(`  ${C.yellow("~")} ${f}: ${C.red(JSON.stringify(a[f]))} → ${C.green(JSON.stringify(b[f]))}`);
-      headerChanges++;
-    }
+  if (JSON.stringify(a.meta?.verification_tier) !== JSON.stringify(b.meta?.verification_tier)) {
+    console.log(`  ${C.yellow("~")} meta.verification_tier: ${C.red(String(a.meta?.verification_tier))} → ${C.green(String(b.meta?.verification_tier))}`);
+    headerChanges++;
+  }
+  if (JSON.stringify(a.logic?.resolution) !== JSON.stringify(b.logic?.resolution)) {
+    console.log(`  ${C.yellow("~")} logic.resolution: ${C.red(JSON.stringify(a.logic?.resolution))} → ${C.green(JSON.stringify(b.logic?.resolution))}`);
+    headerChanges++;
   }
   if (headerChanges === 0) ok("Header fields unchanged");
   console.log();
 
-  // Rules
-  const rulesA = new Map((a.rules ?? []).map(r => [r.id, r]));
-  const rulesB = new Map((b.rules ?? []).map(r => [r.id, r]));
-  let ruleChanges = 0;
+  // Decisions
+  const decisionsA = new Map((a.logic?.decisions ?? []).map(d => [d.id, d]));
+  const decisionsB = new Map((b.logic?.decisions ?? []).map(d => [d.id, d]));
+  let changes = 0;
 
-  for (const [id, rule] of rulesB) {
-    if (!rulesA.has(id)) {
-      console.log(`  ${C.green("+")} rule ${id}: ${rule.action}  ${C.dim(rule.text?.slice(0, 60) ?? "")}`);
-      ruleChanges++;
+  for (const [id, d] of decisionsB) {
+    if (!decisionsA.has(id)) {
+      console.log(`  ${C.green("+")} decision ${id}: ${C.dim(d.description?.slice(0, 60) ?? "")}`);
+      changes++;
     }
   }
-  for (const [id, rule] of rulesA) {
-    if (!rulesB.has(id)) {
-      console.log(`  ${C.red("-")} rule ${id}: ${rule.action}  ${C.dim(rule.text?.slice(0, 60) ?? "")}`);
-      ruleChanges++;
+  for (const [id, d] of decisionsA) {
+    if (!decisionsB.has(id)) {
+      console.log(`  ${C.red("-")} decision ${id}: ${C.dim(d.description?.slice(0, 60) ?? "")}`);
+      changes++;
     }
   }
-  for (const [id, ruleA] of rulesA) {
-    const ruleB = rulesB.get(id);
-    if (!ruleB) continue;
-    const condChanged = JSON.stringify(ruleA.condition) !== JSON.stringify(ruleB.condition);
-    const actionChanged = ruleA.action !== ruleB.action;
-    const priorityChanged = ruleA.priority !== ruleB.priority;
-    if (condChanged || actionChanged || priorityChanged) {
-      console.log(`  ${C.yellow("~")} rule ${id}:`);
-      if (actionChanged)   console.log(`      action:   ${C.red(ruleA.action)} → ${C.green(ruleB.action)}`);
-      if (priorityChanged) console.log(`      priority: ${C.red(String(ruleA.priority))} → ${C.green(String(ruleB.priority))}`);
-      if (condChanged)     console.log(`      condition changed`);
-      ruleChanges++;
+  for (const [id, dA] of decisionsA) {
+    const dB = decisionsB.get(id);
+    if (!dB) continue;
+    const whenChanged = dA.when !== dB.when;
+    const thenChanged = JSON.stringify(dA.then) !== JSON.stringify(dB.then);
+    const priorityChanged = dA.priority !== dB.priority;
+    if (whenChanged || thenChanged || priorityChanged) {
+      console.log(`  ${C.yellow("~")} decision ${id}:`);
+      if (whenChanged)     console.log(`      when:     ${C.red(dA.when)} → ${C.green(dB.when)}`);
+      if (thenChanged)     console.log(`      then changed`);
+      if (priorityChanged) console.log(`      priority: ${C.red(String(dA.priority))} → ${C.green(String(dB.priority))}`);
+      changes++;
     }
   }
-  if (ruleChanges === 0) ok("Rules unchanged");
-  console.log();
-
-  // Readiness
-  const ra = a.readiness; const rb = b.readiness;
-  if (ra && rb) {
-    const scoreFields = ["ari", "lis", "drs", "res", "gms"] as const;
-    for (const f of scoreFields) {
-      const va = ra[f]; const vb = rb[f];
-      if (va !== vb) {
-        const arrow = typeof va === "number" && typeof vb === "number"
-          ? (vb > va ? C.green(`${vb}`) : C.red(`${vb}`))
-          : C.yellow(String(vb));
-        console.log(`  ${C.yellow("~")} ${f.toUpperCase()}: ${va} → ${arrow}`);
-      }
-    }
-    if (ra.autonomy_band !== rb.autonomy_band) {
-      console.log(`  ${C.yellow("~")} band: ${C.red(ra.autonomy_band ?? "N/A")} → ${C.green(rb.autonomy_band ?? "N/A")}`);
-    }
-  }
+  if (changes === 0) ok("Decisions unchanged");
   console.log();
 }
 
@@ -393,42 +603,32 @@ function cmdLint(filePath: string): void {
 
   let issues = 0;
 
-  // Rules
-  const rules = artifact.rules ?? [];
-  if (rules.length === 0) { warn("No rules defined"); issues++; }
+  const decisions = artifact.logic?.decisions ?? [];
+  if (decisions.length === 0) { warn("No decisions defined"); issues++; }
 
-  const ids = rules.map(r => r.id);
+  const ids = decisions.map(d => d.id);
   const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
-  if (dupes.length > 0) { fail(`Duplicate rule IDs: ${dupes.join(", ")}`); issues++; }
+  if (dupes.length > 0) { fail(`Duplicate decision IDs: ${dupes.join(", ")}`); issues++; }
 
-  const lowConf = rules.filter(r => r.confidence !== undefined && r.confidence < 0.7);
-  if (lowConf.length > 0) { warn(`${lowConf.length} rule(s) with confidence < 0.7: ${lowConf.map(r => r.id).join(", ")}`); issues++; }
+  const noProvenance = decisions.filter(d => !d.provenance);
+  if (noProvenance.length > 0) { warn(`${noProvenance.length} decision(s) missing provenance: ${noProvenance.map(d => d.id).join(", ")}`); issues++; }
 
-  const noText = rules.filter(r => !r.text);
-  if (noText.length > 0) { warn(`${noText.length} rule(s) missing text: ${noText.map(r => r.id).join(", ")}`); issues++; }
+  const noPriority = decisions.filter(d => d.priority === undefined);
+  if (noPriority.length > 0) { warn(`${noPriority.length} decision(s) missing priority: ${noPriority.map(d => d.id).join(", ")}`); issues++; }
 
-  const noPriority = rules.filter(r => r.priority === undefined);
-  if (noPriority.length > 0) { warn(`${noPriority.length} rule(s) missing priority: ${noPriority.map(r => r.id).join(", ")}`); issues++; }
-
-  // Contradictions
-  const count = artifact.contradiction_report?.contradiction_count ?? 0;
-  if (count > 0) { warn(`${count} contradiction(s) in contradiction_report`); issues++; }
-  else ok("No contradictions");
+  for (const d of decisions) {
+    try { tokenize(d.when); } catch (e: any) { fail(`decision ${d.id}: 'when' does not tokenize as Nomos-Expr v1 — ${e.message}`); issues++; }
+  }
 
   // Seal
-  if (!artifact.seal) { fail("No seal — artifact is unsealed"); issues++; }
-  else ok("Seal present");
+  if (!artifact.seal || artifact.seal.status !== "sealed") { warn("Artifact is not sealed"); issues++; }
+  else if (!artifact.seal.signature) { fail("status: sealed but signature is null — non-conformant (§3.10)"); issues++; }
+  else ok("Seal present and signed");
 
-  // Readiness
-  const r = artifact.readiness;
-  if (!r) { warn("No readiness block"); issues++; }
-  else {
-    if (r.ari !== undefined && r.ari !== null) {
-      if (r.ari < 0.3) { warn(`ARI ${r.ari} — human_governed band. Not suitable for autonomous deployment`); issues++; }
-      else ok(`ARI ${r.ari} — ${r.autonomy_band}`);
-    }
-    if (r.drs === null) info("DRS is null — no behavioral data ingested (Declared mode)");
-  }
+  // Verification tier
+  const tier = artifact.meta?.verification_tier;
+  if (!tier) { warn("meta.verification_tier not set"); issues++; }
+  else ok(`Verification tier: ${tier}`);
 
   // Agents
   if (!artifact.agents || Object.keys(artifact.agents).length === 0) {
@@ -453,20 +653,22 @@ ${C.bold("nomos")} — NOMOS Protocol CLI
 
 ${C.bold("Usage:")}
   nomos validate <file>                    Check structure and required fields
-  nomos verify   <file>                    Verify cryptographic seal
+  nomos verify   <file> [--pubkey <pem> | --key <hex> | --key-env <VAR>]
+                                            Verify cryptographic seal
   nomos exec     <file> --input '{...}'    Execute artifact against input payload
   nomos exec     <file> --input-file <f>   Execute artifact from input file
   nomos diff     <file1> <file2>           Compare two artifact versions
   nomos lint     <file>                    Check for common authoring issues
 
 ${C.bold("Options for verify:")}
-  --key <hex>          HMAC seal key as hex string
-  --key-env <VAR>      Read seal key from environment variable
-                       (defaults to NOMOS_SEAL_KEY env var)
+  --pubkey <pem>        Path to published Ed25519 public key (asymmetric seals)
+  --key <hex>           Legacy HMAC seal key as hex string
+  --key-env <VAR>       Read legacy HMAC seal key from environment variable
+                        (defaults to NOMOS_SEAL_KEY env var)
 
 ${C.bold("Examples:")}
   nomos validate examples/lending_policy_v1.nomos
-  nomos verify   examples/lending_policy_v1.nomos --key-env NOMOS_SEAL_KEY
+  nomos verify   examples/lending_policy_v1.nomos --pubkey signing_key.pub.pem
   nomos exec     examples/lending_policy_v1.nomos --input '{"patron_age":25,"account_standing":"good"}'
   nomos diff     examples/lending_policy_v1.nomos examples/lending_policy_v2.nomos
   nomos lint     examples/lending_policy_v1.nomos

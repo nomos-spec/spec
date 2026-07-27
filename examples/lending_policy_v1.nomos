@@ -1,155 +1,282 @@
 {
-  "artifact_id": "lending_policy_v1",
-  "version": "1.0.0",
-  "spec_version": "NOMOS-SPEC-001",
-  "confidence": "DECLARED",
-  "conflict_resolution": "collect_and_resolve",
-  "domain": {
+  "nomos_version": "1.0.0",
+  "meta": {
+    "artifact_id": "lending_policy_v1",
     "name": "Public Lending Policy",
-    "organization": "City Library System",
-    "effective_date": "2026-01-01",
-    "jurisdiction": "State of California",
+    "version": "1.0.0",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "owner": {
+      "org_name": "City Library System",
+      "org_id": "city-library-system",
+      "contact": "governance@example.com"
+    },
     "tags": [
       "library",
       "lending",
       "public-sector"
-    ]
+    ],
+    "description": "Illustrative example artifact for NOMOS-SPEC-001 — Public Lending Policy",
+    "industry": "library",
+    "jurisdictions": [
+      "State of California"
+    ],
+    "verification_tier": "compiled"
   },
-  "rules": [
-    {
-      "id": "rule_001",
-      "text": "Patrons aged 18 or older with a good account standing may borrow standard items.",
-      "condition": {
-        "op": "and",
-        "left": {
-          "op": "gte",
-          "field": "patron_age",
-          "value": 18
-        },
-        "right": {
-          "op": "eq",
-          "field": "account_standing",
-          "value": "good"
+  "scope": {
+    "workflow": {
+      "domain": "Public Lending Policy",
+      "workflow_name": "Public Lending Policy",
+      "workflow_key": "lending_policy_v1",
+      "intent": "Illustrative decision logic for Public Lending Policy"
+    },
+    "boundaries": {
+      "in_scope": [
+        "Public Lending Policy"
+      ],
+      "out_of_scope": [],
+      "assumptions": []
+    }
+  },
+  "data_contract": {
+    "inputs": {
+      "patron_age": {
+        "type": "integer",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "account_standing": {
+        "type": "string",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "item_type": {
+        "type": "string",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "outstanding_fines_usd": {
+        "type": "integer",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      },
+      "request_type": {
+        "type": "string",
+        "description": "Referenced by decision logic in this example artifact",
+        "required": true
+      }
+    },
+    "required_fields": [
+      "patron_age",
+      "account_standing",
+      "item_type",
+      "outstanding_fines_usd",
+      "request_type"
+    ],
+    "provenance": {
+      "allowed_sources": [
+        "example"
+      ],
+      "verification_methods": [
+        "none"
+      ]
+    },
+    "confidence_policy": {
+      "min_confidence_for_autonomy": 0.9,
+      "min_confidence_per_field": {},
+      "on_low_confidence": "escalate"
+    }
+  },
+  "logic": {
+    "variables": {},
+    "decisions": [
+      {
+        "id": "rule_001",
+        "description": "Patrons aged 18 or older with a good account standing may borrow standard items.",
+        "when": "(patron_age >= 18 and account_standing == \"good\")",
+        "then": [
+          {
+            "type": "allow"
+          }
+        ],
+        "else": [],
+        "priority": 10,
+        "provenance": {
+          "source_id": "lending_policy_v1",
+          "source_name": "Public Lending Policy",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
         }
       },
-      "action": "ALLOW",
-      "priority": 10,
-      "source": "policy",
-      "confidence": 0.96,
-      "metadata": {
-        "section": "2.1 Borrowing Eligibility",
-        "page": 4,
-        "tags": [
-          "eligibility",
-          "age"
-        ]
-      }
-    },
-    {
-      "id": "rule_002",
-      "text": "Reference materials and periodicals may not be borrowed; in-library use only.",
-      "condition": {
-        "op": "in",
-        "field": "item_type",
-        "value": [
-          "reference",
-          "periodical"
-        ]
+      {
+        "id": "rule_002",
+        "description": "Reference materials and periodicals may not be borrowed; in-library use only.",
+        "when": "item_type in [\"reference\", \"periodical\"]",
+        "then": [
+          {
+            "type": "block",
+            "reason": "Reference materials and periodicals may not be borrowed; in-library use only."
+          }
+        ],
+        "else": [],
+        "priority": 20,
+        "provenance": {
+          "source_id": "lending_policy_v1",
+          "source_name": "Public Lending Policy",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
       },
-      "action": "DENY",
-      "priority": 20,
-      "source": "policy",
-      "confidence": 0.99,
-      "metadata": {
-        "section": "3.4 Non-circulating Collections",
-        "page": 9,
-        "tags": [
-          "collections",
-          "in-library"
-        ]
-      }
-    },
-    {
-      "id": "rule_003",
-      "text": "Patrons with outstanding fines exceeding $10 may not borrow additional items.",
-      "condition": {
-        "op": "gt",
-        "field": "outstanding_fines_usd",
-        "value": 10
+      {
+        "id": "rule_003",
+        "description": "Patrons with outstanding fines exceeding $10 may not borrow additional items.",
+        "when": "outstanding_fines_usd > 10",
+        "then": [
+          {
+            "type": "block",
+            "reason": "Patrons with outstanding fines exceeding $10 may not borrow additional items."
+          }
+        ],
+        "else": [],
+        "priority": 30,
+        "provenance": {
+          "source_id": "lending_policy_v1",
+          "source_name": "Public Lending Policy",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
       },
-      "action": "DENY",
-      "priority": 30,
-      "source": "policy",
-      "confidence": 0.94,
-      "metadata": {
-        "section": "5.2 Fine Collection Policy",
-        "page": 14,
-        "tags": [
-          "fines",
-          "eligibility"
-        ]
-      }
-    },
-    {
-      "id": "rule_004",
-      "text": "Requests for interlibrary loans require supervisor review.",
-      "condition": {
-        "op": "eq",
-        "field": "request_type",
-        "value": "interlibrary_loan"
+      {
+        "id": "rule_004",
+        "description": "Requests for interlibrary loans require supervisor review.",
+        "when": "request_type == \"interlibrary_loan\"",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "rule_004_escalation"
+          }
+        ],
+        "else": [],
+        "priority": 5,
+        "provenance": {
+          "source_id": "lending_policy_v1",
+          "source_name": "Public Lending Policy",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
       },
-      "action": "ESCALATE",
-      "priority": 5,
-      "source": "policy",
-      "confidence": 0.91,
-      "metadata": {
-        "section": "6.1 Interlibrary Loans",
-        "page": 17,
-        "tags": [
-          "interlibrary",
-          "escalation"
-        ]
+      {
+        "id": "rule_005",
+        "description": "Minors under 13 require a parent or guardian co-signature on the library card.",
+        "when": "patron_age < 13",
+        "then": [
+          {
+            "type": "escalate",
+            "escalation_id": "rule_005_escalation"
+          }
+        ],
+        "else": [],
+        "priority": 25,
+        "provenance": {
+          "source_id": "lending_policy_v1",
+          "source_name": "Public Lending Policy",
+          "extractor_version": "example-converter-v1",
+          "extraction_timestamp": "2026-07-27T00:00:00.000Z"
+        }
       }
-    },
-    {
-      "id": "rule_005",
-      "text": "Minors under 13 require a parent or guardian co-signature on the library card.",
-      "condition": {
-        "op": "lt",
-        "field": "patron_age",
-        "value": 13
-      },
-      "action": "ESCALATE",
-      "priority": 25,
-      "source": "policy",
-      "confidence": 0.98,
-      "metadata": {
-        "section": "2.3 Minor Patron Accounts",
-        "page": 5,
-        "tags": [
-          "minors",
-          "guardian",
-          "escalation"
-        ]
-      }
+    ],
+    "resolution": {
+      "conflict_policy": "collect_and_resolve",
+      "tie_breaker": "deny_wins"
     }
-  ],
-  "contradiction_report": {
-    "contradiction_count": 0,
-    "contradictions": []
   },
-  "readiness": {
-    "lis": 0.88,
-    "drs": null,
-    "res": 0.12,
-    "gms": 0.7,
-    "ari": 0.74,
-    "autonomy_band": "autonomous"
+  "governance": {
+    "constraints": [],
+    "escalations": [
+      {
+        "id": "rule_004_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "request_type == \"interlibrary_loan\"",
+        "payload": {
+          "show": [
+            "patron_age",
+            "account_standing",
+            "item_type",
+            "outstanding_fines_usd",
+            "request_type"
+          ],
+          "question": "Requests for interlibrary loans require supervisor review."
+        },
+        "sla_minutes": 1440
+      },
+      {
+        "id": "rule_005_escalation",
+        "role_required": "REVIEWER",
+        "trigger": "patron_age < 13",
+        "payload": {
+          "show": [
+            "patron_age",
+            "account_standing",
+            "item_type",
+            "outstanding_fines_usd",
+            "request_type"
+          ],
+          "question": "Minors under 13 require a parent or guardian co-signature on the library card."
+        },
+        "sla_minutes": 1440
+      }
+    ],
+    "roles": [
+      {
+        "role_id": "REVIEWER",
+        "name": "Reviewer",
+        "authority_scope": [
+          "approve_escalation"
+        ]
+      }
+    ],
+    "compliance": {
+      "requirements": [],
+      "logging_level": "standard",
+      "retention_days": 365
+    }
+  },
+  "execution": {
+    "actions": {},
+    "connectors": []
+  },
+  "audit": {
+    "event_schema": {
+      "type": "nomos.audit.v1",
+      "fields": [
+        "artifact_id",
+        "decision_trace",
+        "constraint_trace",
+        "actions"
+      ]
+    },
+    "emit_on": [
+      "decision",
+      "constraint_violation",
+      "action",
+      "escalation",
+      "completion"
+    ],
+    "redaction": {
+      "pii_fields": [],
+      "strategy": "remove"
+    }
   },
   "seal": {
-    "algorithm": "HMAC-SHA256",
-    "ts": "2026-01-15T10:30:00.000Z",
-    "hash": "68187ec58aa99bde4f11ca9499e95e027dc63730e0c17214b15496b0d165e621",
-    "sig": "e4f79aa316c3a172271ca6214fc64004e670139a4e2f0f0b4bb22687f4f50305"
+    "status": "sealed",
+    "hash": "adc9ed98ce6300fe3337a048d8ca94e973cbf3daa20859ade0aa9119a9acf7a7",
+    "canonicalization": "JCS",
+    "signed_by": {
+      "name": "NOMOS Protocol Working Group (test key)",
+      "org_id": "nomos-spec",
+      "role": "Example Publisher",
+      "timestamp": "2026-01-15T10:30:00.000Z"
+    },
+    "signature": "bd0d5158989b5f249118f86a7c0062bd7f010c57caf65450ecd88158cf0587d4",
+    "signature_algorithm": "HMAC-SHA256"
   }
 }

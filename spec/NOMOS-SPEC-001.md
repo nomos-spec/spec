@@ -1,10 +1,10 @@
 # NOMOS-SPEC-001: Governance Artifact Protocol
 
 **Status:** Active  
-**Version:** 1.1.0  
+**Version:** 2.0.0  
 **Published:** 2026-01-15  
-**Updated:** 2026-06-21  
-**Authors:** SafeHaven LLC / NOMOS Protocol Working Group  
+**Updated:** 2026-07-27  
+**Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
 
 ---
 
@@ -15,6 +15,8 @@ NOMOS-SPEC-001 defines a portable, vendor-neutral format for packaging organisat
 The goals are reproducibility (identical inputs produce identical outputs), auditability (every decision is traceable to a sealed rule), and interoperability (any compliant runtime can execute any conformant artifact without access to the original policy documents).
 
 Sealed artifacts may be distributed and verified independently of the producing platform. The official TypeScript SDK (`@nomosprotocol/sdk`) and the NOMOS Exchange provide reference implementations of the distribution and execution layers described in this specification.
+
+**2.0.0 is a breaking correction, not an addition.** §3 and §4 of v1.1.0 described an artifact structure and condition format that did not match any artifact ever produced by a conformant implementation — an EU AI Act artifact sealed and published on the reference deployment failed validation against v1.1.0's own `schema/artifact.schema.json`. This version replaces §3 and §4 with the structure real conformant producers actually emit, verified directly against a live sealed artifact. §5 through §12 are corrected in smaller, targeted ways — most of that content was already accurate; see the CHANGELOG for the exact line-level diff. Per `DEPRECATION.md` principle 2, this is why the version increments rather than being published as editorial errata: §3/§4 changes alter what a conformant producer or runtime must accept.
 
 ---
 
@@ -45,573 +47,460 @@ All examples use JSON. String values MUST be UTF-8 encoded. All timestamps MUST 
 
 ## 2. Terminology
 
-**Artifact** — A sealed `.nomos` file; the output of the NOMOS compilation step.
+**Artifact** — A sealed `.nomos` file; the output of the NOMOS compilation step. MUST be valid UTF-8 JSON. SHOULD be saved with the `.nomos` extension and served with media type `application/vnd.nomos+json` (§3.0) — never as a bare `.json` file with generic `Content-Type: application/json`.
 
-**Rule** — A single declarative governance statement: a condition tree + an action.
+**Decision** — A single declarative governance statement: a condition (`when`), one or more outcomes (`then`), and a priority. NOMOS-SPEC-001 v1.1.0 called this a "Rule" with a condition tree; §4 corrects this — the condition is a string expression, not a tree object.
 
-**Confidence tier** — A classification indicating how the rules were derived and validated. Valid values: `DECLARED`, `VALIDATED`, `CERTIFIED`, `PROVEN`, `SOVEREIGN`.
+**Verification tier** — A classification of how much confidence a runtime should place in an artifact's rules, stamped into the artifact at `meta.verification_tier`. Valid values: `compiled`, `proven`, `sovereign` (§5.1). A separate, unrelated vocabulary — `DECLARED`/`VALIDATED`/`CERTIFIED` — is used by the reference deployment's un-sealed public demo artifacts (§5.2); the two are not interchangeable and a runtime MUST NOT conflate them.
 
-**Seal** — A cryptographic block appended to a frozen artifact, binding all fields to a specific key and timestamp.
+**Seal** — A cryptographic block appended to a frozen artifact, binding all fields (except itself and `attestations`) to a specific key and timestamp.
 
 **Runtime** — Any system that loads a `.nomos` artifact and evaluates decisions against its rules.
 
-**Verdict** — The outcome of a single execution: `ALLOW`, `DENY`, or `ESCALATE`.
+**Verdict** — The outcome of a single execution. The vocabulary differs by API surface — see §6 for the two real, distinct execution APIs and their respective verdict vocabularies.
 
-**Audit hash** — A SHA-256 digest that chains consecutive verdicts for a given artifact into a tamper-evident log.
+**Audit hash** — A SHA-256 digest that chains consecutive execution entries for a given artifact into a tamper-evident log (§7).
 
 ---
 
 ## 3. Artifact Structure
 
-A `.nomos` file is a UTF-8 JSON document. The top-level object MUST contain the following fields:
-
 ### 3.0 File Extension and Media Type
 
-A `.nomos` artifact SHOULD be saved with the `.nomos` file extension and served with media type
-`application/vnd.nomos+json` — a vendor-specific JSON media type, the same convention `.docx` and
-similar container formats use to be both a valid, generic JSON document and an unambiguously
-identifiable artifact type. Implementations MUST NOT serve or save a sealed artifact as a bare
-`.json` file (e.g. `artifact.nomos.json`) with generic `Content-Type: application/json` — doing so
-loses the distinction between "some JSON" and "a portable governance artifact" that this
-specification exists to establish.
+A `.nomos` artifact SHOULD be saved with the `.nomos` file extension and served with media type `application/vnd.nomos+json` — a vendor-specific JSON media type, the same convention `.docx` and similar container formats use to be both a valid, generic JSON document and an unambiguously identifiable artifact type. Implementations MUST NOT serve or save a sealed artifact as a bare `.json` file (e.g. `artifact.nomos.json`) with generic `Content-Type: application/json` — doing so loses the distinction between "some JSON" and "a portable governance artifact" that this specification exists to establish.
+
+### 3.1 Top-level structure
+
+A `.nomos` file's top-level object MUST contain the following nine keys:
 
 ```json
 {
-  "artifact_id":   "<string>",
-  "version":       "<semver>",
-  "spec_version":  "NOMOS-SPEC-001",
-  "confidence":    "DECLARED | VALIDATED | CERTIFIED | PROVEN | SOVEREIGN",
-  "domain":        { ... },
-  "rules":         [ ... ],
-  "contradiction_report": { ... },
-  "readiness":     { ... },
-  "seal":          { ... }
+  "nomos_version":  "1.0.0",
+  "meta":           { ... },
+  "scope":          { ... },
+  "data_contract":  { ... },
+  "logic":          { ... },
+  "governance":     { ... },
+  "execution":      { ... },
+  "audit":          { ... },
+  "seal":           { ... }
 }
 ```
 
-### 3.1 `artifact_id`
+An artifact MAY additionally carry `agents` (NOMOS-SPEC-002, multi-agent governance manifest), `provenance` (compilation lifecycle record — session id, source documents, review summary), and `attestations` (NOMOS-SPEC-004, third-party co-signatures). Runtimes MUST ignore top-level keys they do not recognise rather than rejecting the artifact.
 
-A URL-safe string uniquely identifying this artifact within an organisation. Implementations SHOULD use lowercase ASCII, digits, underscores, and hyphens only. Maximum 128 characters.
+### 3.2 `nomos_version`
 
-### 3.2 `version`
+Type: string. MUST equal `"1.0.0"` for artifacts conformant with this specification's artifact-structure requirements (§3–§4). A runtime that does not recognise `nomos_version` MUST refuse to execute the artifact.
 
-Semantic version (`MAJOR.MINOR.PATCH`). Implementations MUST NOT treat two artifacts with different `version` values as equivalent even if `artifact_id` matches.
-
-**When to increment:**
-
-| Increment | Trigger |
-|-----------|---------|
-| `MAJOR` | Any change to rule conditions, actions, or `conflict_resolution` that alters the verdict for any previously valid input. Adding a rule that can `DENY` a previously `ALLOW`ed context is a MAJOR change. |
-| `MINOR` | Adding rules that can only escalate or allow inputs that previously received the default `ALLOW` verdict (no matching rule). |
-| `PATCH` | Metadata-only changes — `domain.tags`, `rule.text`, `rule.metadata` — that do not alter evaluation. |
-
-**In-flight executions:** A runtime MAY serve multiple versions of the same `artifact_id` simultaneously. Callers SHOULD pin to a specific `version` in production. A runtime MUST NOT silently upgrade a pinned request to a newer version.
-
-**Re-sealing:** Any change that affects verdict output REQUIRES a new `version` and a new `seal`. Re-sealing without a version increment is not conformant.
-
-### 3.3 `spec_version`
-
-Fixed string `"NOMOS-SPEC-001"`. A runtime that does not recognise the `spec_version` MUST refuse to execute the artifact and return a `spec_version_unsupported` error.
-
-### 3.4 `domain`
-
-Metadata about the governance domain. All fields are OPTIONAL except `name`.
+### 3.3 `meta` — Identity, provenance, ownership
 
 ```json
 {
-  "name":           "<string>",
-  "organization":   "<string>",
-  "effective_date": "<ISO 8601 date>",
-  "jurisdiction":   "<string>",
-  "tags":           ["<string>"]
+  "artifact_id":         "<string, UUID recommended>",
+  "name":                "<string>",
+  "version":             "<semver>",
+  "created_at":          "<ISO 8601 UTC>",
+  "owner": {
+    "org_name": "<string>",
+    "org_id":   "<string>",
+    "contact":  "<string, email>"
+  },
+  "tags":                ["<string>"],
+  "description":         "<string>",
+  "industry":            "<string>",
+  "verification_tier":   "compiled | proven | sovereign"
 }
 ```
 
-### 3.5 `rules`
+`artifact_id` and `version` are REQUIRED. `owner` is REQUIRED; `owner.org_id` and `owner.contact` are REQUIRED, `owner.org_name` is RECOMMENDED. `verification_tier` is REQUIRED once sealed (§5.1). `jurisdictions` (array of strings) is OPTIONAL.
 
-An ordered array of Rule objects (see §4). The order determines evaluation priority when `conflict_resolution` is `first_match`.
+Any change that affects verdict output for any previously valid input REQUIRES a `meta.version` increment and a new seal. Re-sealing without a version increment is not conformant.
 
-### 3.6 `contradiction_report`
-
-A summary of detected rule conflicts produced during the compilation step.
+### 3.4 `scope` — What workflow this governs
 
 ```json
 {
-  "contradiction_count": 0,
-  "contradictions": [
-    {
-      "type": "threshold_conflict | role_conflict | ghost_term | rule_collision | layer_divergence",
-      "rule_ids": ["<string>"],
+  "workflow": {
+    "domain":         "<string>",
+    "workflow_name":  "<string>",
+    "workflow_key":   "<string>",
+    "intent":         "<string>"
+  },
+  "boundaries": {
+    "in_scope":     ["<string>"],
+    "out_of_scope": ["<string>"],
+    "assumptions":  ["<string>"]
+  }
+}
+```
+
+Both `workflow` and `boundaries` are REQUIRED. `boundaries.out_of_scope` and `assumptions` MAY be empty arrays.
+
+### 3.5 `data_contract` — Inputs, types, confidence policy
+
+```json
+{
+  "inputs": {
+    "<field_name>": {
+      "type":        "string | number | integer | boolean | date | datetime | enum | object | array",
       "description": "<string>",
-      "severity": "low | medium | high"
+      "required":    true
     }
+  },
+  "required_fields":  ["<field_name>"],
+  "provenance": {
+    "allowed_sources":       ["<string>"],
+    "verification_methods":  ["<string>"]
+  },
+  "confidence_policy": {
+    "min_confidence_for_autonomy": 0.9,
+    "min_confidence_per_field":    {},
+    "on_low_confidence":           "block | escalate | defer"
+  }
+}
+```
+
+`inputs` and `required_fields` are REQUIRED. A runtime MUST check that every field in `required_fields` is present in the execution request's inputs before evaluating decisions; a runtime that receives a request missing one or more `required_fields` MUST NOT evaluate with the incomplete input set — see §6 for how each real execution API surfaces this.
+
+### 3.6 `logic` — Decision graph
+
+```json
+{
+  "variables":   {},
+  "decisions":   [ { ... } ],
+  "resolution": {
+    "conflict_policy": "first_match | highest_priority | collect_and_resolve",
+    "tie_breaker":      "deny_wins | allow_wins | escalate_wins"
+  }
+}
+```
+
+`decisions` is the ordered array of decision objects — see §4 for their structure and the expression language used in `when`. `resolution` is REQUIRED; RECOMMENDED default is `collect_and_resolve` + `deny_wins`.
+
+### 3.7 `governance` — Constraints, escalation, roles, compliance
+
+```json
+{
+  "constraints": [
+    { "id": "<string>", "type": "budget | privacy | compliance | risk | data | timing | custom",
+      "rule": "<expression string, §4.1>", "on_violation": "block | escalate", "message": "<string>" }
+  ],
+  "escalations": [
+    { "id": "<string>", "role_required": "<string>", "trigger": "<expression string>",
+      "payload": { "show": ["<field>"], "question": "<string>" }, "sla_minutes": 240 }
+  ],
+  "roles": [
+    { "role_id": "<string>", "name": "<string>", "authority_scope": ["<string>"] }
+  ],
+  "compliance": {
+    "requirements": ["<string>"], "logging_level": "minimal | standard | forensic", "retention_days": 365
+  }
+}
+```
+
+All four keys are REQUIRED (`constraints`, `escalations`, and `roles` MAY be empty arrays). Constraints MUST be enforced on every execution, independent of `logic.decisions` evaluation.
+
+### 3.8 `execution` — Allowed actions and integrations
+
+```json
+{
+  "actions": {
+    "<action_name>": {
+      "type":       "api_call | message | record_write | task_create | webhook",
+      "connector":  "<connector id>",
+      "request":    { "method": "POST", "path": "<string>" },
+      "idempotency": { "key": "<expression string>", "strategy": "reject_duplicates | safe_retry" }
+    }
+  },
+  "connectors": [
+    { "id": "<string>", "kind": "http | queue | database | service", "endpoint": "<string>", "auth": { "ref": "<string>" } }
   ]
 }
 ```
 
-An artifact with `contradiction_count > 0` MAY still be sealed, but the runtime MUST surface the contradiction count in every verdict response.
+`connectors[].auth` MUST NOT contain secrets in plaintext — reference an external secret store only.
 
-### 3.7 `readiness`
-
-ARI (AI Readiness Index) scores produced during compilation. All score fields are floats in [0, 1].
+### 3.9 `audit` — Event schema and redaction policy
 
 ```json
 {
-  "lis": 0.82,
-  "drs": 0.71,
-  "res": 0.14,
-  "gms": 0.75,
-  "ari": 0.73,
-  "autonomy_band": "autonomous | bounded | human_governed"
+  "event_schema": { "type": "nomos.audit.v1", "fields": ["artifact_id", "decision_trace", "constraint_trace", "actions"] },
+  "emit_on":      ["decision", "constraint_violation", "action", "escalation", "completion"],
+  "redaction":    { "pii_fields": [], "strategy": "hash | mask | remove", "hash_salt_ref": "<string, optional>" }
 }
 ```
 
-`autonomy_band` is derived from `ari`: ≥ 0.60 → `autonomous`; ≥ 0.30 → `bounded`; < 0.30 → `human_governed`.
+This declares the redaction policy a runtime MUST apply before persisting audit entries (§7) — it does not itself contain audit entries.
 
-### 3.8 `seal`
+### 3.10 `seal`
 
-See §8 for the sealing procedure.
-
-### 3.9 `data_contract` (optional)
-
-Declares the minimum context fields the artifact requires to evaluate correctly. A runtime MUST check that all `required_fields` are present in the execution request context **before** beginning rule evaluation. If any are missing, the runtime MUST return a `data_contract_violation` error (§11) rather than evaluating with incomplete inputs.
+See §8 for the full sealing procedure.
 
 ```json
 {
-  "data_contract": {
-    "required_fields": ["credit_score", "amount", "employment_type"],
-    "field_types": {
-      "credit_score": "number",
-      "amount":       "number",
-      "employment_type": "string"
-    }
-  }
+  "status":              "draft | sealed",
+  "hash":                "<hex-encoded SHA-256 of canonical payload, excluding seal and attestations> | null",
+  "canonicalization":     "JCS",
+  "signed_by":            { "name": "...", "org_id": "...", "role": "...", "timestamp": "<ISO 8601 UTC>" } | null,
+  "signature":            "<base64 signature over JCS({hash, signed_by})> | null",
+  "signature_algorithm":  "Ed25519 | RS256 | HMAC-SHA256"
 }
 ```
 
-`required_fields` is the normative constraint. `field_types` is OPTIONAL documentation — runtimes SHOULD NOT perform type coercion on incoming context values.
+If `status` is `sealed`, `signed_by` and `signature` MUST both be present and non-null. A hash-only artifact — `status: "sealed"` with a populated `hash` but `signature: null` — is not conformant; it indicates the producer computed integrity but never invoked the signing step. Ed25519 is RECOMMENDED: it is the only one of the three algorithms publicly (third-party) verifiable without a shared secret — see §8.2 for public key discovery.
 
-The `seal` block (see §8). Ed25519 is RECOMMENDED — it makes the artifact publicly verifiable:
+### 3.11 `data_contract` in the request path
 
-```json
-{
-  "status":              "sealed",
-  "canonicalization":    "JCS",
-  "signature_algorithm": "Ed25519",
-  "kid":                 "<key id>",
-  "hash":                "<hex-encoded SHA-256 of canonical payload>",
-  "signed_by":           { "name": "...", "org_id": "...", "role": "...", "timestamp": "<ISO 8601 UTC>" },
-  "signature":           "<base64 Ed25519 signature over JCS({hash, signed_by})>"
-}
-```
+A runtime MUST verify `required_fields` from §3.5 before evaluating `logic.decisions` for a given request. Which specific field of the response reports this (`missing_required`, `incomplete_inputs`, etc.) depends on the execution API surface — see §6.
 
 ---
 
-## 4. Rule Expression Language
+## 4. Rule Expression Language ("Nomos-Expr v1")
 
-Each element of the `rules` array MUST conform to the following structure:
+### 4.1 Condition strings
+
+Each decision's `when` field (§4.2) is a **string** in a small, deterministic expression language — not a condition-tree object. Expressions MUST be pure: no network calls, no randomness, no side effects.
+
+Supported syntax:
+
+| Category | Syntax | Example |
+|---|---|---|
+| Boolean | `and`, `or`, `not` | `a > 5 and b == "x"` |
+| Comparison | `==`, `!=`, `>`, `>=`, `<`, `<=` | `invoice_amount > 25000` |
+| Set membership | `in`, `contains` | `item_type in ["reference", "periodical"]` |
+| Arithmetic | `+`, `-`, `*`, `/` | `amount * 0.1 > fee_cap` |
+| Functions | `exists(x)`, `len(x)`, `lower(x)`, `startsWith(a, b)` | `exists(vendor_risk_score)` |
+
+A sentinel condition `"always == true"` is used for unconditional decisions.
+
+A runtime MUST parse and evaluate these expressions deterministically: identical inputs against an identical `when` string MUST always produce the same boolean result. A runtime MUST NOT fail silently on an unparseable expression — it MUST return an evaluation error that the calling API surface (§6) reports to the caller.
+
+### 4.2 Decision object
+
+Each element of `logic.decisions` (§3.6) MUST have this shape:
 
 ```json
 {
   "id":          "<string>",
-  "text":        "<natural language description>",
-  "condition":   { ... },
-  "action":      "ALLOW | DENY | ESCALATE",
-  "priority":    "<integer>",
-  "source":      "policy | behavioral | inferred",
-  "confidence":  "<float 0–1>",
-  "metadata": {
-    "section":      "<string>",
-    "page":         "<integer>",
-    "tags":         ["<string>"],
-    "last_modified": "<ISO 8601>"
+  "description": "<string>",
+  "when":        "<Nomos-Expr v1 string, §4.1>",
+  "then":        [ { "type": "allow | block | escalate | set | emit | action", "...": "..." } ],
+  "else":        [ { ... } ],
+  "priority":    100,
+  "provenance": {
+    "source_id":           "<string, optional>",
+    "source_name":         "<string, optional>",
+    "extractor_version":   "<string, optional>",
+    "extraction_timestamp": "<ISO 8601, optional>"
   }
 }
 ```
 
-### 4.1 Condition AST
+`id`, `description`, `when`, `then`, and `priority` are REQUIRED. `else` MAY be an empty array. `provenance` is OPTIONAL, RECOMMENDED for any decision derived from a source document — every `.nomos` decision SHOULD be traceable to the section of the source it came from.
 
-Conditions are expressed as a recursive Abstract Syntax Tree. Each node is one of:
+### 4.3 Outcome objects
 
-**Leaf node** (field comparison):
-```json
-{ "op": "eq | neq | gt | gte | lt | lte | in | nin | exists | regex",
-  "field": "<dot-separated path>",
-  "value": "<scalar | array>" }
-```
+Each element of `then`/`else` MUST have a `type` of one of:
 
-**Branch node** (logical):
-```json
-{ "op": "and | or | not",
-  "left": { ... },
-  "right": { ... } }
-```
+| `type` | Meaning | Additional fields |
+|---|---|---|
+| `allow` | Permits the action | — |
+| `block` | Denies the action | `reason` (RECOMMENDED) |
+| `escalate` | Routes to human review | `escalation_id` referencing `governance.escalations` (§3.7) |
+| `set` | Assigns a `logic.variables` value | `variable`, `value` |
+| `emit` | Emits an audit/event record | event payload |
+| `action` | Invokes a named action from `execution.actions` (§3.8) | `action_name` |
 
-`not` uses `left` only; `right` MUST be omitted.
+A runtime MUST evaluate eligible decisions in descending `priority` order and apply outcomes per `logic.resolution.conflict_policy` (§3.6) when more than one decision is eligible for a given input.
 
-**Examples:**
+### 4.4 Field paths
 
-```json
-{ "op": "and",
-  "left":  { "op": "gte", "field": "patron_age", "value": 18 },
-  "right": { "op": "eq",  "field": "account_standing", "value": "good" } }
-```
+Field paths use dot notation for nested access (e.g. `applicant.credit_score`). Array indexing is not defined in this spec version.
 
-```json
-{ "op": "in",
-  "field": "item_type",
-  "value": ["reference", "periodical"] }
-```
+### 4.5 Deprecated: condition-tree format
 
-### 4.2 Supported operators
-
-| Operator | Types | Semantics |
-|----------|-------|-----------|
-| `eq` | any scalar | strict equality |
-| `neq` | any scalar | strict inequality |
-| `gt` / `gte` | number, date-string | greater than / greater than or equal |
-| `lt` / `lte` | number, date-string | less than / less than or equal |
-| `in` | any, array | field value is in the provided array |
-| `nin` | any, array | field value is not in the provided array |
-| `exists` | — | field is present and non-null |
-| `regex` | string | field matches the provided RE2 pattern |
-| `and` / `or` | — | logical connectives |
-| `not` | — | logical negation |
-
-A runtime MAY support additional operators via extension, but MUST NOT fail on unrecognised operators — it MUST instead return an `ESCALATE` verdict with `reason: "unsupported_operator"`.
-
-### 4.3 Field paths
-
-Field paths use dot notation: `applicant.credit_score`, `loan.amount_usd`. Array indexing is not defined in this spec version.
-
-### 4.4 Conflict resolution modes
-
-The `conflict_resolution` field at the artifact root (OPTIONAL, default `first_match`) governs multi-rule evaluation:
-
-| Mode | Behaviour |
-|------|-----------|
-| `first_match` | Return the action of the highest-priority matching rule |
-| `collect_and_resolve` | Evaluate all rules; resolve conflicts by `DENY > ESCALATE > ALLOW` |
-| `highest_priority` | Among all matching rules, apply only the one with the highest `priority` |
+An earlier internal execution path (predating the reference deployment's Studio/Exchange product) represents `when` as a structured tree object (`{ type: "and" | "or" | "condition", expressions: [...], condition: {...} }`) rather than a string. This is a distinct, older internal representation, not a conformant `.nomos` artifact structure under this spec version, and MUST NOT be produced by new conformant producers. A runtime encountering it internally MUST convert it to the string form before treating an artifact as spec-conformant.
 
 ---
 
 ## 5. Confidence Classification
 
-Confidence tiers are assigned during compilation and sealed into the artifact. They reflect both how rules were derived (policy-only vs. behavioral triangulation) and whether the artifact meets quantitative ARI thresholds for distribution on the NOMOS Exchange.
+Two separate, non-interchangeable vocabularies exist in the reference deployment. A runtime MUST NOT conflate them, and a conformant producer MUST use the one appropriate to what it is producing.
 
-### 5.1 DECLARED
+### 5.1 Verification tier (sealed artifacts — `meta.verification_tier`)
 
-Rules derived exclusively from uploaded policy documents. No behavioral data was used.
+Assigned when an artifact is sealed (§3.10, §8). Valid values, in ascending order of confidence:
 
-- `drs` in `readiness` MUST be `null`.
-- The artifact carries reduced statistical confidence.
-- Suitable for new deployments where historical decision data does not yet exist.
-- Not eligible for publication to the NOMOS Exchange.
+| Tier | Meaning |
+|---|---|
+| `compiled` | Rules extracted from policy documents (and, if provided, behavioral data), schema-valid, seal-valid. The baseline for any sealed artifact. |
+| `proven` | `compiled`, plus the artifact includes measurable evidence references and a performance ledger from real behavioral data. |
+| `sovereign` | `proven`, plus a verified compliance profile, forensic-level audit logging, and enforced governance constraints. |
 
-### 5.2 VALIDATED
+A runtime MUST preserve `meta.verification_tier` verbatim from the sealed artifact and MUST NOT infer or override it independently.
 
-Rules derived from policy documents and confirmed against behavioral decision logs. Statistical triangulation was performed but full gap analysis was not required or was inconclusive.
+### 5.2 Confidence band (un-sealed public demo artifacts only)
 
-- `drs` in `readiness` MUST be a float in [0, 1].
-- The artifact has passed contradiction detection.
-- Suitable for production deployments where behavioral data is available but the dataset does not yet meet the threshold for `CERTIFIED`.
-
-### 5.3 CERTIFIED
-
-Rules triangulated against behavioral decision logs with full gap analysis. Statistical validation passed.
-
-- `drs` in `readiness` MUST be a float in [0, 1].
-- The artifact has passed contradiction detection and gap analysis.
-- Suitable for production deployments requiring regulator-grade auditability.
-
-### 5.4 PROVEN
-
-`CERTIFIED` artifacts that additionally meet a minimum ARI threshold.
-
-- All `CERTIFIED` requirements apply.
-- `readiness.ari` MUST be ≥ 0.60.
-- `readiness.autonomy_band` MUST be `autonomous`.
-- Eligible for publication to the NOMOS Exchange.
-- Distribution platforms MUST enforce the ARI gate before accepting a `PROVEN` artifact and MUST reject with a `confidence_gate_failed` error if the condition is not met.
-
-### 5.5 SOVEREIGN
-
-The highest confidence tier. Reserved for artifacts with demonstrated statistical reliability above the autonomous threshold.
-
-- All `PROVEN` requirements apply.
-- `readiness.ari` MUST be ≥ 0.75.
-- Eligible for publication to the NOMOS Exchange with priority placement.
-- Distribution platforms MUST require administrator review before activating a `SOVEREIGN` artifact listing.
-
-**Summary table:**
-
-| Tier | Behavioral data | ARI gate | Exchange eligible |
-|---|---|---|---|
-| `DECLARED` | No | None | No |
-| `VALIDATED` | Yes | None | No |
-| `CERTIFIED` | Yes (full) | None | No |
-| `PROVEN` | Yes (full) | ≥ 0.60 | Yes |
-| `SOVEREIGN` | Yes (full) | ≥ 0.75 | Yes (admin review) |
-
-A runtime MAY surface the confidence tier in its API response. A runtime MUST NOT change the `confidence` field of a sealed artifact without re-sealing.
+The reference deployment's public demo catalog (§12.3) uses a separate field, `confidence_band`, with values `DECLARED | VALIDATED | CERTIFIED`. These artifacts are not run through the sealing procedure in §8 and do not carry a `seal` block in the sense of §3.10. `DECLARED` means the rules reflect standard industry practice, not empirically validated thresholds from real behavioral data — every artifact currently in the reference deployment's public demo catalog is `DECLARED`. `VALIDATED` and `CERTIFIED` are reserved values for a forked, behaviorally-triangulated version of a demo artifact; as of this spec version no shipped demo artifact carries either value.
 
 ---
 
 ## 6. Execution Model
 
-### 6.1 Request
+The reference deployment exposes **two separate, real execution APIs**, serving different artifact populations, with different authentication and different response shapes. A conformant runtime implementing only one is not thereby non-conformant with the other — pick the surface matching your artifact population. Do not assume the two are interchangeable.
 
-Submit a decision payload to a conformant runtime via `POST /api/v1/verify-decision`.
+### 6.1 Domain execution — `POST /api/nomos/execute`
+
+Session-authenticated (cookie), used for artifacts loaded via the enterprise "Domain" model.
+
+**Request:**
 
 ```json
 {
-  "artifact_id":  "<string>",
-  "decision":     "<string, ≤ 200 chars>",
-  "inputs":       { "<field>": "<value>", ... },
-  "domain_id":    "<integer | omit if not domain-scoped>",
-  "caller": {
-    "agent_id":        "<string | omit>",
-    "correlation_id":  "<string, ≤ 256 chars | omit>",
-    "user_id":         "<string | omit>"
-  }
+  "domain_id":   "<integer>",
+  "input_data":  { "<field>": "<value>", ... },
+  "options":     { ... },
+  "caller": { "user_id": "<string, optional>", "correlation_id": "<string, optional>" }
 }
 ```
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `artifact_id` | REQUIRED | Identifier of a sealed artifact in `active` or `superseded` state. A runtime MUST reject `draft` or `deprecated` artifacts with HTTP 422. |
-| `decision` | REQUIRED | Human-readable label for the decision point. Recorded in the audit trail and used for escalation routing. |
-| `inputs` | REQUIRED | Key/value map of decision factors. Types MUST match the data contract declared in the artifact (§3.9). Unknown keys are recorded in the audit trail but do not affect rule evaluation. |
-| `domain_id` | OPTIONAL | Scopes the execution to a specific domain. The runtime verifies the caller has access. |
-| `caller.agent_id` | OPTIONAL | Identity of the calling agent. SHOULD be stable across calls from the same agent instance. Recorded verbatim in the audit trail. |
-| `caller.correlation_id` | OPTIONAL | Caller-assigned trace identifier. Propagated to audit records and LangSmith traces. Serves as the idempotency key (see §6.7). |
-| `caller.user_id` | OPTIONAL | End-user identifier for downstream accountability. Recorded in the audit trail. |
+**Version negotiation:** set request header `Accept-Nomos-Version: 1.0.0` for the spec-compliant response below; omit it (or send `1.0`) for a legacy response format. Response header `Content-Nomos-Version` echoes which format was returned.
 
-A runtime MUST NOT include credential material (passwords, tokens, private keys) from `inputs` in plaintext audit records. Fields declared in the artifact's redaction policy MUST be hashed or masked before storage (see §3.9).
-
-### 6.2 Authentication
-
-A conformant runtime MUST support two authentication methods, evaluated in this order:
-
-1. **API key** — Supply `X-Nomos-Api-Key: <key>` in the request header. The key is validated against a stored hash; the plaintext MUST NOT be stored. Keys are scoped to a domain and a subscription tier.
-2. **Session** — For callers with an active session, the runtime MAY accept the session credential. The session identity MUST have domain access.
-
-Unauthenticated requests MUST be rejected with HTTP 401.
-
-### 6.3 Version negotiation
-
-A runtime MUST support two response formats selected by the `Accept-Nomos-Version` request header:
-
-| Header value | Response format | Response header |
-|---|---|---|
-| `1.0.0` | Spec-compliant `ExecutionReceipt` (§6.5) | `Content-Nomos-Version: 1.0.0` |
-| `1.0` or omitted | Legacy verdict object (§6.6) | `Content-Nomos-Version: 1.0` |
-
-New integrations SHOULD request `Accept-Nomos-Version: 1.0.0`. The legacy format is stable but will not receive new fields.
-
-### 6.4 Evaluation pipeline
-
-1. **Scope validation** — confirm `artifact_id` resolves to a known sealed artifact in an executable state.
-2. **Seal verification** — verify the artifact's HMAC-SHA-256 seal (§8.1). A runtime MUST NOT evaluate rules against an artifact with a broken seal.
-3. **Data contract validation** — check that all `required_fields` from the artifact's data contract (§3.9) are present in `inputs`. Record `missing_required` for the response.
-4. **Confidence check** — compute `inputs.confidence` (§6.8). If it falls below `min_confidence_for_autonomy`, apply the `on_low_confidence` policy before rule evaluation.
-5. **Constraint enforcement** — evaluate speed, quality, and sovereignty dials from the artifact's calibration profile.
-6. **Rule evaluation** — iterate rules in priority order (or per `conflict_resolution` mode). Evaluate each condition against `inputs`.
-7. **Conflict resolution** — apply the artifact's `conflict_resolution` mode if multiple rules match (`first_match`, `highest_priority`, or `collect_and_resolve`).
-8. **Action execution** — execute outcome actions with idempotency tracking keyed on `caller.correlation_id`.
-9. **Verdict emission** — return an `ExecutionReceipt` (§6.5) or legacy verdict (§6.6).
-10. **Audit append** — append the verdict to the artifact's hash-chained audit trail (§7).
-
-### 6.5 Spec-compliant response (v1.0.0)
-
-When `Accept-Nomos-Version: 1.0.0` is requested, the runtime returns an `ExecutionReceipt`:
+**Spec-compliant response (`ExecutionReceipt`):**
 
 ```json
 {
   "receipt_version": "1.0.0",
-
   "artifact": {
-    "artifact_id":        "<string>",
-    "artifact_version":   "<semver>",
-    "seal_hash":          "<hex-encoded HMAC-SHA-256 | null>",
-    "verification_tier":  "DECLARED | CERTIFIED | null"
+    "artifact_id":       "<string>",
+    "artifact_version":  "<semver>",
+    "seal_hash":          "<hex | null>",
+    "verification_tier":  "compiled | proven | sovereign | null"
   },
-
   "execution": {
-    "execution_id":  "<uuid>",
-    "started_at":    "<ISO 8601 UTC>",
-    "ended_at":      "<ISO 8601 UTC>",
-    "status":        "allowed | blocked | escalated | deferred | error",
-    "final_reason":  "<string — matched rule ID and condition>",
-    "latency_ms":    "<integer>"
+    "execution_id": "<string>",
+    "started_at":   "<ISO 8601 UTC>",
+    "ended_at":     "<ISO 8601 UTC>",
+    "status":       "allowed | blocked | escalated | deferred",
+    "final_reason": "<string>",
+    "latency_ms":   "<integer>"
   },
-
   "inputs": {
-    "provided":          { "<field>": "<value>", ... },
-    "missing_required":  ["<field>", ...],
-    "confidence":        "<float 0–1>",
-    "provenance":        { "<field>": "<source>", ... }
+    "provided":         { "<field>": "<value>" },
+    "missing_required":  ["<field>"],
+    "confidence":        "<float 0-1>",
+    "provenance":        {}
   },
-
   "trace": {
-    "constraints": [
-      { "constraint_id": "<string>", "result": "passed | violated", "message": "<string | omit>" }
-    ],
-    "decisions": [
-      { "decision_id": "<rule_id>", "result": "matched | not_matched | error", "outcome": "allow | block | escalate | omit", "error": "<string | omit>" }
-    ],
-    "actions": [
-      { "action": "<string>", "result": "success | failure | skipped", "idempotency_key": "<string>", "error": "<string | omit>" }
-    ],
-    "escalation": {
-      "role_required":  "<string>",
-      "trigger_id":     "<rule_id>",
-      "payload_fields": ["<field>", ...],
-      "sla_minutes":    "<integer | null>"
-    }
-  },
-
-  "audit": {
-    "event_ids": ["<uuid>", ...],
-    "redaction": {
-      "strategy":        "hash | mask | remove",
-      "fields_redacted": ["<field>", ...]
-    }
-  },
-
-  "errors": [
-    { "code": "<string>", "message": "<string>", "location": "<string | omit>" }
-  ]
+    "constraints": [ { "constraint_id": "<string>", "result": "passed | violated", "message": "<string, optional>" } ],
+    "decisions":   [ { "decision_id": "<string>", "result": "matched | not_matched | expired", "outcome": "allow | block | escalate" } ],
+    "actions":     [ { "action": "<string>", "result": "success | failure", "idempotency_key": "<string>", "error": "<string, optional>" } ],
+    "escalation":  { "role_required": "<string>", "trigger_id": "<string>", "payload_fields": ["<field>"] } 
+  }
 }
 ```
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `receipt_version` | `"1.0.0"` | Literal. MUST be `"1.0.0"` for receipts conforming to this specification. |
-| `artifact.seal_hash` | `string \| null` | The artifact's HMAC-SHA-256 seal. Null only when the artifact record has no seal — a condition that MUST NOT arise in production. |
-| `execution.execution_id` | UUID | Assigned by the runtime. Stable reference for audit queries. |
-| `execution.status` | enum | See §6.6 for the full status table. |
-| `execution.final_reason` | string | Human-readable explanation of the verdict. SHOULD include the matched rule ID and the condition that determined the outcome. |
-| `execution.latency_ms` | integer | Wall-clock evaluation time in milliseconds. Excludes network round-trip. |
-| `inputs.confidence` | float | 0–1. Reflects data contract validation; degrades for missing or mistyped fields (see §6.8). |
-| `inputs.missing_required` | string[] | Fields declared `REQUIRED` in the data contract that were absent from the payload. Non-empty implies `confidence < 1.0`. |
-| `inputs.provenance` | object | Maps field names to their declared source. Populated from the data contract's `provenance` entries. |
-| `trace.escalation` | object \| null | Present when `status` is `escalated`. Identifies the required reviewer role, trigger rule, and SLA in minutes. |
-| `audit.event_ids` | string[] | IDs of audit trail entries written for this execution. Retrieve the full hash-chained record via `GET /api/audit/:id`. |
-| `audit.redaction.strategy` | enum | How sensitive fields were handled before storage. Declared in the artifact's data contract (§3.9). |
-| `errors` | array | Non-fatal evaluation errors. An empty array is the normal case. Errors here do not prevent a verdict but degrade `inputs.confidence`. |
+`execution.status` mapping from the internal outcome vocabulary: `approved → allowed`, `rejected → blocked`, `escalated → escalated`, `held → deferred`.
 
-### 6.6 Status values
+### 6.2 Exchange execution — `POST /api/v1/verify` and `POST /api/v1/verify-decision`
 
-| Status | Meaning |
-|--------|---------|
-| `allowed` | All applicable rules evaluated; at least one `allow` rule matched and no `block` rule matched. |
-| `blocked` | A `block` rule matched. The decision MUST NOT proceed. |
-| `escalated` | No rule produced a definitive outcome, OR a rule explicitly routed to a human reviewer. The `trace.escalation` object identifies the required role and SLA. |
-| `deferred` | Data confidence fell below `min_confidence_for_autonomy` and `on_low_confidence` is `"defer"`. A human decision is required within the declared SLA. |
-| `error` | The runtime encountered a fatal evaluation error. The `errors` array contains details. A runtime MUST NOT return `allowed` when `errors` is non-empty and any error affected a `block` or `escalate` rule. |
+API-key-authenticated (`X-Nomos-Api-Key` header) or session, used by the official SDK (§12.1) and by any caller integrating with the NOMOS Exchange or Studio-sealed artifacts. `/verify` serves the public demo catalog only (`pub_*` artifact IDs, §12.3, no auth required); `/verify-decision` serves everything else (`art_*` Studio artifacts, Exchange catalog slugs, and `dom_*` domain routing), routed by `artifact_id` prefix.
 
-### 6.7 Legacy response (v1.0)
-
-When `Accept-Nomos-Version` is omitted or set to `1.0`, the runtime returns:
+**Request:**
 
 ```json
 {
-  "verdict":          "approved | escalated | blocked",
-  "rule_applied":     "<condition expression>",
-  "rule_id":          "<string | null>",
-  "rule_reference":   "<string>",
-  "rule_description": "<string>",
-  "confidence":       "<float 0–1>",
-  "latency_ms":       "<integer>",
-  "audit_hash":       "sha256:<hex>",
-  "evaluated_at":     "<ISO 8601 UTC>"
+  "artifact_id":  "<string>",
+  "decision":     "<string, ≤200 chars>",
+  "inputs":       { "<field>": "<value>" },
+  "caller": { "agent_id": "<string, optional>", "correlation_id": "<string, optional>", "user_id": "<string, optional>", "tool": "<string, optional>" },
+  "execution_at": "<ISO 8601, optional — replay as of this instant>",
+  "decision_type": "<string, optional>"
 }
 ```
 
-`audit_hash` in the legacy format is a content hash of the verdict record (SHA-256 of `{ artifact_id, decision, inputs, verdict, ts }`). It is suitable for spot-checking response integrity but does not constitute a full audit chain. Use the spec-compliant `audit.event_ids` field and `GET /api/audit/:id` for a verifiable, hash-chained trail.
+**Response:**
 
-### 6.8 Confidence degradation
+```json
+{
+  "id":             "req_<uuid>",
+  "object":         "decision",
+  "artifact_id":    "<string>",
+  "artifact_name":  "<string>",
+  "allowed":        true,
+  "verdict":        "approved | rejected | escalated",
+  "rule":           { "id": "<string>", "description": "<string | null>", "action": "allow | deny | escalate" },
+  "evaluation": {
+    "rules_evaluated": "<integer>", "rules_matched": "<integer>", "rules_expired": "<integer>", "conflicts_resolved": "<integer>",
+    "rules_checked": [ { "id": "<string>", "name": "<string>", "fired": true, "conditions": [ { "field": "<string>", "check": "<string>", "input": "<value>", "present": true, "passed": true } ] } ]
+  },
+  "classifications": [ { "field": "<string>", "value": "<value>", "rule_id": "<string>", "rule_name": "<string>" } ],
+  "obligations":     [ "<string>" ],
+  "confidence":      { "tier": "<string>", "score": "<float 0-1>", "description": "<string>" },
+  "audit":           { "hash": "<hex>", "timestamp": "<ISO 8601 UTC>" },
+  "performance":     { "latency_ms": "<integer>" },
+  "verdict_description": "<string>",
+  "incomplete_inputs":   { "fields": ["<field>"], "count": "<integer>", "warning": "<string>" },
+  "paths_to_approval":   ["<string>"],
+  "expired_rules":       ["<string>"],
+  "replay":              true,
+  "active_decision_type": { "id": "<string>", "name": "<string>", "auto_scoped": true }
+}
+```
 
-`inputs.confidence` reflects how fully the runtime could trust the decision payload. Three landmark values are defined:
+`classifications`, `obligations`, `incomplete_inputs`, `paths_to_approval`, `expired_rules`, `replay`, and `active_decision_type` are present only when applicable to the specific evaluation — omitted otherwise, not null.
 
-| Value | Condition |
-|-------|-----------|
-| `0.99` | All required fields present, correctly typed, within declared ranges, and all field-level confidence thresholds satisfied. |
-| `0.92` | One field is borderline — within 10% of a numeric threshold or near a categorical boundary. |
-| `0.85` | Multiple borderline fields. Degrades further for each additional borderline condition. |
+The simpler public-artifact response from `POST /api/v1/verify` follows the same `allowed`/`outcome`/`verdict_description`/`audit_record` shape but without the `rule`/`evaluation`/`confidence` nesting above — see §12.3.
 
-When `inputs.confidence` falls below the artifact's `min_confidence_for_autonomy` threshold, the runtime MUST apply the `on_low_confidence` policy declared in the data contract:
+### 6.3 Idempotency
 
-- `block` → return `status: blocked`
-- `escalate` → return `status: escalated`
-- `defer` → return `status: deferred` and write a pending decision record
+`caller.correlation_id` is accepted on both APIs and is recorded in the audit trail (§7). **As of this spec version, neither API deduplicates or caches a response by `correlation_id`** — a repeated call with the same `correlation_id` re-executes and produces a new audit entry. This is a known gap relative to the idempotency behavior a caller might reasonably expect from the field's presence; treat `correlation_id` today as a trace identifier only, not a dedup key.
 
-A runtime MUST NOT return `status: allowed` when confidence is below the declared threshold.
+### 6.4 Quota and rate limits (Exchange execution only)
 
-If a required field is absent from `inputs` and its condition cannot be evaluated:
-
-- A runtime MUST NOT default missing numeric fields to `0` or string fields to `""`.
-- If `autonomy_band` is `human_governed` → status is `escalated`.
-- Otherwise → status is `escalated` with `final_reason: "missing_context_field"`.
-
-### 6.9 Idempotency
-
-`caller.correlation_id` is the idempotency key for an execution. If a runtime receives a request with a `correlation_id` it has already processed within the deduplication window (RECOMMENDED: 5 minutes), it MUST return the original cached receipt without creating a new audit trail entry.
-
-The cached response MUST include a `"cached": true` field at the top level and the original `execution.execution_id`. The audit trail entry count MUST NOT increment for a cache hit.
-
-A runtime MUST NOT use caller IP address or payload hash as the primary deduplication mechanism. If `correlation_id` is omitted, the runtime SHOULD generate one and include it in the response — the execution is treated as non-idempotent.
-
-### 6.10 Quota and rate limits
-
-A conformant runtime MUST return the following headers on every execution response:
+A conformant response from `/api/v1/*` MUST include:
 
 | Header | Description |
-|--------|-------------|
-| `X-Verifications-Used` | Verifications consumed in the current billing period. |
-| `X-Verifications-Limit` | Monthly limit for the account's subscription tier. `"unlimited"` for uncapped tiers. |
-| `X-Overage` | Present and set to `"true"` when the account has exceeded its monthly limit. |
-| `X-Overage-Count` | Calls beyond the monthly limit in the current billing period. |
-
-When the free tier limit is reached the runtime MUST return HTTP 429 with `code: "QUOTA_EXCEEDED"`, a `reset_date` field (ISO 8601), and an `upgrade_url`.
+|---|---|
+| `X-Verifications-Used` | Verifications consumed in the current billing period |
+| `X-Verifications-Limit` | Monthly limit for the account's subscription tier, or `unlimited` |
+| `X-Overage` | `"true"` when the account has exceeded its monthly limit |
+| `X-Overage-Count` | Calls beyond the monthly limit in the current billing period |
 
 ---
 
 ## 7. Audit Trail
 
-### 7.1 Entry schema
+### 7.1 Entry hash chain
 
-Every execution appends one entry to the artifact's immutable audit trail:
-
-```json
-{
-  "entry_id":     "<uuid>",
-  "artifact_id":  "<string>",
-  "version":      "<semver>",
-  "ts":           "<ISO 8601 UTC>",
-  "request_id":   "<uuid>",
-  "verdict":      "ALLOW | DENY | ESCALATE",
-  "matched_rules": ["<rule_id>"],
-  "context_hash": "<sha256 of serialised context>",
-  "prev_hash":    "<hex | null for first entry>",
-  "entry_hash":   "<sha256 of this entry minus entry_hash>",
-  "actor":        "<api_key_id | session_user_id>"
-}
-```
-
-### 7.2 Hash chain
-
-`entry_hash` is computed as:
+Every execution appends one entry to a hash chain, keyed per artifact (Domain execution, §6.1) or per Studio session (Exchange execution, §6.2). The chain primitive is shared:
 
 ```
-SHA-256( entry_id || artifact_id || ts || verdict || prev_hash )
+entryHash = SHA-256( previousHash + "|" + JCS(eventData) + "|" + timestamp )
 ```
 
-where `||` denotes concatenation of UTF-8 byte representations and `prev_hash` is the `entry_hash` of the immediately preceding entry for the same `artifact_id`, or the all-zeros 64-character hex string for the first entry.
+where `JCS(eventData)` is the JSON-Canonicalization-Scheme-canonicalized (§8) event payload for this entry, and `previousHash` is the immediately preceding entry's `entryHash` for the same chain. `"|"` is a literal delimiter character preventing length-extension ambiguity between the three concatenated components.
 
-A verifier MUST walk the chain from genesis to tip and confirm each `entry_hash` recomputes correctly. Any gap or hash mismatch MUST be reported as chain corruption.
+**Genesis entry** (first entry in a chain):
+
+```
+genesisHash = SHA-256( "genesis:" + chainId + ":" + timestamp )
+```
+
+used as `previousHash` for the first real entry. `chainId` is the decision id (Domain execution) or session id (Exchange execution).
+
+A verifier MUST walk the chain from genesis to tip and confirm each `entryHash` recomputes correctly from the recorded `eventData` and `timestamp`. Any gap or mismatch indicates chain corruption.
+
+### 7.2 Per-query audit hash (Exchange `/query` only)
+
+The Exchange's separate public-query surface (not an execution API under §6, but a read-oriented "ask this artifact a question" endpoint) computes a simpler, non-chained integrity hash per query:
+
+```
+audit_hash = SHA-256( JCS({ query_id, seal_hash, inputs, verdict, queried_at }) )
+```
+
+This is suitable for confirming a single query response was not altered in transit or storage; it is not a hash chain and does not itself detect a missing or reordered query.
 
 ---
 
@@ -619,106 +508,45 @@ A verifier MUST walk the chain from genesis to tip and confirm each `entry_hash`
 
 Sealing is a one-way operation. Once a `.nomos` artifact is sealed, its payload MUST NOT be modified. Any modification invalidates the seal.
 
-### Step 1: Assemble payload
+### 8.1 Canonicalization
 
-Construct the artifact JSON object with all fields EXCEPT `seal`. The object MUST include `artifact_id`, `version`, `spec_version`, `confidence`, `domain`, `rules`, `contradiction_report`, and `readiness`.
+Runtimes MUST canonicalize using JCS (JSON Canonicalization Scheme, [RFC 8785](https://www.rfc-editor.org/rfc/rfc8785)) for both hashing and signing: object keys sorted lexicographically at every nesting level, no insignificant whitespace, UTF-8 string escaping per the JSON spec.
 
-### Step 2: Canonicalize
-
-Serialize the payload using [RFC 8785 JSON Canonicalization Scheme (JCS)](https://www.rfc-editor.org/rfc/rfc8785):
-
-- Keys sorted lexicographically (Unicode code point order)
-- No insignificant whitespace
-- Numbers in IEEE 754 double-precision canonical form
-- Strings escaped per RFC 8259
-
-### Step 3: Compute payload hash
+### 8.2 Hash
 
 ```
-hash = SHA-256( canonical_bytes )
+seal.hash = SHA-256( JCS(artifact_without_seal_and_attestations) )
 ```
 
-Encode as lowercase hex (64 characters).
+`seal` and `attestations` (NOMOS-SPEC-004) are excluded from the hash input — `seal` cannot cover itself, and `attestations` are added after sealing by third parties without invalidating the original seal.
 
-### Step 4: Sign
-
-A seal proves two things: **integrity** (the payload is unchanged, established by the hash in Step 3) and **authenticity** (a specific authority sealed it, and no one else could forge it). Two signing methods are defined.
-
-**Asymmetric — Ed25519 (RECOMMENDED).** The sealing authority signs with a private key; anyone verifies with the corresponding **public key**. Because the verification key cannot produce signatures, it is safe to publish (§8.2), which makes a sealed `.nomos` **independently verifiable by any party, offline, without the secret and without contacting the sealing authority.**
+### 8.3 Signature
 
 ```
-signer_id = { "name": "...", "org_id": "...", "role": "...", "timestamp": "<ISO 8601 UTC>" }
-signature = base64( Ed25519_sign( private_key, JCS({ "hash": hash, "signed_by": signer_id }) ) )
+payload = JCS({ hash: seal.hash, signed_by: seal.signed_by })
 ```
 
-The message signed is the JCS canonicalization (Step 2 rules) of the object `{ hash, signed_by }`. `kid` is the key id of the signing key (§8.2).
+A conformant producer signs `payload` using one of, in order of preference:
 
-**Symmetric — HMAC-SHA256 (LEGACY).** A 256-bit shared secret (`SEAL_KEY`) both creates and verifies the signature. Because the verification key *is* the forging key, HMAC seals can only be verified by a holder of the secret and are therefore **NOT third-party verifiable.** HMAC MUST NOT be used where independent verifiability is claimed; it is retained only for backward compatibility and closed deployments.
+1. **Ed25519** (RECOMMENDED) — asymmetric; publicly verifiable with only the published public key (§8.4), no shared secret. `signature_algorithm: "Ed25519"`, `kid` set to the signing key's id.
+2. **RS256/EC** — asymmetric, caller-supplied key.
+3. **HMAC-SHA256** — symmetric, dev/fallback only. `signature_algorithm: "HMAC-SHA256"`. **Not publicly (third-party) verifiable** — the verifier needs the same secret as the signer. MUST NOT be represented as publicly verifiable.
 
-```
-sig = HMAC-SHA256( key=SEAL_KEY, msg=hash )   # hex, over the hex hash string
-```
+A producer that stamps `status: "sealed"` MUST have actually executed one of these three signing steps and populated a non-null `signature`. Populating `hash` while leaving `signature: null` — however common a coding mistake this may be for an implementation that computes the hash but forgets to invoke the signing step — produces a non-conformant artifact per §3.10.
 
-### Step 5: Embed seal block
+### 8.4 Public key discovery
 
-Append the `seal` field to the artifact object.
+Ed25519 public keys are published at `/.well-known/nomos-signing-keys` as `[{ kid, algorithm: "Ed25519", public_key_pem }]`. A verifier resolves the correct key for a given seal by its `kid`, which is a deterministic content hash of the public key (first 16 characters of base64url-SHA-256 of the SPKI-encoded public key) — this allows key rotation without invalidating verification of seals made under a retired key, as long as its public key remains published or otherwise available to the verifier.
 
-**Asymmetric (RECOMMENDED):**
-
-```json
-"seal": {
-  "status":              "sealed",
-  "canonicalization":    "JCS",
-  "signature_algorithm": "Ed25519",
-  "kid":                 "<key id of the signing key>",
-  "hash":                "<hex SHA-256 from Step 3>",
-  "signed_by":           { "name": "...", "org_id": "...", "role": "...", "timestamp": "<ISO 8601 UTC>" },
-  "signature":           "<base64 Ed25519 signature from Step 4>"
-}
-```
-
-**Legacy (HMAC):**
-
-```json
-"seal": {
-  "status":              "sealed",
-  "canonicalization":    "JCS",
-  "signature_algorithm": "HMAC-SHA256",
-  "hash":                "<hex SHA-256 from Step 3>",
-  "signed_by":           { "name": "...", "org_id": "...", "role": "...", "timestamp": "<ISO 8601 UTC>" },
-  "sig":                 "<hex HMAC from Step 4>"
-}
-```
-
-The artifact is now sealed and MUST be treated as immutable. A verifier dispatches on `signature_algorithm`.
-
-### 8.1 Verification
-
-Verification runs **two independent checks; both MUST pass**, and both run offline:
-
-1. **Integrity.** Remove the `seal` field, re-canonicalize (Step 2), recompute `SHA-256` (Step 3), and confirm it equals `seal.hash`.
-2. **Authenticity.**
-   - `Ed25519` → reconstruct `JCS({ "hash": seal.hash, "signed_by": seal.signed_by })` and verify `seal.signature` against the public key whose id is `seal.kid` (obtained per §8.2). No secret is involved.
-   - `HMAC-SHA256` → recompute `HMAC-SHA256(SEAL_KEY, seal.hash)` and compare in constant time. Requires the shared secret.
-
-An integrity failure means the payload was modified after sealing. An authenticity failure means the seal was produced by a different key or forged. Note that both checks are required and neither implies the other: a body altered under an untouched signature passes authenticity but fails integrity; a body whose hash anyone could have written passes integrity but fails authenticity.
-
-### 8.2 Public key discovery
-
-A sealing authority publishes its Ed25519 verification keys, unauthenticated, at a well-known location so any verifier can fetch them once and then verify offline:
+### 8.5 Verification
 
 ```
-GET /.well-known/nomos-signing-keys
-→ { "keys": [ { "kid": "...", "algorithm": "Ed25519", "public_key_pem": "-----BEGIN PUBLIC KEY-----\n…" } ] }
+hash_match      = timingSafeEqual( SHA-256(JCS(artifact_without_seal_and_attestations)), seal.hash )
+signature_valid = crypto.verify( payload, seal.signature, publicKey )   // Ed25519: no pre-hash; RSA/EC: sha256 pre-hash
+verified        = hash_match AND signature_valid
 ```
 
-`kid` is derived from the public key as `base64url( SHA-256( SPKI-DER(public_key) ) )` truncated to 16 characters, so every implementation computes the same id. The response is a key **set**: it MAY carry more than one key (e.g. a rotated-out key retained so old seals still verify). A verifier selects the key whose `kid` matches the seal.
-
-### 8.3 Key rotation
-
-Asymmetric keys MAY be rotated without invalidating existing seals, provided **the retired public key remains published**. Each seal names its signer via `kid`, so a verifier always resolves the exact key that produced it; a new key is added to the published set and used for new seals while old public keys are retained for old artifacts. The private key MUST be protected (env/KMS/HSM) and never published.
-
-The legacy `SEAL_KEY` (HMAC) MUST NOT be rotated once artifacts are in production, since a symmetric secret is both signer and verifier: rotating it invalidates every prior seal. This limitation is one of the reasons Ed25519 is RECOMMENDED.
+Both comparisons MUST be timing-safe. A verifier MUST report `hash_match` and `signature_valid` as distinct booleans, not only a combined `verified` — a hash-only artifact (§3.10) is a real, distinguishable state (content pinned, not signed), not identical to "verification failed."
 
 ---
 
@@ -726,86 +554,75 @@ The legacy `SEAL_KEY` (HMAC) MUST NOT be rotated once artifacts are in productio
 
 ### 9.1 Compliant runtime
 
-A runtime is **conformant** if it:
+A runtime is conformant if it:
 
-1. Refuses to execute an artifact whose `spec_version` it does not recognise.
-2. Refuses to execute an artifact whose seal does not verify (§8.1), unless operating in an explicitly flagged `insecure_no_verify` mode for testing.
-3. Evaluates all rule operators defined in §4.2.
-4. Returns `ESCALATE` for unrecognised operators rather than failing silently.
-5. Appends a hash-chained audit entry (§7) for every execution.
-6. Surfaces `contradictions` count in every verdict response.
+1. Refuses to execute an artifact whose `nomos_version` it does not recognise.
+2. Evaluates `logic.decisions` per §4, in descending `priority` order, applying `logic.resolution.conflict_policy` when multiple decisions are eligible.
+3. Enforces `governance.constraints` (§3.7) on every execution, independent of decision evaluation.
+4. Verifies `required_fields` from `data_contract` (§3.5) before evaluating, per whichever execution API surface (§6) it implements.
+5. Appends a hash-chained audit entry (§7.1) for every execution, or a per-query audit hash (§7.2) for every read-oriented query.
+6. Preserves `meta.verification_tier` verbatim (§5.1) and does not infer or override it.
 
 ### 9.2 Compliant artifact producer
 
-A producer is **conformant** if it:
+A producer is conformant if it:
 
 1. Generates artifacts that validate against `schema/artifact.schema.json`.
-2. Seals artifacts using the procedure in §8. A producer that claims **publicly verifiable** seals MUST use an asymmetric algorithm (Ed25519 RECOMMENDED), stamp each seal with its `kid`, and publish the corresponding public key(s) at `/.well-known/nomos-signing-keys` (§8.2). HMAC-SHA256 seals are NOT publicly verifiable and MUST NOT be represented as such.
-3. Assigns `confidence` per the following rules (in order of precedence):
-   - `SOVEREIGN`: behavioral data used, full gap analysis passed, ARI ≥ 0.75.
-   - `PROVEN`: behavioral data used, full gap analysis passed, ARI ≥ 0.60.
-   - `CERTIFIED`: behavioral data used, full gap analysis passed, ARI < 0.60.
-   - `VALIDATED`: behavioral data used, contradiction detection passed, gap analysis not completed or inconclusive.
-   - `DECLARED`: no behavioral data used.
-4. Populates `contradiction_report` with any detected conflicts before sealing.
-5. Does NOT assign `PROVEN` or `SOVEREIGN` if ARI conditions are not met, and MUST produce a producer error rather than silently downgrading.
-6. Does NOT publish a `DECLARED` or `VALIDATED` artifact to any distribution platform that enforces the Exchange eligibility gate (§5.4–5.5).
+2. Seals artifacts per §8, populating a real, non-null `signature` whenever `seal.status` is `"sealed"` — never `hash`-only.
+3. Assigns `meta.verification_tier` per §5.1's ascending criteria, and does not assign `proven` or `sovereign` without the evidence those tiers require.
+4. Populates decision `provenance` (§4.2) for every decision derived from a source document.
 
 ---
 
 ## 10. Security Considerations
 
-**Signing key protection** — The signing key is the root of trust for all artifacts. For Ed25519, the **private** key MUST be stored in a secrets manager (env/KMS/HSM) and never embedded in code, version control, or the artifact; only the **public** key is published (§8.2), and publishing it is safe because it cannot forge a seal. For legacy HMAC, `SEAL_KEY` is both signer and verifier and MUST be treated as a top-level secret. Making seals publicly verifiable removes the *verification* secret, not the *signing* secret — signing remains a privileged operation.
+**Signing key protection** — The signing key is the root of trust for all artifacts. For Ed25519, the **private** key MUST be stored in a secrets manager (env/KMS/HSM) and never embedded in code, version control, or the artifact; only the **public** key is published (§8.4), and publishing it is safe because it cannot forge a seal. For HMAC, the shared secret is both signer and verifier and MUST be treated as a top-level secret. Making seals publicly verifiable removes the *verification* secret, not the *signing* secret — signing remains a privileged operation.
 
-**Key provenance** — Publishing a public key at `/.well-known/nomos-signing-keys` lets verifiers fetch it over TLS, which binds trust to the domain's certificate. Deployments requiring a stronger anchor SHOULD pin the key out of band or record its publication in an append-only transparency log so the key set itself is auditable.
+**Key provenance** — Publishing a public key at `/.well-known/nomos-signing-keys` lets verifiers fetch it over TLS, which binds trust to the domain's certificate. Deployments requiring a stronger anchor SHOULD pin the key out of band or record its publication in an append-only transparency log.
 
-**Replay attacks** — The `request_id` in an execution request SHOULD be a UUIDv4. Runtimes SHOULD reject duplicate `request_id` values within a configurable window (recommended: 5 minutes).
+**Context injection** — Runtimes MUST NOT evaluate user-supplied strings as arbitrary code. `when`/constraint expression evaluation (§4.1) MUST be performed by the deterministic Nomos-Expr v1 evaluator only.
 
-**Context injection** — Runtimes MUST NOT evaluate user-supplied strings as code. Condition evaluation MUST be performed against a static rule tree only.
+**Audit trail integrity** — The hash-chain audit trail (§7.1) is append-only. Runtimes MUST NOT expose a deletion endpoint for audit entries.
 
-**Audit trail integrity** — The hash-chain audit trail is append-only. Runtimes MUST NOT expose a deletion endpoint for audit entries. Backup and replication of the audit store is REQUIRED for production deployments.
+**Verification tier downgrade** — Altering `meta.verification_tier` without re-sealing constitutes misrepresentation of the artifact's provenance. Runtimes MUST preserve it verbatim from the sealed artifact.
 
-**Confidence tier downgrade** — Altering the `confidence` field without re-sealing constitutes misrepresentation of the artifact's provenance. Runtimes MUST preserve the `confidence` field verbatim from the sealed artifact. Valid values are `DECLARED`, `VALIDATED`, `CERTIFIED`, `PROVEN`, and `SOVEREIGN`. Any other value MUST be rejected with `confidence_tier_invalid`.
+**Idempotency gap** — Per §6.3, `correlation_id` is not currently a dedup key on either execution API. A caller relying on it for exactly-once semantics today will not get them; this is a real, disclosed gap, not a documentation omission.
 
 ---
 
 ## 11. Error Catalog
 
-All errors produced by a conformant runtime MUST use the machine-readable codes listed below. HTTP status codes apply to REST transport bindings; non-HTTP runtimes SHOULD map these to an equivalent error channel.
+The reference deployment's two execution APIs (§6) do not share a single error-code vocabulary today. This is a real, disclosed inconsistency, not a specification gap to be papered over with an idealized unified table.
 
-| Code | HTTP | Origin | Trigger | Recovery |
-|------|------|--------|---------|----------|
-| `spec_version_unsupported` | 400 | §3.3 | `spec_version` is not recognised by this runtime | Upgrade the runtime or use a supported spec version |
-| `seal_verification_failed` | 400 | §8.1 | Payload hash or HMAC does not match the `seal` block | Artifact may be tampered; do not execute; re-seal from source |
-| `artifact_not_found` | 404 | §6.4 | `artifact_id` not in registry or not in an executable state | Confirm the artifact has been sealed and registered |
-| `data_contract_violation` | 422 | §3.9 | One or more `required_fields` absent from execution context | Add the missing fields before retrying |
-| `confidence_tier_invalid` | 400 | §5 | `confidence` value is not one of `DECLARED`, `VALIDATED`, `CERTIFIED`, `PROVEN`, `SOVEREIGN` | Fix the producer; re-seal with a valid confidence value |
-| `confidence_gate_failed` | 422 | §5.4–5.5 | Artifact claims `PROVEN` or `SOVEREIGN` but ARI score does not meet the required threshold | Re-compile with sufficient behavioral data to achieve ARI ≥ 0.60 (`PROVEN`) or ≥ 0.75 (`SOVEREIGN`) |
-| `duplicate_request_id` | 409 | §6.9 | `correlation_id` already processed within the dedup window | Use a fresh UUID; retrieve cached response from original call |
-| `chain_corruption` | 500 | §7.2 | Audit chain hash verification fails at one or more entries | Halt writes; alert operator; restore from verified backup |
-| `unsupported_operator` | — | §4.2 | Condition node `op` is not in the operator table | Not an error response — runtime MUST return `ESCALATE` with `reason: "unsupported_operator"` |
-| `unknown_agent` | — | SPEC-002 §3 | `agent_id` not in the artifact's `agents` manifest | Advisory mode: ESCALATE. Enforce mode: hard block |
-| `deny_list_violation` | 403 | SPEC-002 §4 | Agent `agent_id` is in `cannot_call` for this action | Hard block in both advisory and enforce mode |
+### 11.1 Domain execution (`/api/nomos/execute`, `/api/nomos/domain/*`)
 
-### 11.1 Error response format
+Returns `{ "error": "<message>" }` with an HTTP status code and **no machine-readable `code` field**. A caller must currently match on HTTP status and message text. HTTP statuses used: `400` (invalid request/domain id), `401` (authentication required), `403` (access denied to domain/decision), `404` (domain or decision not found).
 
-All error responses MUST follow this envelope:
+### 11.2 Exchange execution (`/api/v1/verify`, `/api/v1/verify-decision`)
+
+Returns `{ "error": "<message>", "code": "<UPPER_SNAKE_CASE code>" }`. Codes actually in use:
+
+| Code | HTTP | Trigger |
+|---|---|---|
+| `VALIDATION_ERROR` | 400 | Request body fails schema validation |
+| `WRONG_ENDPOINT` | 400 | `pub_*` artifact id sent to `/verify-decision` (must use `/verify`) |
+| `NOT_FOUND` | 404 | `artifact_id` not found in the relevant registry |
+| `AUTH_REQUIRED` | 401 | Non-public artifact requested without `X-Nomos-Api-Key` or session |
+| `FORBIDDEN` | 403 | API key does not have access to this artifact |
+| `NO_RULES` | 400 | Artifact has no governance rules to evaluate |
+| `DATA_CONTRACT_VIOLATION` | 422 | None of the provided input fields are referenced by any rule |
+| `SCHEMA_MISMATCH` | 422 | One or more `data_contract.required_fields` missing from `inputs` |
+| `INVALID_EXECUTION_AT` | 422 | `execution_at` is not a valid, non-future ISO 8601 timestamp |
+| `INVALID_KEY` | 401 | `X-Nomos-Api-Key` is invalid or revoked |
+| `ALLOTMENT_EXCEEDED` | 402 | Free monthly query allotment reached, no active paid plan |
+
+### 11.3 Error response envelope (Exchange execution)
 
 ```json
-{
-  "error": {
-    "code":    "data_contract_violation",
-    "message": "Required context field 'credit_score' is missing",
-    "hint":    "Supply all required_fields defined in this artifact's data_contract.",
-    "doc_url": "https://nomosprotocol.com/spec#data-contract-violation"
-  },
-  "request_id": "<uuid>"
-}
+{ "error": "<human-readable message>", "code": "<CODE>" }
 ```
 
-`code` is REQUIRED. `message` and `hint` are RECOMMENDED. `doc_url` is OPTIONAL. Runtimes MUST NOT return different codes for the same error condition across calls.
-
----
+`error` and `code` are both REQUIRED on this surface. Domain execution (§11.1) does not currently include `code` — a caller integrating with both surfaces MUST branch on which one it is calling rather than assuming a shared shape.
 
 ---
 
@@ -813,7 +630,7 @@ All error responses MUST follow this envelope:
 
 ### 12.1 TypeScript SDK
 
-The official SDK (`@nomosprotocol/sdk`) provides a typed client for interacting with any conformant NOMOS runtime. It is zero-dependency, fetch-based, and auto-retries on rate limits and transient errors.
+The official SDK (`@nomosprotocol/sdk`, published on npm) provides a typed client for interacting with the reference deployment. It is zero-dependency, fetch-based, and auto-retries on rate limits and transient errors.
 
 ```bash
 npm install @nomosprotocol/sdk
@@ -821,55 +638,44 @@ npm install @nomosprotocol/sdk
 
 **Core methods:**
 
-| Method | Maps to | Notes |
+| Method | Calls | Notes |
 |---|---|---|
-| `nomos.decisions.verify(params)` | `POST /api/v1/verify` or `/api/v1/verify-decision` | Public artifacts (`pub_*`) use the open endpoint; custom artifacts require an API key |
-| `nomos.artifacts.list(params)` | `GET /api/exchange/artifacts` | Filter by band, domain, jurisdiction |
-| `nomos.artifacts.retrieve(id)` | `GET /api/exchange/artifacts/:id` | Returns full artifact metadata |
+| `nomos.decisions.verify(params)` | `POST /api/v1/verify` (public artifacts) or `/api/v1/verify-decision` (everything else), chosen by `artifact_id` prefix | See §6.2 |
+| `nomos.artifacts.retrieve(id)` | `GET /api/v1/artifacts/:id` | |
+| `nomos.artifacts.list(params)` | `GET /api/v1/artifacts` | Filter by band, domain, jurisdiction |
+| `nomos.artifacts.schema(id)` | `GET /api/v1/artifacts/:id/schema` | Field names/types the artifact's rules reference |
 | `nomos.governance.generate(params)` | `POST /api/v1/generate-governance` | Compile a governance artifact from policy text |
-| `nomos.governance.detectContradictions(params)` | `POST /api/v1/detect-contradictions` | Check rules array for conflicts before sealing |
+| `nomos.governance.detectContradictions(params)` | `POST /api/v1/detect-contradictions` | Check rules for conflicts before sealing |
 
-**Typed errors:** `NomosAuthenticationError`, `NomosAuthorizationError`, `NomosRateLimitError`, `NomosValidationError`, `NomosNotFoundError`, `NomosAPIError`, `NomosNetworkError` — all extend `NomosError`.
+**Typed errors:** `NomosAuthenticationError`, `NomosAuthorizationError`, `NomosRateLimitError`, `NomosValidationError`, `NomosNotFoundError`, `NomosAPIError`, `NomosNetworkError` — all extend `NomosError`, which carries a `code` from `NomosErrorCode` (`authentication_error | authorization_error | rate_limit_error | validation_error | not_found | api_error | network_error | webhook_signature_error`) — note this SDK-level code vocabulary is lowercase_snake_case and is distinct from the transport-level `code` values in §11.2.
 
 ```typescript
-import { Nomos, NomosRateLimitError } from '@nomosprotocol/sdk';
+import { Nomos } from '@nomosprotocol/sdk';
 
-const nomos = new Nomos('nms_live_...');
+const nomos = new Nomos('nmk_live_...');
 
 const result = await nomos.decisions.verify({
-  artifact_id:      'loan_approval_v1',
-  decision_context: { credit_score: 720, loan_amount: 50_000 },
+  artifact_id: 'pub_lending_v1',
+  decision:    'approve_loan',
+  inputs:      { credit_score: 720, amount: 15000 },
 });
-// result.allowed, result.verdict, result.audit_record
+// result.allowed, result.verdict, result.verdict_description
 ```
 
 ### 12.2 NOMOS Exchange
 
-The NOMOS Exchange is the distribution layer for sealed artifacts. Publishers may list `PROVEN` (ARI ≥ 0.60) and `SOVEREIGN` (ARI ≥ 0.75) artifacts. `DECLARED` and `VALIDATED` artifacts are not eligible.
-
-**Exchange lifecycle:**
-
-1. Artifact sealed in Studio (`PROVEN` or `SOVEREIGN`)
-2. Publisher submits `POST /api/exchange/artifacts` — quality gate enforced server-side
-3. Artifact enters `pending` status (admin review for `SOVEREIGN`)
-4. Artifact activated → discoverable at `/exchange/:artifactId`
-5. Consumers fork to Studio or download `.nomos` directly
-6. Forked artifact records provenance (`forkedFrom.artifactId`, `forkedFrom.sealHash`)
-
-**Autonomy band filter:** Consumers may filter Exchange listings by `autonomy_band` (`autonomous` / `bounded` / `human_governed`), which is derived from `readiness.ari` per §3.7.
+The NOMOS Exchange is the distribution layer for sealed Studio artifacts. Publishers list a sealed artifact; consumers query it via §6.2 or fork it into their own Studio session. The `proven`/`sovereign` verification tiers (§5.1) are the tiers a listing quality gate would reasonably require — this spec version does not assert a specific enforced gate, since that policy lives in the Exchange product, not the artifact format.
 
 ### 12.3 Public demo artifacts
 
-The reference runtime ships with pre-sealed public artifacts accessible without authentication. Their `artifact_id` values carry a `pub_` prefix:
+The reference deployment ships five pre-built, un-sealed demo artifacts, callable via `POST /api/v1/verify` with no authentication:
 
-| Artifact ID | Domain | Confidence |
+| Artifact ID | Domain | Confidence band (§5.2) |
 |---|---|---|
-| `pub_lending_v1` | Loan approval | PROVEN |
-| `pub_fraud_v1` | Fraud detection | CERTIFIED |
-| `pub_kyc_v1` | KYC screening | CERTIFIED |
+| `pub_lending_v1` | Consumer loan approval | `DECLARED` |
+| `pub_refund_v1` | Refund policy | `DECLARED` |
+| `pub_fraud_v1` | Fraud detection | `DECLARED` |
+| `pub_hr_leave_v1` | HR leave approval | `DECLARED` |
+| `pub_kyc_v1` | KYC screening | `DECLARED` |
 
-Public artifacts are callable via `POST /api/v1/verify` with no API key. They are read-only and not listed on the Exchange.
-
----
-
-*End of NOMOS-SPEC-001*
+All five are `DECLARED` — none have been forked and re-triangulated against real behavioral data, and none are listed on the Exchange (§5.2's `VALIDATED`/`CERTIFIED` values are reserved for a forked, behaviorally-triangulated version, not the shipped demo artifacts themselves).

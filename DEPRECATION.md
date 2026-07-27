@@ -38,6 +38,20 @@ Draft → Active → Deprecated → End of Life
 | NOMOS-SPEC-001 | Active | 2026-01-15 | **2029-01-15** |
 | NOMOS-SPEC-002 | Active | 2026-06-05 | **2029-06-05** |
 
+### Exception: NOMOS-SPEC-001 v2.0.0 (2026-07-27)
+
+Principle 2 above requires a **new spec number** for a breaking change, on the assumption
+there are conformant artifacts sealed under the version being changed that need a protected
+runway. NOMOS-SPEC-001 v1.1.0's §3/§4 described an artifact structure that, on investigation,
+no producer had ever actually emitted — including the reference deployment's own sealed
+artifacts, which failed validation against this repo's own schema. There was nothing
+conformant to v1.1.0's literal §3/§4 to protect. Given that, v2.0.0 was published in place,
+under the same spec number, as a correction rather than under principle 2's new-number path —
+the assumption behind that principle (real deployed conformant artifacts needing a migration
+runway) did not hold here. This is recorded as a one-time, reasoned exception, not a change to
+principle 2 itself: a future breaking change to an actually-adopted NOMOS-SPEC-001 shape still
+requires a new spec number.
+
 ---
 
 ## What Deprecation Means for Each Stakeholder
