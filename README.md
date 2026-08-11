@@ -12,6 +12,7 @@ The **NOMOS Protocol** defines an open, vendor-neutral format for packaging gove
 
 A `.nomos` file is a JSON document containing extracted policy rules, confidence metadata, and a cryptographic seal — signed with Ed25519 by default, so anyone can verify an artifact is authentic and unmodified offline, with the publisher's public key alone, no server call and no shared secret. Any compliant runtime can load a `.nomos` artifact and evaluate decisions against it — deterministically, without calling an AI model at runtime.
 
+NOMOS is one implementation of **[computable authority](https://computableauthority.com)** — the discipline of making institutional policy directly executable by AI systems, rather than interpreted after the fact.
 
 ---
 
@@ -327,6 +328,7 @@ The NOMOS Protocol specification and schemas are released under [CC BY 4.0](http
 
 ## Links
 
+- Computable Authority (the discipline NOMOS implements): [computableauthority.com](https://computableauthority.com)
 - Protocol site: [nomos.nomosprotocol.com](https://nomos.nomosprotocol.com)
 - Hosted runtime: [nomosprotocol.com](https://nomosprotocol.com)
 - Protocol Spec: [nomosprotocol.com/spec](https://nomosprotocol.com/spec)
