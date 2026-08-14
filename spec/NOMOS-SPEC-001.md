@@ -71,6 +71,8 @@ All examples use JSON. String values MUST be UTF-8 encoded. All timestamps MUST 
 
 A `.nomos` artifact SHOULD be saved with the `.nomos` file extension and served with media type `application/vnd.nomos+json` — a vendor-specific JSON media type, the same convention `.docx` and similar container formats use to be both a valid, generic JSON document and an unambiguously identifiable artifact type. Implementations MUST NOT serve or save a sealed artifact as a bare `.json` file (e.g. `artifact.nomos.json`) with generic `Content-Type: application/json` — doing so loses the distinction between "some JSON" and "a portable governance artifact" that this specification exists to establish.
 
+`application/vnd.nomos+json` is a registered media type in the [IANA Media Types registry](https://www.iana.org/assignments/media-types/application/vnd.nomos+json), reviewed and approved by the IESG-designated media type expert (2026-08-14). This is not a self-declared convention — it is an independently reviewed, permanent registration in the vendor tree, citable by any implementation or third party without reference to this repository.
+
 ### 3.1 Top-level structure
 
 A `.nomos` file's top-level object MUST contain the following nine keys:
