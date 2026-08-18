@@ -7,6 +7,37 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Repository] — 2026-08-18 (Known gap: reference implementation)
+
+### Why
+
+While fixing a confirmed defect in the reference implementation's decision resolution (a
+single-winner evaluation loop was silently discarding independent standing obligations on a
+real sealed artifact — 24 of 38 rules never evaluated), traced the fix against §3.6/§4.3's
+`logic.resolution` contract and found the reference implementation doesn't actually implement
+it.
+
+### Known gap (non-normative — no spec text changes)
+
+`server/lib/rule-evaluator.ts` — the reference implementation §4.1 already names for the
+expression language, and the evaluator behind the Exchange's public query surface — does not
+read `logic.resolution.conflict_policy` or `tie_breaker` from a sealed artifact. It now
+implements a fixed internal model instead: `allow`/`block`-type outcomes compete for the
+verdict (highest priority wins, ties broken deterministically by rule id — never array
+position), while `set`/`emit`/`escalate`/`action`-type outcomes all accumulate independently,
+with an accumulated escalation able to override a weaker `allow` when its priority is `>=` the
+deciding rule's. This is closer in spirit to §3.6's RECOMMENDED default
+(`collect_and_resolve` + `deny_wins`) than the single-winner behavior it replaced, but a
+sealed artifact that explicitly declares a different `conflict_policy` (e.g. `first_match`)
+currently has that declaration validated by schema and then silently ignored at evaluation
+time.
+
+Tracked as a known conformance gap, not fixed here — recorded so it doesn't get rediscovered
+as a surprise later. `schema/artifact.schema.json` and §3.6's text are unchanged; both remain
+correct as written.
+
+---
+
 ## [NOMOS-SPEC-001 v2.1.0] — 2026-07-27 (Further correction to §4.1)
 
 ### Why
