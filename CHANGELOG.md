@@ -7,7 +7,61 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Repository] — 2026-08-18 (Reference evaluator conformance correction)
+
+Implementation/conformance correction only. No spec text changes: §3.6, §4.3 and
+`schema/artifact.schema.json` were already correct and are unchanged.
+
+### Why
+
+Reviewing the same-day decision-resolution change recorded below, differential-tested the
+reference evaluator against the real sealed 851-rule EU AI Act artifact rather than against
+hand-written fixtures alone. That change had exempted `block` (deny) outcomes from the
+escalation-priority comparison entirely, on the reasoning that a denial is already maximally
+restrictive so no escalation could make it more so.
+
+That reasoning was wrong. An escalation is not a weaker denial — it states *who holds
+authority to decide*. A decision at priority 700 routing a case to human review genuinely
+outranks a decision at priority 500 permitting an automatic rejection, and the artifact's own
+declared priority ordering is the only thing entitled to settle that. Measured on the real
+artifact, the exemption returned an automatic denial in 65 of 400 sampled evaluations (16%)
+where the sealed policy's own priorities called for human review.
+
+### Corrected semantics (as now implemented)
+
+- Decision resolution is governed **uniformly by declared `priority`** across `allow`, `block`
+  and `escalate` outcomes. No outcome type is exempt from the comparison.
+- A **higher-priority escalation is never overridden by a lower-priority denial** (or
+  permission). A denial stands only where it genuinely outranks every applicable escalation.
+- At an exact priority tie, escalation resolves the verdict — ambiguity at equal authority
+  defers to a human rather than to an automatic outcome.
+- Unconditional (`always == true`) escalations are standing obligations, not case-specific
+  triggers, and do not by themselves force a verdict. This exclusion is load-bearing: the EU
+  AI Act artifact carries 90 such rules, which fire on every input.
+- Ordering remains deterministic: priority first, then rule id — never input array position.
+
+### Validation
+
+Differential and property-based validation against the sealed EU AI Act artifact, now retained
+as a permanent regression suite rather than a one-off check. Across generated inputs it asserts
+the evaluator never returns an automatic verdict while a conditional escalation of greater or
+equal priority applies, never cites a lower-priority rule than the highest one that fired, and
+produces identical results under shuffling of the rule array. Confirmed the suite genuinely
+fails when the defect is reintroduced. Post-correction: zero human-review overrides, zero
+cited-rule downgrades; all remaining differences versus the prior evaluator resolve toward
+escalation and are justified by the artifact's own priority ordering.
+
+The hand-written conformance matrix passed in full while this defect was live — it asserted
+the incorrect behaviour directly. Validation against a real sealed artifact is what caught it.
+
+---
+
 ## [Repository] — 2026-08-18 (Known gap: reference implementation)
+
+> **Superseded in part by the conformance correction above (same day).** The model described
+> below is accurate except for escalation precedence: escalation is now compared against
+> `block` outcomes as well as `allow`, uniformly by declared priority. The `conflict_policy` /
+> `tie_breaker` gap recorded here remains open and accurate.
 
 ### Why
 
