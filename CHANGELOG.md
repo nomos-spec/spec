@@ -7,6 +7,52 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Repository] — 2026-08-18 (Known gap closed: `logic.resolution` is now binding)
+
+Implementation/conformance change only. No spec text changes; §3.6 and §4.3 were already
+correct and are unchanged.
+
+### Closed
+
+The gap recorded twice below — that the reference evaluator validated an artifact's declared
+`logic.resolution` at seal time and then ignored it at evaluation time — is now closed. The
+evaluator behind the Exchange's public query surface reads the artifact's own
+`conflict_policy` and `tie_breaker` and resolves conflicts accordingly.
+
+Two invariants bound the change, both asserted in the conformance suite:
+
+- **Priority strictly dominates `tie_breaker`.** A tie_breaker settles an exact priority tie
+  and can never promote a lower-priority outcome over a higher-priority one. Without this
+  guard, `deny_wins` would reintroduce the escalation-precedence defect corrected earlier the
+  same day.
+- **`conflict_policy` governs which verdict wins, never whether obligations accumulate.**
+  §4.3 scopes it to "when more than one decision is eligible". Obligations, workflows and
+  classifications surface in full under every policy; collapsing them was the original defect
+  this work began from.
+
+Where an artifact declares no `tie_breaker`, the reference evaluator falls back to
+`escalate_wins` rather than §3.6's RECOMMENDED `deny_wins`. §3.6 makes the field REQUIRED, so
+there is no spec-defined behaviour for its absence; faced with a free choice, an undeclared tie
+between human review and automatic rejection resolves to human review. A declared value always
+governs. Implementers who prefer the recommended default should declare it explicitly, which is
+what §3.6 already requires.
+
+### Note for artifact producers
+
+Measured across both real sealed artifacts available: the EU AI Act artifact (851 rules) showed
+no change in outcome, and its pinned production verdicts are unchanged. A 38-rule health-sector
+artifact showed 287 of 600 sampled evaluations change — 266 of them genuine exact-priority ties
+newly resolved by its own declared `deny_wins`, with no priority inversions.
+
+That difference is a property of the artifacts, not the runtime, and is worth stating plainly:
+when most rules in an artifact share one priority, `tie_breaker` stops being an edge-case
+setting and becomes the artifact's dominant decision mechanism. Producers that emit a default
+`resolution` block without a deliberate policy choice should treat both fields — and the
+priority spread that determines how often they are consulted — as substantive governance
+decisions requiring the issuing authority's sign-off, not as boilerplate.
+
+---
+
 ## [Repository] — 2026-08-18 (Reference evaluator conformance correction)
 
 Implementation/conformance correction only. No spec text changes: §3.6, §4.3 and
@@ -58,10 +104,11 @@ the incorrect behaviour directly. Validation against a real sealed artifact is w
 
 ## [Repository] — 2026-08-18 (Known gap: reference implementation)
 
-> **Superseded in part by the conformance correction above (same day).** The model described
-> below is accurate except for escalation precedence: escalation is now compared against
-> `block` outcomes as well as `allow`, uniformly by declared priority. The `conflict_policy` /
-> `tie_breaker` gap recorded here remains open and accurate.
+> **Superseded by the two entries above (same day).** Escalation precedence was corrected to
+> compare against `block` outcomes as well as `allow`, uniformly by declared priority; and the
+> `conflict_policy` / `tie_breaker` gap recorded here is now **closed** — the reference
+> evaluator reads and honours the artifact's declared `logic.resolution`. Retained as the
+> record of how the gap was found and disclosed.
 
 ### Why
 
