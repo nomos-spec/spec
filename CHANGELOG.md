@@ -45,11 +45,19 @@ hit this fallback.
   runtime accommodation for non-conformant input, not new spec-conformant behavior — producers
   should emit `type: "escalate"` directly, per §4.3, rather than relying on it.
 
-### Known follow-on, not yet fixed
+### Correction to this entry
 
-The extraction pipeline that produces the `action_name`-encoded escalations described above is
-not yet corrected to emit spec-conformant `type: "escalate"` directly. Tracked as a separate,
-open issue in the reference implementation, not a spec gap.
+The paragraph originally here claimed the extraction pipeline was "not yet corrected" to emit
+`type: "escalate"` directly and needed a follow-on fix. That was wrong, found and corrected
+within the hour: `nomos-legacy-adapter.ts`'s `actionToOutcome` — the function `toSpec()` runs at
+seal time — already maps `escalate`/`manual_review`/`route_to`/`hold` to `type: "escalate"`
+correctly, and has since the same-day fix recorded below (2026-08-18, "single-winner evaluation
+silently discarding independent standing obligations"). The 15 EU AI Act rules cited above are
+stale: that artifact's `extractor_version` is `v9`, sealed well before the 2026-08-18 fix. A
+fresh extraction of the same source text today would produce spec-conformant `type: "escalate"`
+directly. Re-sealing the artifact — not a code change — is what would bring it current; the
+evaluator-side tolerance above remains correct and worth keeping regardless, since re-sealing
+every historical artifact isn't instantaneous.
 
 ---
 
