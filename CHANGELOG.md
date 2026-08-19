@@ -7,6 +7,52 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Repository] — 2026-08-19 (Reference evaluator conformance correction: `action` outcomes are not `escalate` outcomes)
+
+Implementation/conformance correction only. No spec text changes: §4.3 already defines `action`
+("Invokes a named action from `execution.actions`") and `escalate` ("Routes to human review") as
+distinct outcome types and is unchanged.
+
+### Why
+
+The reference evaluator's internal outcome classifier had a fallback: any `then` action that
+wasn't recognized as a decision (`allow`/`block`), a classification (`set`), or one of
+`escalate`/`manual_review`/`hold`/`route_to` was treated as `escalated` — the same category as a
+genuine escalation. §4.3's `action` outcome (invoking a named handler from `execution.actions`,
+e.g. a standing duty like "perform annual audits") fell into this fallback and was silently
+treated as if it, too, routed to human review — including competing in the same
+priority comparison that decides the final verdict.
+
+Measured on a real sealed 41-rule artifact: a request satisfying every real prohibition (no
+violations, no anomalies — a case that should resolve `allow`) came back `escalate`, matched to
+a rule whose only content was `{"type":"action","action_name":"annual_audit"}` — a standing
+administrative duty with a default priority that happened to tie once any other rule in the
+artifact had matched. 26 of the artifact's 41 rules are unconditional (`always == true`); most
+hit this fallback.
+
+### Corrected semantics (as now implemented)
+
+- `action` outcomes accumulate (0..N) exactly like `emit`/obligation outcomes already did —
+  reported in full, never competing for the verdict slot governed by §4.2's priority ordering.
+- Only `escalate` (and the pre-existing internal aliases `manual_review`/`hold`/`route_to`)
+  transfer decision authority and may override a lower-priority `allow`/`block`.
+- Some already-sealed artifacts encode a genuine escalation as `{"type":"action","action_name":
+  "escalate"|"route_to"|"manual_review"|"hold"}` rather than `{"type":"escalate", ...}` as §4.3
+  requires — 15 rules in the live 851-rule EU AI Act artifact do this. The evaluator now
+  recognizes exactly those four reserved words in `action_name` as a tolerance for
+  already-produced data, never as general-purpose `action_name` matching (which would
+  reintroduce the defect above for ordinary business labels like `annual_audit`). This is a
+  runtime accommodation for non-conformant input, not new spec-conformant behavior — producers
+  should emit `type: "escalate"` directly, per §4.3, rather than relying on it.
+
+### Known follow-on, not yet fixed
+
+The extraction pipeline that produces the `action_name`-encoded escalations described above is
+not yet corrected to emit spec-conformant `type: "escalate"` directly. Tracked as a separate,
+open issue in the reference implementation, not a spec gap.
+
+---
+
 ## [Repository] — 2026-08-18 (Known gap closed: `logic.resolution` is now binding)
 
 Implementation/conformance change only. No spec text changes; §3.6 and §4.3 were already
