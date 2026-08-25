@@ -42,6 +42,7 @@ A `.nomos` artifact now moves through three distinct moments, not two:
 | `spec/NOMOS-SPEC-002.md` | Multi-agent extension — agents manifest, guard phases, constraints DSL |
 | `spec/NOMOS-SPEC-003.md` | Temporal validity, staleness signalling, deterministic replay |
 | `spec/NOMOS-SPEC-004.md` | Composable artifacts (`extends`) + third-party attestations |
+| `spec/NOMOS-SPEC-006.md` | Artifact revocation — detached issuer-signed statements, signed revocation list, `max_age` |
 | `schema/artifact.schema.json` | JSON Schema for `.nomos` artifact files |
 | `schema/rule.schema.json` | JSON Schema for a single rule object |
 | `examples/lending_policy_v1.nomos` | Example — public lending policy |

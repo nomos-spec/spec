@@ -1,6 +1,6 @@
 # NOMOS-SPEC-006: Artifact Revocation
 
-**Status:** Draft  
+**Status:** Active  
 **Version:** 1.6.0  
 **Extends:** NOMOS-SPEC-001 v2.1.0, NOMOS-SPEC-004 v1.4.0  
 **Published:** 2026-08-25  
@@ -368,16 +368,23 @@ NOMOS-SPEC-001 baseline conformance.
 4. **No third-party revocation**: a verifier MUST reject a revocation statement
    whose `kid` does not resolve to the artifact's own issuer key (§3.5).
 
-### 8.1 Known follow-on work
+### 8.1 Schema status
 
-This document specifies the mechanism and normative verifier behavior. It does
-not itself amend `schema/artifact.schema.json`, `schema/public-query-response
-.schema.json`, or `schema/execution-response.schema.json` to add `max_age`
-(§6.2), nor does it add the new `schema/revocation-statement.schema.json` and
-`schema/revocation-list.schema.json` files implied by §3.2 and §4.3. Those are
-tracked as separate, reviewable changes once this document's normative text is
-accepted, consistent with how NOMOS-SPEC-004's schema additions followed its
-own text.
+`schema/revocation-statement.schema.json` and `schema/revocation-list.schema
+.json` (§3.2, §4.3) are in this repository. `max_age` (§6.2) is in
+`schema/public-query-response.schema.json` and `schema/execution-response
+.schema.json`.
+
+### 8.2 Known implementation gap (disclosed, not hidden)
+
+The reference deployment emits `max_age` on the public query path
+(`nomos.can()` / `POST /api/exchange/artifacts/:id/query`) but not yet on the
+authenticated execution path (`POST /api/v1/verify` / `verify-decision`) —
+§6's normative text covers both; the implementation currently covers one. This
+is recorded here on the same terms as NOMOS-SPEC-001 §11's Idempotency Gap: a
+real, disclosed limitation of the reference deployment, not a defect in this
+specification's text. A runtime claiming §6 conformance on the execution path
+specifically should confirm it emits `max_age` there before relying on it.
 
 ---
 

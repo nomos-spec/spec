@@ -7,7 +7,7 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [NOMOS-SPEC-006 v1.6.0] — 2026-08-25 (Draft)
+## [NOMOS-SPEC-006 v1.6.0] — 2026-08-25
 
 A seal proves an artifact was produced by its issuer and hasn't changed since — it says nothing
 about whether the issuer still stands behind it today. This document specifies **artifact
@@ -18,7 +18,8 @@ behavior — including honest, unmissable reporting when no revocation source is
 (fail-open, never silent) — and a `max_age` cache-freshness hint distinct from NOMOS-SPEC-003's
 triangulation-drift staleness signal. Revocation is issuer-key-only in this version, mirroring
 NOMOS-SPEC-004 §2.5's attester-revokes-its-own-attestation model; no new authority concept is
-introduced. Status: Draft — normative text is open for review before any schema is finalized.
+introduced. Reference implementation covers `max_age` on the public query path; the authenticated
+execution path is a disclosed follow-on (§8.2 of the spec).
 
 ### Added (NOMOS-SPEC-006)
 
