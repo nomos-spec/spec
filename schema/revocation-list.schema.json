@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/revocation-list.schema.json",
+  "title": "NOMOS Revocation List",
+  "description": "Response body from GET /.well-known/nomos-revocations (NOMOS-SPEC-006 §4) — a signed, dated aggregation of an issuer's currently-active revocation statements, published for bulk and offline checking. The CRL-equivalent for sealed .nomos artifacts.",
+  "type": "object",
+  "required": ["generated_at", "algorithm", "kid", "statements", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this list was assembled. Part of the signed payload — the freshness anchor a verifier reasons about when deciding how stale a fetched list is allowed to be (NOMOS-SPEC-006 §9.3)."
+    },
+    "algorithm": {
+      "type": "string",
+      "const": "Ed25519",
+      "description": "Ed25519 in this version."
+    },
+    "kid": {
+      "type": "string",
+      "description": "Key id used to sign the list as a whole. Resolvable at /.well-known/nomos-signing-keys."
+    },
+    "statements": {
+      "type": "array",
+      "description": "Every currently-active revocation statement known to the issuer, verbatim, in any order. MAY be empty — an empty array is a normal, signed assertion that nothing has been revoked as of generated_at.",
+      "items": { "$ref": "https://nomosprotocol.com/schema/revocation-statement.schema.json" }
+    },
+    "signature": {
+      "type": "string",
+      "description": "base64 Ed25519 signature over JCS({ generated_at, statements }) — see NOMOS-SPEC-006 §4.3. Attests completeness and currency of the list as of generated_at, in addition to (not instead of) each statement's own independently-verifiable signature."
+    }
+  },
+  "examples": [
+    {
+      "generated_at": "2026-08-25T00:05:00Z",
+      "algorithm": "Ed25519",
+      "kid": "dGVzdC1rZXktaWQ",
+      "statements": [
+        {
+          "artifact_id": "khda_teacher_licensing",
+          "artifact_version": "1.2.0",
+          "artifact_hash": "a3f9c1d2e4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1",
+          "reason": "Signing key suspected compromised 2026-08-24. All versions sealed under this kid are withdrawn pending re-seal under a rotated key.",
+          "algorithm": "Ed25519",
+          "kid": "dGVzdC1rZXktaWQ",
+          "signature": "MEUCIQDx3f8k…",
+          "issued_at": "2026-08-25T00:00:00Z"
+        }
+      ],
+      "signature": "MEQCIF7a2b9c…"
+    },
+    {
+      "generated_at": "2026-08-25T00:05:00Z",
+      "algorithm": "Ed25519",
+      "kid": "dGVzdC1rZXktaWQ",
+      "statements": [],
+      "signature": "MEQCIB1d4e7f…"
+    }
+  ]
+}

@@ -7,6 +7,47 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-006 v1.6.0] — 2026-08-25 (Draft)
+
+A seal proves an artifact was produced by its issuer and hasn't changed since — it says nothing
+about whether the issuer still stands behind it today. This document specifies **artifact
+revocation**: a detached, issuer-signed statement that a specific sealed version should no
+longer be relied upon, a signed and dated aggregation of statements for offline bulk-checking
+(the CRL-equivalent, published at `/.well-known/nomos-revocations`), normative verifier
+behavior — including honest, unmissable reporting when no revocation source is reachable
+(fail-open, never silent) — and a `max_age` cache-freshness hint distinct from NOMOS-SPEC-003's
+triangulation-drift staleness signal. Revocation is issuer-key-only in this version, mirroring
+NOMOS-SPEC-004 §2.5's attester-revokes-its-own-attestation model; no new authority concept is
+introduced. Status: Draft — normative text is open for review before any schema is finalized.
+
+### Added (NOMOS-SPEC-006)
+
+- **Revocation statement** (§3) — standalone signed object, never embedded in or mutating the
+  artifact it revokes. Bound to an exact `artifact_hash` (replay protection, mirrors
+  NOMOS-SPEC-004 §2.4). Uses `issued_at` rather than reusing NOMOS-SPEC-004's `revoked_at`, since
+  that field means the opposite thing there (unsigned annotation vs. signed content) — same name
+  across sibling specs would be a predictable implementation bug.
+- **Revocation list** (§4) — signed, dated aggregation at `/.well-known/nomos-revocations`. Signs
+  the list as a whole (`generated_at` + `statements`) in addition to each statement's own
+  independently-verifiable signature.
+- **Verifier behavior** (§5) — normative fail-open-but-loud handling when no revocation source is
+  available offline; REVOKED reported as a result distinct from a tamper/forgery failure.
+- **`max_age`** (§6) — advisory cache-freshness hint on query/execution responses, answering "how
+  long may a caller hold this verdict before re-checking revocation," which the existing
+  `staleness_advisory` (triangulation drift) does not address.
+- **§7 (non-normative)** draws an explicit line between this and two unrelated things that share
+  the word "deprecation" in this protocol family — spec-version deprecation (`DEPRECATION.md`)
+  and Registry-implementation version lifecycle — neither of which implies revocation.
+- **`schema/revocation-statement.schema.json`**, **`schema/revocation-list.schema.json`** (new).
+- **`schema/public-query-response.schema.json`**, **`schema/execution-response.schema.json`** —
+  added optional `max_age`.
+- **`verify/verify.ts`** — new `--revocations <file>` flag implementing §5.1/§5.2 end-to-end:
+  verifies the list signature, checks each statement independently regardless of list-level
+  trust (a corrupted list transport must not hide a genuine revocation), and prints the required
+  unmissable notice when no revocations file is supplied.
+
+---
+
 ## [Repository] — 2026-08-19 (Reference evaluator conformance correction: `action` outcomes are not `escalate` outcomes)
 
 Implementation/conformance correction only. No spec text changes: §4.3 already defines `action`

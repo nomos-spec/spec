@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/revocation-statement.schema.json",
+  "title": "NOMOS Revocation Statement",
+  "description": "A detached, issuer-signed statement that one specific sealed artifact version should no longer be relied upon (NOMOS-SPEC-006 §3). Never embedded in, and never a mutation of, the artifact it revokes.",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "artifact_version",
+    "artifact_hash",
+    "reason",
+    "algorithm",
+    "kid",
+    "signature",
+    "issued_at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "artifact_id": {
+      "type": "string",
+      "description": "The artifact family being revoked."
+    },
+    "artifact_version": {
+      "type": "string",
+      "description": "The exact version being revoked. Revocation is per-version — revoking one version says nothing about any other."
+    },
+    "artifact_hash": {
+      "type": "string",
+      "description": "MUST equal the seal.hash of the version named above (binding check, NOMOS-SPEC-006 §3.4). An unbound statement MUST NOT be treated as revoking a version whose hash it does not match."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Free-text, human-readable. This document does not mandate a closed enum; a deployment needing machine-routed reasons MAY adopt its own controlled vocabulary as a documented convention."
+    },
+    "algorithm": {
+      "type": "string",
+      "const": "Ed25519",
+      "description": "Ed25519 in this version."
+    },
+    "kid": {
+      "type": "string",
+      "description": "Key id of the ISSUER key that sealed the artifact being revoked — not a new revocation-specific key. MUST resolve to the same key that produced the artifact's own seal (NOMOS-SPEC-006 §3.5). Resolvable at /.well-known/nomos-signing-keys per NOMOS-SPEC-001 §8.4."
+    },
+    "signature": {
+      "type": "string",
+      "description": "base64 Ed25519 signature over JCS({ artifact_id, artifact_version, artifact_hash, reason, issued_at }) — see NOMOS-SPEC-006 §3.3. algorithm, kid, and signature itself are excluded from the signed payload."
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the statement was signed. Part of the signed payload — unlike NOMOS-SPEC-004's revoked_at (an unsigned annotation on an attestation), this timestamp IS signed content. See NOMOS-SPEC-006 §1."
+    }
+  },
+  "examples": [
+    {
+      "artifact_id": "khda_teacher_licensing",
+      "artifact_version": "1.2.0",
+      "artifact_hash": "a3f9c1d2e4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1",
+      "reason": "Signing key suspected compromised 2026-08-24. All versions sealed under this kid are withdrawn pending re-seal under a rotated key.",
+      "algorithm": "Ed25519",
+      "kid": "dGVzdC1rZXktaWQ",
+      "signature": "MEUCIQDx3f8k…",
+      "issued_at": "2026-08-25T00:00:00Z"
+    }
+  ]
+}

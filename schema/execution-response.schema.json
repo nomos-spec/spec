@@ -80,6 +80,11 @@
       "items": { "type": "string" },
       "description": "IDs of rules that were skipped due to temporal bounds at the execution instant. Present when at least one rule was expired. NOMOS-SPEC-003 §5."
     },
+    "max_age": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "RECOMMENDED maximum seconds a caller SHOULD hold this verdict before re-querying or re-checking the issuer's revocation list. Advisory, not required for conformance; absence is not an error. Distinct from staleness_advisory below (triangulation drift) — this reflects revocation risk. NOMOS-SPEC-006 §6.2."
+    },
     "staleness_advisory": {
       "type": "object",
       "description": "Passive advisory emitted when decisions since last triangulation exceed the staleness threshold. Never affects verdict. NOMOS-SPEC-003 §6.",

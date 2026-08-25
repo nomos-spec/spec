@@ -51,6 +51,11 @@
       "type": "integer",
       "minimum": 0,
       "description": "Wall-clock evaluation time in milliseconds."
+    },
+    "max_age": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "RECOMMENDED maximum seconds a caller SHOULD hold this verdict before re-querying or re-checking the issuer's revocation list. Advisory, not required for conformance; absence is not an error. Distinct from NOMOS-SPEC-003's staleness_advisory (triangulation drift) — this reflects revocation risk. NOMOS-SPEC-006 §6.2."
     }
   },
   "examples": [
@@ -62,7 +67,8 @@
       "query_id": "qry_d369dea8561b36133d40",
       "audit_hash": "8c51992191da2f7b6e4a1c0d9f3e5a7b2c4d6e8f0a1b3c5d7e9f1a3b5c7d9e1f",
       "queried_at": "2026-07-22T10:00:00.000Z",
-      "latency_ms": 42
+      "latency_ms": 42,
+      "max_age": 300
     }
   ]
 }
