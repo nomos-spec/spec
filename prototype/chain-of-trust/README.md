@@ -103,6 +103,39 @@ answer at this stage, not a standard. Nothing here is wired into `nomos-guard` o
 (both published packages on the mediation path); this stays a standalone prototype until the
 shape has been exercised more.
 
+## Security hardening + automated tests
+
+A dedicated pass found and fixed real issues, rather than assuming the happy-path demo generalized:
+
+- **`verifyChainPresentation` no longer throws.** `chain-verify-core.ts` and `key-cert.ts`'s
+  `verifyKeyCertificate` both used to let a malformed PEM or bad base64 propagate as an uncaught
+  exception on the *next* hop of the walk — safety-netted by the receiver's own try/catch, but not
+  by the CLI, which would have printed a raw stack trace. Fixed at the root (inside the core), so
+  neither caller needs its own defense.
+- **Every certificate's shape is validated before any crypto touches it** — each field must be the
+  right primitive type, `algorithm` must literally be `"Ed25519"` — producing a clear `MALFORMED`
+  instead of an incidental crypto exception or a silent type-coercion.
+- **A 20-certificate chain-length cap**, independent of and in addition to the transport's body
+  size limit — no real chain is ever that deep.
+- **Cycle detection is tested with a real signed cycle** (root certifies A, A certifies root, the
+  walk must detect it rather than loop), not just traced by reading the code.
+- **The receiver binds to `127.0.0.1` by default**, not `0.0.0.0` — Node's own `server.listen(port)`
+  binds every interface if you don't say otherwise, and a demo server silently reachable from the
+  network was a real footgun. `--host` opts into anything wider deliberately.
+- **Oversized requests get a real `413` response.** The previous version called `req.destroy()`
+  before writing the error, which killed the socket before the client could read why — fixed so
+  the connection yields a proper JSON error first.
+- **Explicit `Content-Type` enforcement** — a non-JSON body is rejected before it's parsed.
+
+`test.ts` (`npx tsx --test test.ts`, `node:test` + `node:assert`, zero deps) runs all of the above
+as real assertions — including two real HTTP round trips per wire test via `startReceiver()`, not
+in-process shortcuts — plus every scenario from the walkthrough above. 17 assertions, all passing.
+
+**What "hardened" means here, precisely:** this pass makes the *verification code* solid against
+malformed and adversarial input. It does not, and cannot, resolve the property this prototype
+was built to leave open — see the next section. Don't read "no corners in the code" as "no open
+questions in the design"; the two are independent, and only the first one was in scope to close.
+
 ## What this proves, and what it doesn't
 
 A successful run shows verification needing no live call to the issuer **and** no per-issuer

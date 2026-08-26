@@ -28,7 +28,6 @@
 import * as fs from "fs";
 import * as path from "path";
 import { verifyChainPresentation, type ChainVerdict } from "./chain-verify-core.js";
-import type { KeyCertificate } from "./key-cert.js";
 
 const EXIT_CODE: Record<ChainVerdict["decision"], number> = {
   ALLOWED: 0,
@@ -67,9 +66,14 @@ function main(): void {
   if (!rootPubkeyPath) printAndExit({ decision: "MALFORMED", detail: "--root-pubkey is required. There is no default root — you must supply the key you've decided to trust." });
   if (!chainPath) printAndExit({ decision: "MALFORMED", detail: "--chain <certs.json> is required — the set of key certificates presented alongside the artifact (order does not matter)." });
 
-  const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
-  const chain: KeyCertificate[] = JSON.parse(fs.readFileSync(chainPath, "utf8"));
-  const rootPublicKeyPem = fs.readFileSync(rootPubkeyPath, "utf8");
+  let artifact: any, chain: unknown, rootPublicKeyPem: string;
+  try {
+    artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
+    chain = JSON.parse(fs.readFileSync(chainPath, "utf8"));
+    rootPublicKeyPem = fs.readFileSync(rootPubkeyPath, "utf8");
+  } catch (e: any) {
+    printAndExit({ decision: "MALFORMED", detail: `Could not read/parse input files: ${e?.message ?? e}` });
+  }
 
   console.log(`\nVerifying chain for: ${artifactPath}`);
   console.log(`  target kid (artifact signer) : ${artifact?.seal?.kid ?? "—"}`);

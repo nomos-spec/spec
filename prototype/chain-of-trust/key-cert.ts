@@ -99,15 +99,24 @@ export type KeyCertVerifyResult =
   | { valid: false; reason: "bad_signature" | "expired" | "not_yet_valid" };
 
 /** Verifies ONE certificate's signature + expiry against a caller-supplied parent public key.
- *  Does not resolve trust on its own — see verify-chain.ts for the walk that turns a sequence
- *  of these into an actual "is this issuer recognized" decision. */
+ *  Does not resolve trust on its own — see chain-verify-core.ts for the walk that turns a
+ *  sequence of these into an actual "is this issuer recognized" decision.
+ *
+ *  Never throws. `cert` and `parentPublicKeyPem` may both be attacker-controlled — a malformed
+ *  PEM, a non-base64 signature, or a missing field must fail closed as `bad_signature`, not
+ *  propagate a raw crypto exception up to a caller that isn't expecting one. */
 export function verifyKeyCertificate(cert: KeyCertificate, parentPublicKeyPem: string, now: Date = new Date()): KeyCertVerifyResult {
-  const valid = crypto.verify(
-    null,
-    keyCertPayload(cert),
-    crypto.createPublicKey(parentPublicKeyPem),
-    Buffer.from(cert.signature, "base64")
-  );
+  let valid: boolean;
+  try {
+    valid = crypto.verify(
+      null,
+      keyCertPayload(cert),
+      crypto.createPublicKey(parentPublicKeyPem),
+      Buffer.from(cert.signature, "base64")
+    );
+  } catch {
+    return { valid: false, reason: "bad_signature" };
+  }
   if (!valid) return { valid: false, reason: "bad_signature" };
   if (now.getTime() > Date.parse(cert.expires_at)) return { valid: false, reason: "expired" };
   if (now.getTime() < Date.parse(cert.issued_at)) return { valid: false, reason: "not_yet_valid" };

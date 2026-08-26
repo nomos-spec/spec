@@ -18,36 +18,13 @@
  * question is out of scope by design (see README.md).
  */
 
-import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
-import { jcs, computeKid, createKeyCertificate } from "./key-cert.js";
+import { computeKid, createKeyCertificate } from "./key-cert.js";
+import { generateKeypair, sealToyArtifact } from "./test-helpers.js";
 
 const FIXTURES_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures");
-
-function generateKeypair() {
-  const { publicKey, privateKey } = crypto.generateKeyPairSync("ed25519");
-  return {
-    publicKeyPem: publicKey.export({ type: "spki", format: "pem" }).toString(),
-    privateKeyPem: privateKey.export({ type: "pkcs8", format: "pem" }).toString(),
-  };
-}
-
-/** Mirrors verify.ts's expected artifact shape exactly — the same JCS + SHA-256 + Ed25519 procedure. */
-function sealToyArtifact(signerKid: string, signerPrivateKeyPem: string, label: string) {
-  const unsealed = {
-    meta: { artifact_id: `prototype-toy-${label}`, version: "0.1.0", verification_tier: "PROTOTYPE" },
-    provenance: { review_summary: { pending_at_seal: 0 } },
-    logic: { decisions: [] },
-  };
-  const hash = crypto.createHash("sha256").update(jcs(unsealed)).digest("hex");
-  const signedBy = `prototype-demo:${label}`;
-  const signature = crypto
-    .sign(null, jcs({ hash, signed_by: signedBy }), crypto.createPrivateKey(signerPrivateKeyPem))
-    .toString("base64");
-  return { ...unsealed, seal: { status: "sealed", hash, signature, algorithm: "Ed25519", kid: signerKid, signed_by: signedBy } };
-}
 
 function main(): void {
   fs.mkdirSync(FIXTURES_DIR, { recursive: true });

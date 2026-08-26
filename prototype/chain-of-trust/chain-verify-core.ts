@@ -27,6 +27,26 @@ export type ChainVerdict =
   | { decision: "SEAL_INVALID"; detail: string }
   | { decision: "MALFORMED"; detail: string };
 
+// No real chain is ever this deep — this bounds the O(chain.length) work per hop (worst case
+// O(n^2) across the whole walk) against a pathologically large `chain` array, independent of and
+// in addition to whatever body-size limit the transport (e.g. receiver.ts) already enforces.
+const MAX_CHAIN_LENGTH = 20;
+
+/** Every field an attacker-controlled certificate needs to have the right shape before any crypto
+ *  touches it. Returns an error string, or null if the shape is acceptable — deliberately checked
+ *  before any `crypto.*` call so a malformed certificate produces a clear MALFORMED message
+ *  instead of an incidental crypto exception or a silently-failing type coercion. */
+function validateCertShape(cert: unknown, index: number): string | null {
+  if (typeof cert !== "object" || cert === null) return `chain[${index}] is not an object.`;
+  const c = cert as Record<string, unknown>;
+  for (const field of ["parent_kid", "child_kid", "child_public_key_pem", "issued_at", "expires_at", "signature"] as const) {
+    if (typeof c[field] !== "string" || !c[field]) return `chain[${index}].${field} must be a non-empty string.`;
+  }
+  if (c.algorithm !== "Ed25519") return `chain[${index}].algorithm must be "Ed25519".`;
+  if (c.scope !== undefined && typeof c.scope !== "string") return `chain[${index}].scope must be a string if present.`;
+  return null;
+}
+
 function verifyEd25519(payload: Buffer, signatureB64: string, pem: string): boolean {
   try {
     return crypto.verify(null, payload, crypto.createPublicKey(pem), Buffer.from(signatureB64, "base64"));
@@ -85,17 +105,43 @@ function walkChain(chain: KeyCertificate[], rootPublicKeyPem: string, targetKid:
   return { ok: true, pem: currentPem, path };
 }
 
-export function verifyChainPresentation(args: { artifact: any; chain: KeyCertificate[]; rootPublicKeyPem: string; now?: Date }): ChainVerdict {
-  const { artifact, chain, rootPublicKeyPem } = args;
+/**
+ * Never throws. `artifact`, `chain`, and every field within them may be attacker-controlled (this
+ * is exactly the function a wire receiver calls on an unauthenticated request body) — any
+ * malformed shape, bad PEM, non-base64 signature, or unexpected type must resolve to a verdict,
+ * never propagate an exception to a caller (CLI or HTTP) that isn't prepared to catch one.
+ */
+export function verifyChainPresentation(args: { artifact: any; chain: unknown; rootPublicKeyPem: string; now?: Date }): ChainVerdict {
+  try {
+    return verifyChainPresentationUnsafe(args);
+  } catch (e: any) {
+    return { decision: "MALFORMED", detail: `Unexpected error while evaluating the presentation: ${e?.message ?? String(e)}` };
+  }
+}
+
+function verifyChainPresentationUnsafe(args: { artifact: any; chain: unknown; rootPublicKeyPem: string; now?: Date }): ChainVerdict {
+  const { artifact, rootPublicKeyPem } = args;
   const now = args.now ?? new Date();
 
   const seal = artifact?.seal;
   if (!seal || seal.status === "draft") return { decision: "MALFORMED", detail: "Artifact is not sealed." };
   if (typeof seal.kid !== "string" || !seal.kid) return { decision: "MALFORMED", detail: "Artifact seal has no kid to resolve a chain for." };
+  if (typeof seal.hash !== "string" || typeof seal.signature !== "string") {
+    return { decision: "MALFORMED", detail: "Artifact seal is missing hash or signature." };
+  }
   if (seal.signature_algorithm !== "Ed25519" && seal.algorithm !== "Ed25519") {
     return { decision: "MALFORMED", detail: "Chain verification requires an Ed25519-sealed artifact." };
   }
-  if (!Array.isArray(chain)) return { decision: "MALFORMED", detail: "chain must be an array of key certificates." };
+
+  if (!Array.isArray(args.chain)) return { decision: "MALFORMED", detail: "chain must be an array of key certificates." };
+  if (args.chain.length > MAX_CHAIN_LENGTH) {
+    return { decision: "MALFORMED", detail: `chain has ${args.chain.length} certificates — exceeds the ${MAX_CHAIN_LENGTH}-certificate limit.` };
+  }
+  for (let i = 0; i < args.chain.length; i++) {
+    const err = validateCertShape(args.chain[i], i);
+    if (err) return { decision: "MALFORMED", detail: err };
+  }
+  const chain = args.chain as KeyCertificate[];
 
   const walk = walkChain(chain, rootPublicKeyPem, seal.kid, now);
   if (!walk.ok) return { decision: "ISSUER_NOT_RECOGNIZED", reason: walk.reason, detail: walk.detail };
