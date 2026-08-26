@@ -41,7 +41,7 @@ locally, the same way a browser walks a certificate chain against its pinned roo
 npx tsx demo.ts
 ```
 
-Then run each of the three printed commands. They demonstrate, with real fixtures and a real CLI,
+Then run each of the four printed commands. They demonstrate, with real fixtures and a real CLI,
 not just code inspection:
 
 1. **`ALLOWED`** — the full chain resolves from the pinned root to the artifact's actual signing
@@ -50,6 +50,13 @@ not just code inspection:
    anywhere in the presented chain. The chain walk breaks cleanly; no crash, no false accept.
 3. **`ISSUER_NOT_RECOGNIZED`** (exit 2) — the chain connects, but a link has expired. Reported
    with a distinct reason, not conflated with "never recognized."
+4. **Order independence** — the same two certificates as case 1, reversed, reach the byte-identical
+   `ALLOWED` result. `--chain` is a **set**, not a sequence: `walkChain()` in `verify-chain.ts`
+   matches each step by `parent_kid`/`child_kid` content across the whole remaining set, never by
+   array position. This is deliberate, not incidental — a wire format that required certificates
+   to arrive in a specific order would be smuggling in trust semantics ("as-transmitted sequence
+   implies as-intended chain") that don't belong there. Verified empirically, not just by
+   inspection: forward and reversed fixtures produce identical output and exit codes.
 
 ## What this proves, and what it doesn't
 

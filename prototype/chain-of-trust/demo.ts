@@ -90,6 +90,10 @@ function main(): void {
   fs.writeFileSync(path.join(FIXTURES_DIR, "artifact-honored.nomos"), JSON.stringify(artifactHonored, null, 2));
   fs.writeFileSync(path.join(FIXTURES_DIR, "artifact-impostor.nomos"), JSON.stringify(artifactImpostor, null, 2));
   fs.writeFileSync(path.join(FIXTURES_DIR, "chain-success.json"), JSON.stringify([rootToIntermediate, intermediateToLeaf], null, 2));
+  // Same two certificates as chain-success.json, reversed order. The chain walker matches by
+  // parent_kid/child_kid content, never by array position — verification must reach the exact
+  // same verdict from this file as from chain-success.json. See verify-chain.ts's walkChain().
+  fs.writeFileSync(path.join(FIXTURES_DIR, "chain-success-reversed.json"), JSON.stringify([intermediateToLeaf, rootToIntermediate], null, 2));
   fs.writeFileSync(path.join(FIXTURES_DIR, "chain-expired.json"), JSON.stringify([rootToIntermediate, intermediateToLeafExpired], null, 2));
 
   console.log("NOMOS PROTOTYPE TEST ROOT — not a production trust anchor. Generated fresh, this run only.\n");
@@ -105,6 +109,9 @@ function main(): void {
   console.log("  npx tsx verify-chain.ts fixtures/artifact-impostor.nomos --chain fixtures/chain-success.json --root-pubkey fixtures/root.pub.pem\n");
   console.log("  # 3. expired — chain connects but the leaf certificate has lapsed");
   console.log("  npx tsx verify-chain.ts fixtures/artifact-honored.nomos --chain fixtures/chain-expired.json --root-pubkey fixtures/root.pub.pem\n");
+  console.log("  # 4. order-independence — same two certificates as case 1, reversed. Must reach");
+  console.log("  #    the identical ALLOWED verdict; presentation order carries no trust meaning.");
+  console.log("  npx tsx verify-chain.ts fixtures/artifact-honored.nomos --chain fixtures/chain-success-reversed.json --root-pubkey fixtures/root.pub.pem\n");
 }
 
 main();

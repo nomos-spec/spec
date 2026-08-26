@@ -11,6 +11,11 @@
  * Usage:
  *   npx tsx verify-chain.ts <artifact.nomos> --chain <certs.json> --root-pubkey <root.pub.pem>
  *
+ * --chain is a SET of certificates, not a sequence — presentation order must not affect the
+ * verdict (see the invariant documented on walkChain() below). A future wire format that carries
+ * these certs should be free to transmit them in any order without that becoming a hidden trust
+ * decision.
+ *
  * There is deliberately NO default for --root-pubkey and no fallback to any NOMOS-hosted key.
  * The relying party must supply the one root key it has independently decided to trust. That
  * decision — who operates a root, and why it should be trusted — is exactly the open governance
@@ -42,6 +47,14 @@ function verifyEd25519(payload: Buffer, signatureB64: string, pem: string): bool
  * Walks the chain from the pinned root to the artifact's signing key. Each step's verifying key
  * comes entirely from the previous step's certified `child_public_key_pem` — never from a
  * directory lookup — so the only externally-supplied trust input is the root itself.
+ *
+ * INVARIANT: `chain` is an unordered set, not a sequence. At every step this searches the whole
+ * remaining set for the certificate whose `parent_kid` matches the key just validated — it never
+ * assumes position i+1 continues position i. Presentation order must not affect the result: a
+ * relying party that received {cert A, cert B, cert C} in any order must reach the same verdict.
+ * The moment verification depends on order, the wire format that carries these certs starts
+ * carrying trust semantics it shouldn't (an implicit "as-transmitted sequence = as-intended
+ * chain" assumption) — this walker deliberately reconstructs the chain from content, not position.
  */
 function walkChain(chain: KeyCertificate[], rootPubkeyPem: string, targetKid: string, now: Date): string {
   const rootKid = computeKid(rootPubkeyPem);
@@ -105,7 +118,7 @@ function main(): void {
     else if (args[i] === "--root-pubkey" && args[i + 1]) rootPubkeyPath = path.resolve(args[++i]);
   }
   if (!rootPubkeyPath) fail("--root-pubkey is required. There is no default root — you must supply the key you've decided to trust.");
-  if (!chainPath) fail("--chain <certs.json> is required — the ordered array of key certificates presented alongside the artifact.");
+  if (!chainPath) fail("--chain <certs.json> is required — the set of key certificates presented alongside the artifact (order does not matter).");
 
   const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
   const chain: KeyCertificate[] = JSON.parse(fs.readFileSync(chainPath, "utf8"));
