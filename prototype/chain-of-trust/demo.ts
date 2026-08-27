@@ -2,7 +2,7 @@
 /**
  * PROTOTYPE — chain-of-trust demo fixture generator
  *
- * NOT a spec. Generates FRESH, disposable Ed25519 keypairs in memory (root, intermediate, leaf,
+ * Reference implementation for NOMOS-SPEC-007 (Draft). Generates FRESH, disposable Ed25519 keypairs in memory (root, intermediate, leaf,
  * plus an uncertified impostor) — never NOMOS_SIGNING_KEY, never anything durable — issues key
  * certificates between them, seals toy `.nomos` artifacts, and writes fixtures to ./fixtures/ so
  * verify-chain.ts (CLI) and receiver.ts/presenter.ts (real HTTP) can both be run against the

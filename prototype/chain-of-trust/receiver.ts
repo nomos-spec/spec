@@ -3,7 +3,7 @@
  * PROTOTYPE — reference "receiver": an independent system deciding whether to honor a presented
  * artifact, over an actual socket.
  *
- * NOT a spec, not wired into nomos-guard or nomos-mcp (both published packages on the mediation
+ * Reference implementation for NOMOS-SPEC-007 (Draft) §6, not wired into nomos-guard or nomos-mcp (both published packages on the mediation
  * path — entangling an experimental handshake into either would put real users on unstable
  * ground). This is a standalone `node:http` server, zero dependencies, matching this repo's
  * existing verifier ethos.

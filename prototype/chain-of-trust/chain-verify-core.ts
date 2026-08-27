@@ -1,7 +1,7 @@
 /**
  * PROTOTYPE — pure chain-verification core
  *
- * NOT a spec. Extracted from verify-chain.ts so the same verdict logic can back two different
+ * Reference implementation for NOMOS-SPEC-007 (Draft) §4. Extracted from verify-chain.ts so the same verdict logic can back two different
  * presentations: a CLI (exit codes + printed lines) and an HTTP receiver (status + JSON body).
  * This module never calls process.exit() or console.log() — it returns a value. Copying the walk
  * into a second place instead of sharing this would let the CLI and the receiver drift apart,

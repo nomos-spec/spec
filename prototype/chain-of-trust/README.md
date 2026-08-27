@@ -1,9 +1,13 @@
-# Prototype: Chain-of-Trust Key Certificates + Offline Handshake
+# Reference Implementation: NOMOS-SPEC-007 (Draft) — Chain-of-Trust Key Certificates
 
-**Status: prototype, not a spec.** Nothing here is NOMOS-SPEC-007 or any other numbered spec.
-This directory exists to test whether the primitives below survive contact with real code — over
-a real socket, not just in-process — before anything is proposed for standardization. Do not
-depend on this for anything beyond that.
+**Status: this code is now the pure reference implementation for [NOMOS-SPEC-007](../../spec/NOMOS-SPEC-007.md),
+published as Draft.** It began as an unnumbered prototype to test whether the primitives below
+survived contact with real code — over a real socket, not just in-process — before anything was
+proposed for standardization. They did; the spec is now written. What has **not** changed:
+NOMOS-SPEC-007 has exactly one implementation (this one), and makes no interoperability claim
+until a second, independent implementation exists — see the spec's §8 for what Draft status does
+and does not establish. Do not depend on this as proven interoperable infrastructure yet; do
+treat it as a complete, tested starting point for anyone building a second implementation.
 
 ## Why this exists
 

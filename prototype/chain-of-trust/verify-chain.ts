@@ -2,7 +2,7 @@
 /**
  * PROTOTYPE — Offline chain-of-trust verifier (CLI)
  *
- * NOT a spec, not wired into any production path. See ./README.md.
+ * Reference implementation for NOMOS-SPEC-007 (Draft), not wired into any production path. See ./README.md.
  *
  * Thin wrapper over chain-verify-core.ts's verifyChainPresentation() — the same function backs
  * receiver.ts's HTTP path, so the CLI and the wire receiver can never drift onto two different

@@ -1,8 +1,8 @@
 /**
  * PROTOTYPE — Key Certificates (chain-of-trust)
  *
- * NOT a spec. See ./README.md for status and scope. This module exists to test whether the
- * primitive shape below survives contact before any of it is proposed as NOMOS-SPEC-007.
+ * Reference implementation for NOMOS-SPEC-007 (Draft) §3 — see ./README.md for status and
+ * scope. This module implements the key-certificate primitive the spec defines.
  *
  * A key certificate is one key (the "parent" — a root or intermediate) certifying that another
  * key (the "child") is authorized to sign, within an optional scope, until an expiry. It answers

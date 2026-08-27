@@ -3,7 +3,7 @@
  * PROTOTYPE — reference "presenter": an agent carrying a `.nomos` artifact plus its key-cert
  * chain into an independent system it has no prior relationship with, and asking to be honored.
  *
- * NOT a spec. Deliberately dumb: reads an artifact and a chain from disk, POSTs the envelope
+ * Reference implementation for NOMOS-SPEC-007 (Draft) §6. Deliberately dumb: reads an artifact and a chain from disk, POSTs the envelope
  * `{ artifact, key_certs }` to a receiver's /verify endpoint, prints whatever comes back. It does
  * not name a root, does not hint at one, and could not influence the receiver's trust decision
  * even if it tried — that property belongs entirely to the receiver's own configuration.
