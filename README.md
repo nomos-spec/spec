@@ -42,6 +42,7 @@ A `.nomos` artifact now moves through three distinct moments, not two:
 | `spec/NOMOS-SPEC-002.md` | Multi-agent extension — agents manifest, guard phases, constraints DSL |
 | `spec/NOMOS-SPEC-003.md` | Temporal validity, staleness signalling, deterministic replay |
 | `spec/NOMOS-SPEC-004.md` | Composable artifacts (`extends`) + third-party attestations |
+| `spec/NOMOS-SPEC-005.md` | Public query extension — keyless authority queries, permanent transcripts |
 | `spec/NOMOS-SPEC-006.md` | Artifact revocation — detached issuer-signed statements, signed revocation list, `max_age` |
 | `schema/artifact.schema.json` | JSON Schema for `.nomos` artifact files |
 | `schema/rule.schema.json` | JSON Schema for a single rule object |
@@ -320,6 +321,12 @@ This repository tracks the NOMOS artifact format specification. Backward-incompa
 | NOMOS-SPEC-002 | Active | Multi-agent manifest, guard phases, constraints DSL |
 | NOMOS-SPEC-003 | Active | Temporal validity, staleness signalling, deterministic replay |
 | NOMOS-SPEC-004 | Active | Composable artifacts (`extends`), third-party attestations |
+| NOMOS-SPEC-005 | Draft | Public query extension — keyless authority queries, permanent transcripts |
+| NOMOS-SPEC-006 | Active | Artifact revocation — detached issuer-signed statements, signed revocation list |
+
+## Experimental — not a numbered spec
+
+**Chain-of-trust key certificates.** [Paper 5 / R-08](https://www.nomosprotocol.com/paper-5) named a gap: every existing mechanism above (sealing, attestation, revocation) proves part of "can this authority be trusted," but none let an independent system with no prior relationship to the issuer recognize that issuer live, without a call back to NOMOS. This prototype tests a key-certificate chain — one key certifying another, resolved locally against a root the relying party pins itself — the same pattern a browser uses for its certificate store. Working prototype, tested end to end; **not** NOMOS-SPEC-007 or any numbered spec, and not proposed for standardization until a second independent implementation exists. See the [`prototype/chain-of-trust`](https://github.com/nomos-spec/spec/tree/prototype/chain-of-trust/prototype/chain-of-trust) branch.
 
 ---
 
