@@ -6,6 +6,7 @@
 [![Spec 004](https://img.shields.io/badge/spec-NOMOS--SPEC--004-blueviolet)](spec/NOMOS-SPEC-004.md)
 [![Spec 005](https://img.shields.io/badge/spec-NOMOS--SPEC--005-yellow)](spec/NOMOS-SPEC-005.md)
 [![Spec 006](https://img.shields.io/badge/spec-NOMOS--SPEC--006-red)](spec/NOMOS-SPEC-006.md)
+[![Spec 007 Draft](https://img.shields.io/badge/spec-NOMOS--SPEC--007%20(Draft)-lightgrey)](spec/NOMOS-SPEC-007.md)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![Validate](https://github.com/nomos-spec/spec/actions/workflows/validate.yml/badge.svg)](https://github.com/nomos-spec/spec/actions/workflows/validate.yml)
 [![IANA Media Type](https://img.shields.io/badge/IANA-application%2Fvnd.nomos%2Bjson-brightgreen)](https://www.iana.org/assignments/media-types/application/vnd.nomos+json)
@@ -44,8 +45,16 @@ A `.nomos` artifact now moves through three distinct moments, not two:
 | `spec/NOMOS-SPEC-004.md` | Composable artifacts (`extends`) + third-party attestations |
 | `spec/NOMOS-SPEC-005.md` | Public query extension — keyless authority queries, permanent transcripts |
 | `spec/NOMOS-SPEC-006.md` | Artifact revocation — detached issuer-signed statements, signed revocation list, `max_age` |
+| `spec/NOMOS-SPEC-007.md` | **Draft.** Chain-of-trust key certificates — an independent system recognizing an artifact's issuer with no prior relationship and no call home |
 | `schema/artifact.schema.json` | JSON Schema for `.nomos` artifact files |
 | `schema/rule.schema.json` | JSON Schema for a single rule object |
+| `schema/revocation-statement.schema.json` | JSON Schema for a NOMOS-SPEC-006 artifact revocation statement |
+| `schema/revocation-list.schema.json` | JSON Schema for a NOMOS-SPEC-006 revocation list |
+| `schema/key-certificate.schema.json` | JSON Schema for a NOMOS-SPEC-007 key certificate |
+| `schema/chain-verification-request.schema.json` | JSON Schema for a NOMOS-SPEC-007 `POST /verify` request |
+| `schema/chain-verification-response.schema.json` | JSON Schema for a NOMOS-SPEC-007 `POST /verify` response |
+| `schema/chain-revocation-statement.schema.json` | JSON Schema for a NOMOS-SPEC-007 chain-key revocation statement |
+| `schema/chain-revocation-list.schema.json` | JSON Schema for a NOMOS-SPEC-007 chain-key revocation list |
 | `examples/lending_policy_v1.nomos` | Example — public lending policy |
 | `examples/healthcare_triage_v1.nomos` | Example — clinical triage protocol |
 | `examples/minimal_v1.nomos` | Minimal valid artifact (structure check only) |
@@ -323,10 +332,14 @@ This repository tracks the NOMOS artifact format specification. Backward-incompa
 | NOMOS-SPEC-004 | Active | Composable artifacts (`extends`), third-party attestations |
 | NOMOS-SPEC-005 | Draft | Public query extension — keyless authority queries, permanent transcripts |
 | NOMOS-SPEC-006 | Active | Artifact revocation — detached issuer-signed statements, signed revocation list |
+| NOMOS-SPEC-007 | Draft | Chain-of-trust key certificates — an independent system recognizing an artifact's issuer with no prior relationship and no call home |
 
-## Experimental — not a numbered spec
-
-**Chain-of-trust key certificates.** [Paper 5 / R-08](https://www.nomosprotocol.com/paper-5) named a gap: every existing mechanism above (sealing, attestation, revocation) proves part of "can this authority be trusted," but none let an independent system with no prior relationship to the issuer recognize that issuer live, without a call back to NOMOS. This prototype tests a key-certificate chain — one key certifying another, resolved locally against a root the relying party pins itself — the same pattern a browser uses for its certificate store. Working prototype, tested end to end; **not** NOMOS-SPEC-007 or any numbered spec, and not proposed for standardization until a second independent implementation exists. See the [`prototype/chain-of-trust`](https://github.com/nomos-spec/spec/tree/prototype/chain-of-trust/prototype/chain-of-trust) branch.
+NOMOS-SPEC-007 is published as a Draft specifically to invite what a Draft is for: independent
+implementation and scrutiny. It has exactly one implementation today — see
+[`spec/NOMOS-SPEC-007.md §8`](spec/NOMOS-SPEC-007.md#8-conformance-and-implementation-status) for
+what that does and does not establish, and the
+[`prototype/chain-of-trust`](https://github.com/nomos-spec/spec/tree/prototype/chain-of-trust/prototype/chain-of-trust)
+branch for the pure reference implementation.
 
 ---
 

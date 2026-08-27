@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/chain-verification-response.schema.json",
+  "title": "NOMOS Chain Verification Response",
+  "description": "Response body from POST /verify (NOMOS-SPEC-007 §4.4, §6.2, §7.3). Exactly one of seven decisions. The three chain-authenticity failures (ISSUER_NOT_RECOGNIZED, KEY_REVOKED, SEAL_INVALID) and the rule-evaluation outcome (DENIED) MUST remain distinguishable — collapsing 'the issuer was never established' into 'the rules said no' is a nonconformant implementation (NOMOS-SPEC-007 §10.1).",
+  "type": "object",
+  "required": ["decision"],
+  "properties": {
+    "decision": {
+      "type": "string",
+      "enum": ["ALLOWED", "AUTHORIZED", "DENIED", "ESCALATED", "ISSUER_NOT_RECOGNIZED", "KEY_REVOKED", "SEAL_INVALID", "MALFORMED"]
+    },
+    "leaf_kid": {
+      "type": "string",
+      "description": "Present only when decision is ALLOWED — the artifact's own resolved signing key id."
+    },
+    "path": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Present only when decision is ALLOWED — the resolved kid path from root to leaf."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Overloaded by decision, disclosed rather than hidden (NOMOS-SPEC-007 §8.2): when decision is ISSUER_NOT_RECOGNIZED, one of a fixed set of short codes (no_certificate_for_root | chain_broken | cycle | bad_signature | expired | not_yet_valid) — see reason for that case below. When decision is AUTHORIZED, DENIED, or ESCALATED, a full human-readable explanation from rule evaluation instead. A future revision should consider splitting these into distinct field names."
+    },
+    "rule": {
+      "type": ["string", "null"],
+      "description": "Present when decision is AUTHORIZED, DENIED, or ESCALATED — the rule id that decided it, if any."
+    },
+    "missing_inputs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Present when decision is ESCALATED — the fields the artifact's rules still need."
+    },
+    "obligations": {
+      "type": "array",
+      "description": "May accompany AUTHORIZED, DENIED, or ESCALATED — notify/log/flag-style duties, same vocabulary as NOMOS-SPEC-005 §1's public-query response."
+    },
+    "revoked_kid": {
+      "type": "string",
+      "description": "Present only when decision is KEY_REVOKED — the kid of the specific key found revoked."
+    },
+    "detail": {
+      "type": "string",
+      "description": "Human-readable detail for ISSUER_NOT_RECOGNIZED, KEY_REVOKED, SEAL_INVALID, or MALFORMED."
+    }
+  },
+  "examples": [
+    { "decision": "AUTHORIZED", "reason": "2 rules evaluated. No restriction fired.", "rule": "catch-all", "missing_inputs": [] },
+    { "decision": "ISSUER_NOT_RECOGNIZED", "reason": "chain_broken", "detail": "Chain breaks after kid 40ZaXrnpntaoD4dn — no certificate continues it toward the artifact's signing key." },
+    { "decision": "KEY_REVOKED", "revoked_kid": "intermediateKid1", "detail": "Key intermediateKid1 in this chain has been revoked by its own parent." },
+    { "decision": "SEAL_INVALID", "detail": "Hash mismatch — payload modified after sealing." }
+  ]
+}

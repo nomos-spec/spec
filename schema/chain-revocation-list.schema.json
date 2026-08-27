@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/chain-revocation-list.schema.json",
+  "title": "NOMOS Chain Key Revocation List",
+  "description": "Response body from GET /.well-known/nomos-chain-revocations (NOMOS-SPEC-007 §5.3) — a signed, dated aggregation of currently-revoked chain keys. Mirrors NOMOS-SPEC-006's revocation-list.schema.json in structure and purpose, one level down (keys, not artifact versions).",
+  "type": "object",
+  "required": ["generated_at", "algorithm", "kid", "statements", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this list was assembled. Part of the signed payload."
+    },
+    "algorithm": {
+      "type": "string",
+      "const": "Ed25519",
+      "description": "Ed25519 in this version."
+    },
+    "kid": {
+      "type": "string",
+      "description": "Key id used to sign the list as a whole — the deployment's own platform key, not a claim of revocation authority over any key in the list. Each contained statement carries its own issuer's independent signature."
+    },
+    "statements": {
+      "type": "array",
+      "description": "Every currently-active chain-key revocation statement known to the deployment, verbatim, in any order. MAY be empty.",
+      "items": { "$ref": "https://nomosprotocol.com/schema/chain-revocation-statement.schema.json" }
+    },
+    "signature": {
+      "type": "string",
+      "description": "base64 Ed25519 signature over JCS({ generated_at, statements })."
+    }
+  },
+  "examples": [
+    {
+      "generated_at": "2026-08-27T00:05:00Z",
+      "algorithm": "Ed25519",
+      "kid": "…",
+      "statements": [],
+      "signature": "…"
+    }
+  ]
+}

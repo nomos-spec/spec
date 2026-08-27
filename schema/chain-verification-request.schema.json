@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/chain-verification-request.schema.json",
+  "title": "NOMOS Chain Verification Request",
+  "description": "Request body for POST /verify (NOMOS-SPEC-007 §6) — a presenter offering a sealed artifact and a certificate chain to a relying party it has no prior relationship with.",
+  "type": "object",
+  "required": ["version", "artifact", "key_certs", "root_public_key_pem"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1",
+      "description": "Wire envelope version. A verifier MUST reject any value it does not recognize with MALFORMED rather than guess at an unfamiliar shape."
+    },
+    "artifact": {
+      "description": "The sealed .nomos artifact being presented (NOMOS-SPEC-001 §8)."
+    },
+    "key_certs": {
+      "type": "array",
+      "maxItems": 20,
+      "description": "The chain (NOMOS-SPEC-007 §4) — an unordered set of key certificates. MAY be empty if the artifact's own signing key equals the pinned root. A verifier MUST reject more than 20 entries without attempting to walk them.",
+      "items": { "$ref": "https://nomosprotocol.com/schema/key-certificate.schema.json" }
+    },
+    "root_public_key_pem": {
+      "type": "string",
+      "description": "The root the relying party's OWN configuration has decided to trust. MUST NOT be sourced from anything else in this request — see NOMOS-SPEC-007 §10.2."
+    },
+    "facts": {
+      "type": "object",
+      "description": "Optional. When present, and only once the chain resolves to a recognized, unrevoked issuer (NOMOS-SPEC-007 §7), the artifact's own rules are evaluated against these facts."
+    },
+    "action": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Optional human-readable label for what is being asked. Has no normative effect on the verdict."
+    }
+  },
+  "examples": [
+    {
+      "version": "1",
+      "artifact": { "meta": { "artifact_id": "example" }, "seal": { "status": "sealed", "kid": "8kR2Xw5dF7hJmN1s" } },
+      "key_certs": [],
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----\n",
+      "facts": { "credit_score": 750 }
+    }
+  ]
+}

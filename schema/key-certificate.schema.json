@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/key-certificate.schema.json",
+  "title": "NOMOS Key Certificate",
+  "description": "A detached, Ed25519-signed statement that one key (the parent) certifies another key (the child) as authorized to sign, until an expiry (NOMOS-SPEC-007 §3). Chained together and resolved against a relying party's own pinned root, key certificates let an independent system recognize an artifact's issuer without a prior lookup or a call home.",
+  "type": "object",
+  "required": ["parent_kid", "child_kid", "child_public_key_pem", "issued_at", "expires_at", "algorithm", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "parent_kid": {
+      "type": "string",
+      "description": "Key id of the CERTIFYING key (a root or an intermediate), computed per NOMOS-SPEC-001 §8.4's convention."
+    },
+    "child_kid": {
+      "type": "string",
+      "description": "Key id of the key being certified. MUST equal computeKid(child_public_key_pem) — a verifier MUST NOT trust a child_kid that does not match the material carried in this same certificate."
+    },
+    "child_public_key_pem": {
+      "type": "string",
+      "description": "The certified key's own public key material, carried inline. There is no central directory to resolve it from — that absence is the entire point of a chain that verifies without calling home."
+    },
+    "scope": {
+      "type": "string",
+      "description": "Free-text in this version. Not yet a structurally enforced constraint (NOMOS-SPEC-007 §8.2) — carried so a future version can define enforcement without a wire-format break."
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this statement was signed. Part of the signed payload."
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this certificate stops being valid. Part of the signed payload."
+    },
+    "algorithm": {
+      "type": "string",
+      "const": "Ed25519",
+      "description": "Ed25519 in this version."
+    },
+    "signature": {
+      "type": "string",
+      "description": "base64 Ed25519 signature over JCS({ parent_kid, child_kid, child_public_key_pem, scope, issued_at, expires_at }) — produced with the PARENT's private key. algorithm and signature itself are excluded from the signed payload."
+    }
+  },
+  "examples": [
+    {
+      "parent_kid": "V3HqL9zM2Nk4pQrT",
+      "child_kid": "8kR2Xw5dF7hJmN1s",
+      "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----\n",
+      "scope": "authority:lending",
+      "issued_at": "2026-08-27T00:00:00Z",
+      "expires_at": "2027-08-27T00:00:00Z",
+      "algorithm": "Ed25519",
+      "signature": "MEUCIQD1a2b3c4…"
+    }
+  ]
+}

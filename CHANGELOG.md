@@ -7,6 +7,57 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-007 v1.7.0 — Draft] — 2026-08-27
+
+Every trust mechanism through NOMOS-SPEC-006 resolves a key by looking it up somewhere the
+relying party already knows to ask. None of them let an **independent system with no prior
+relationship to the issuer** recognize that issuer live, without a call home — the gap Paper 5's
+R-08 finding names directly. This document specifies **chain-of-trust key certificates**: one
+key certifying another, resolved entirely offline against a root the relying party has
+independently pinned, the same delegation pattern a browser uses against its certificate store.
+Also specifies key-level revocation (cascading correctly through every path to a revoked key, not
+just the one that was checked) and how a successful chain resolution composes with rule
+evaluation so a presented, never-registered artifact can answer "is this action permitted," not
+only "is this artifact's issuer genuine."
+
+Published as a **Draft**, deliberately: this document has exactly one implementation — the
+reference one — and makes no interoperability claim until a second, independent implementation
+exists. That is what publishing a Draft is for.
+
+### Added (NOMOS-SPEC-007)
+
+- **Key certificate** (§3) — detached, Ed25519-signed, JCS-canonicalized statement that a parent
+  key certifies a child key, until an expiry. Deliberate sibling of NOMOS-SPEC-004's attestation
+  object (same cryptographic shape) rather than a variant of it — an attestation is advisory and
+  never gates evaluation; a key certificate is exactly the mechanism that determines whether an
+  issuer is recognized at all.
+- **Chain verification** (§4) — the normative walk algorithm from a pinned root to an artifact's
+  own signing key. Order-independence is a required invariant, not an implementation detail: the
+  presented chain is a set, verified by content matching at each step, never by array position.
+  Five distinguishable outcomes (ALLOWED, ISSUER_NOT_RECOGNIZED, KEY_REVOKED, SEAL_INVALID,
+  MALFORMED) that a conformant verifier MUST NOT collapse into one another.
+- **Key revocation** (§5) — a key's own parent withdraws its standing to sign, checked by kid at
+  every hop of the walk so a revoked intermediate is dead on every path a presenter might
+  construct through it, not just the one that happened to be checked.
+- **Verification envelope** (§6) — `POST /verify` request/response shape with explicit wire
+  version negotiation (`version: "1"`), rejecting an unrecognized envelope rather than guessing.
+- **Chain verification composed with rule evaluation** (§7) — supplying `facts` alongside a
+  presentation upgrades a bare `ALLOWED` into a real `AUTHORIZED`/`DENIED`/`ESCALATED` verdict,
+  but only once the chain independently resolves — rule evaluation MUST NOT run, and MUST NOT be
+  used to answer, when the issuer itself was never established.
+- **§9 (non-normative)** explicitly scopes out root governance (who should operate a shared
+  trust root) as a separate, unresolved question this document does not answer.
+
+### Known gaps (disclosed, §8.2)
+
+- Exactly one implementation exists; no interoperability claim is made.
+- `scope` (§3.1) is carried and signed but not yet enforced.
+- No certificate-level revocation, only key-level.
+- The `reason` field is overloaded by decision (a short code on `ISSUER_NOT_RECOGNIZED`, a full
+  sentence on `AUTHORIZED`/`DENIED`/`ESCALATED`) — a genuine naming wart, not smoothed over.
+
+---
+
 ## [NOMOS-SPEC-006 v1.6.0] — 2026-08-25
 
 A seal proves an artifact was produced by its issuer and hasn't changed since — it says nothing
