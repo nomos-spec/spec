@@ -1,0 +1,297 @@
+{
+  "_readme": "See README.md in this directory. check_at is the `now` a checker should pass in — these fixtures are pinned to fixed dates, not wall-clock time, precisely so results stay reproducible indefinitely.",
+  "check_at": "2027-01-01T00:00:00.000Z",
+  "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6RPr+84XvdeSzmKPEvfzLpOgkdCiMmP+5mPBfQXKiOY=\n-----END PUBLIC KEY-----\n",
+  "cases": [
+    {
+      "name": "allowed",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-honored",
+          "version": "1.0.0"
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
+          "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
+          "algorithm": "Ed25519",
+          "kid": "k25GdGYvawXqFJrX",
+          "signed_by": "vectors:honored"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "child_kid": "PAEp-jMJnzvkwQSt",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcPJuoc1maNqykcc8VMFx2Ye7BZ/myCVurtXWAEMIKlc=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "eBkZfc6nyoxt+T0IC4owth8rri/h2frIKjg1MhNfAY3o29wPIP+4eppgUZDYSZnNI/TDRxvavlR1CI8meWDpDg=="
+        },
+        {
+          "parent_kid": "PAEp-jMJnzvkwQSt",
+          "child_kid": "k25GdGYvawXqFJrX",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx/ToUSXXlewl4xjIdlTM03SWJ2uUVWL9FxmiNWr8Gqo=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "JB40nQ8EpBcVpr2i54wyhy5FkwIShr7/Xo5Qn6DSZdYIvFWrEiTe6P9Eur9YN8edBa7QaS26aIhtvYfHIRVEBw=="
+        }
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "leaf_kid": "k25GdGYvawXqFJrX",
+        "path": [
+          "oce5bYh8xC2E7WZS",
+          "PAEp-jMJnzvkwQSt",
+          "k25GdGYvawXqFJrX"
+        ]
+      }
+    },
+    {
+      "name": "allowed_reversed_order",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-honored",
+          "version": "1.0.0"
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
+          "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
+          "algorithm": "Ed25519",
+          "kid": "k25GdGYvawXqFJrX",
+          "signed_by": "vectors:honored"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "PAEp-jMJnzvkwQSt",
+          "child_kid": "k25GdGYvawXqFJrX",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx/ToUSXXlewl4xjIdlTM03SWJ2uUVWL9FxmiNWr8Gqo=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "JB40nQ8EpBcVpr2i54wyhy5FkwIShr7/Xo5Qn6DSZdYIvFWrEiTe6P9Eur9YN8edBa7QaS26aIhtvYfHIRVEBw=="
+        },
+        {
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "child_kid": "PAEp-jMJnzvkwQSt",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcPJuoc1maNqykcc8VMFx2Ye7BZ/myCVurtXWAEMIKlc=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "eBkZfc6nyoxt+T0IC4owth8rri/h2frIKjg1MhNfAY3o29wPIP+4eppgUZDYSZnNI/TDRxvavlR1CI8meWDpDg=="
+        }
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "leaf_kid": "k25GdGYvawXqFJrX",
+        "path": [
+          "oce5bYh8xC2E7WZS",
+          "PAEp-jMJnzvkwQSt",
+          "k25GdGYvawXqFJrX"
+        ]
+      },
+      "note": "Same two certificates as \"allowed\", reversed. Must reach the byte-identical verdict — presentation order carries no trust meaning."
+    },
+    {
+      "name": "issuer_not_recognized_uncertified_key",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-impostor",
+          "version": "1.0.0"
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "5cbfc17df950ac1d697714b2643e215a1242d78de2e87c4037e4a3c43d61749d",
+          "signature": "LgWmJRBiR8hHr+OmDf+zfLs5En8WzWtSGx9FJIUVvrBczu0eS0WK3jVDILslUfkrQnaOGyPbatM0S9v9S4HbDg==",
+          "algorithm": "Ed25519",
+          "kid": "NugBocBe_MuhevwS",
+          "signed_by": "vectors:impostor"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "child_kid": "PAEp-jMJnzvkwQSt",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcPJuoc1maNqykcc8VMFx2Ye7BZ/myCVurtXWAEMIKlc=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "eBkZfc6nyoxt+T0IC4owth8rri/h2frIKjg1MhNfAY3o29wPIP+4eppgUZDYSZnNI/TDRxvavlR1CI8meWDpDg=="
+        },
+        {
+          "parent_kid": "PAEp-jMJnzvkwQSt",
+          "child_kid": "k25GdGYvawXqFJrX",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx/ToUSXXlewl4xjIdlTM03SWJ2uUVWL9FxmiNWr8Gqo=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "JB40nQ8EpBcVpr2i54wyhy5FkwIShr7/Xo5Qn6DSZdYIvFWrEiTe6P9Eur9YN8edBa7QaS26aIhtvYfHIRVEBw=="
+        }
+      ],
+      "expected": {
+        "decision": "ISSUER_NOT_RECOGNIZED",
+        "reason": "chain_broken"
+      }
+    },
+    {
+      "name": "issuer_not_recognized_expired",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-honored",
+          "version": "1.0.0"
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
+          "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
+          "algorithm": "Ed25519",
+          "kid": "k25GdGYvawXqFJrX",
+          "signed_by": "vectors:honored"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "child_kid": "PAEp-jMJnzvkwQSt",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcPJuoc1maNqykcc8VMFx2Ye7BZ/myCVurtXWAEMIKlc=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "eBkZfc6nyoxt+T0IC4owth8rri/h2frIKjg1MhNfAY3o29wPIP+4eppgUZDYSZnNI/TDRxvavlR1CI8meWDpDg=="
+        },
+        {
+          "parent_kid": "PAEp-jMJnzvkwQSt",
+          "child_kid": "k25GdGYvawXqFJrX",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx/ToUSXXlewl4xjIdlTM03SWJ2uUVWL9FxmiNWr8Gqo=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2026-06-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "HEbt2l5TWWscCXzlDg9dqTxMfVFI9SO5P7FsOfLVaMTvZ6b7fysqXPReSaA7ivCX6GhUzW+oqx23iQKI0m0MBg=="
+        }
+      ],
+      "expected": {
+        "decision": "ISSUER_NOT_RECOGNIZED",
+        "reason": "expired"
+      }
+    },
+    {
+      "name": "seal_invalid_tampered_after_sealing",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-honored",
+          "version": "1.0.0"
+        },
+        "logic": {
+          "decisions": [
+            {
+              "injected": true
+            }
+          ]
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
+          "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
+          "algorithm": "Ed25519",
+          "kid": "k25GdGYvawXqFJrX",
+          "signed_by": "vectors:honored"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "child_kid": "PAEp-jMJnzvkwQSt",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcPJuoc1maNqykcc8VMFx2Ye7BZ/myCVurtXWAEMIKlc=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "eBkZfc6nyoxt+T0IC4owth8rri/h2frIKjg1MhNfAY3o29wPIP+4eppgUZDYSZnNI/TDRxvavlR1CI8meWDpDg=="
+        },
+        {
+          "parent_kid": "PAEp-jMJnzvkwQSt",
+          "child_kid": "k25GdGYvawXqFJrX",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx/ToUSXXlewl4xjIdlTM03SWJ2uUVWL9FxmiNWr8Gqo=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "JB40nQ8EpBcVpr2i54wyhy5FkwIShr7/Xo5Qn6DSZdYIvFWrEiTe6P9Eur9YN8edBa7QaS26aIhtvYfHIRVEBw=="
+        }
+      ],
+      "expected": {
+        "decision": "SEAL_INVALID"
+      }
+    },
+    {
+      "name": "malformed_chain_over_length_cap",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-honored",
+          "version": "1.0.0"
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
+          "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
+          "algorithm": "Ed25519",
+          "kid": "k25GdGYvawXqFJrX",
+          "signed_by": "vectors:honored"
+        }
+      },
+      "key_certs": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "expected": {
+        "decision": "MALFORMED"
+      }
+    },
+    {
+      "name": "malformed_unsealed_artifact",
+      "artifact": {
+        "meta": {}
+      },
+      "key_certs": [],
+      "expected": {
+        "decision": "MALFORMED"
+      }
+    }
+  ]
+}

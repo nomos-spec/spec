@@ -456,18 +456,24 @@ plainly rather than implying it is handled:
 
 ### 8.3 Reference implementation
 
-- **Pure primitive** (§3-4), signer-agnostic, no persistence: [`prototype/chain-of-trust`
-  branch](https://github.com/nomos-spec/spec/tree/prototype/chain-of-trust/prototype/chain-of-trust)
+- **Pure primitive** (§3-4), signer-agnostic, no persistence:
+  [`prototype/chain-of-trust/`](https://github.com/nomos-spec/spec/tree/main/prototype/chain-of-trust)
   in this repository — `key-cert.ts`, `chain-verify-core.ts`, a standalone CLI verifier
   (`verify-chain.ts`), and a minimal `node:http` reference receiver/presenter pair
   (`receiver.ts` / `presenter.ts`) demonstrating §6's envelope over an actual socket. Order
-  independence (§4.3) is verified empirically in `test.ts`, not just asserted from reading the
-  code.
+  independence (§4.3) is verified empirically in `test.ts` (17 assertions), not just asserted
+  from reading the code.
 - **Production deployment**, including §5 revocation and §7 rule-evaluation composition:
   `nomosprotocol.com`'s `POST /api/v1/chain-of-trust/verify` (`@nomosprotocol/sdk`'s
   `nomos.can({ artifact, key_certs, root_public_key_pem, ...facts })`). This is the fuller
   implementation §5 and §7 describe; the pure prototype above covers §3-4 and §6's envelope
   without persistence or rule evaluation.
+- **Test vectors**: [`chain-of-trust-vectors/`](https://github.com/nomos-spec/spec/tree/main/chain-of-trust-vectors)
+  — seven fixed `{ artifact, key_certs, expected }` cases (a resolved chain, reversed-order
+  equivalence, an uncertified issuer, an expired certificate, a tampered artifact, and two
+  malformed inputs), confirmed self-consistent with the reference implementation
+  (`check.ts`), specifically so a second implementer has something concrete to check their own
+  verifier against rather than only prose to interpret.
 - **Schemas**: `schema/key-certificate.schema.json`, `schema/chain-verification-request.schema.json`,
   `schema/chain-verification-response.schema.json`, `schema/chain-revocation-statement.schema.json`,
   `schema/chain-revocation-list.schema.json`.

@@ -55,6 +55,8 @@ A `.nomos` artifact now moves through three distinct moments, not two:
 | `schema/chain-verification-response.schema.json` | JSON Schema for a NOMOS-SPEC-007 `POST /verify` response |
 | `schema/chain-revocation-statement.schema.json` | JSON Schema for a NOMOS-SPEC-007 chain-key revocation statement |
 | `schema/chain-revocation-list.schema.json` | JSON Schema for a NOMOS-SPEC-007 chain-key revocation list |
+| `prototype/chain-of-trust/` | NOMOS-SPEC-007's pure reference implementation — key certificates, chain verification, a CLI verifier, a minimal HTTP receiver/presenter pair |
+| `chain-of-trust-vectors/` | NOMOS-SPEC-007 fixed interop test vectors — for a second implementer to check their verifier against |
 | `examples/lending_policy_v1.nomos` | Example — public lending policy |
 | `examples/healthcare_triage_v1.nomos` | Example — clinical triage protocol |
 | `examples/minimal_v1.nomos` | Minimal valid artifact (structure check only) |
@@ -338,8 +340,10 @@ NOMOS-SPEC-007 is published as a Draft specifically to invite what a Draft is fo
 implementation and scrutiny. It has exactly one implementation today — see
 [`spec/NOMOS-SPEC-007.md §8`](spec/NOMOS-SPEC-007.md#8-conformance-and-implementation-status) for
 what that does and does not establish, and the
-[`prototype/chain-of-trust`](https://github.com/nomos-spec/spec/tree/prototype/chain-of-trust/prototype/chain-of-trust)
-branch for the pure reference implementation.
+[`prototype/chain-of-trust/`](https://github.com/nomos-spec/spec/tree/main/prototype/chain-of-trust)
+directory for the pure reference implementation, and
+[`chain-of-trust-vectors/`](https://github.com/nomos-spec/spec/tree/main/chain-of-trust-vectors)
+for fixed test cases to check a second implementation against.
 
 ---
 
