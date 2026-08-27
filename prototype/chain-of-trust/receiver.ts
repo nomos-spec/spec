@@ -48,6 +48,9 @@ const MAX_BODY_BYTES = 1_000_000;
 const STATUS: Record<ChainVerdict["decision"], number> = {
   ALLOWED: 200,
   ISSUER_NOT_RECOGNIZED: 403,
+  // Recognized issuer, not delegated authority over this artifact (§3.4). Shares 403 with the
+  // other refusals; `decision` in the body is what a caller branches on.
+  OUT_OF_SCOPE: 403,
   SEAL_INVALID: 422,
   MALFORMED: 400,
 };

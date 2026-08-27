@@ -119,8 +119,7 @@ A certificate chain resolves this the way a public-key infrastructure resolves i
 relying party does not need to know the leaf issuer in advance, only a root it has decided to
 trust, plus a chain of certificates connecting the two. This document specifies exactly that
 primitive for NOMOS artifacts — nothing more. It does not specify who should operate a shared
-root (§9), and it does not yet specify a scope-enforcement mechanism beyond carrying a `scope`
-string (§3.2, §8.2) — both are named explicitly as unresolved rather than silently assumed away.
+root (§9), which is named explicitly as unresolved rather than silently assumed away.
 
 ---
 
@@ -133,7 +132,7 @@ string (§3.2, §8.2) — both are named explicitly as unresolved rather than si
   "parent_kid":            "V3HqL9zM2Nk4pQrT",
   "child_kid":              "8kR2Xw5dF7hJmN1s",
   "child_public_key_pem":  "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----\n",
-  "scope":                  "authority:lending",
+  "scope":                  "industry:financial/lending",
   "issued_at":              "2026-08-27T00:00:00Z",
   "expires_at":             "2027-08-27T00:00:00Z",
   "algorithm":              "Ed25519",
@@ -146,7 +145,7 @@ string (§3.2, §8.2) — both are named explicitly as unresolved rather than si
 | `parent_kid` | string | REQUIRED | Key id of the CERTIFYING key (a root or an intermediate), computed per NOMOS-SPEC-001 §8.4's convention: `base64url(SHA-256(SPKI DER))`, first 16 characters. |
 | `child_kid` | string | REQUIRED | Key id of the key being certified. MUST equal `computeKid(child_public_key_pem)` — a verifier MUST NOT trust a `child_kid` that does not match the material actually carried in this same certificate (§4.2). |
 | `child_public_key_pem` | string | REQUIRED | The certified key's own public key material, carried inline. There is no central directory to resolve it from — that absence is the entire point of a chain that verifies without calling home. |
-| `scope` | string | OPTIONAL | Free-text in this version. Not yet a structurally enforced constraint — see §8.2's disclosed gap. Carried so a future version of this document can define enforcement without a wire-format break. |
+| `scope` | string | OPTIONAL | The delegation's limits, enforced per §3.4. Absent means unrestricted. |
 | `issued_at` | string (ISO 8601 UTC) | REQUIRED | When this statement was signed. Part of the signed payload. |
 | `expires_at` | string (ISO 8601 UTC) | REQUIRED | When this certificate stops being valid. Part of the signed payload. A certificate has no revocation mechanism of its own short of expiry, other than key revocation (§5). |
 | `algorithm` | string | REQUIRED | `"Ed25519"` in this version. |
@@ -177,6 +176,59 @@ Given a certificate and a caller-supplied parent public key, a verifier MUST:
 This check resolves nothing about trust by itself — it only establishes that *this one*
 certificate is a genuine, unexpired statement by whoever holds the named parent's private key.
 §4 defines how a sequence of these becomes an actual trust decision.
+
+---
+
+### 3.4 Scope (normative)
+
+A certificate's `scope` states the limits of the delegation. It is part of the signed payload
+(§3.2), so it cannot be altered without invalidating the certificate.
+
+**Grammar.** A scope is a space-separated set of `dimension:value` terms, ALL of which must hold.
+A dimension MUST NOT appear more than once. An absent or empty scope means UNRESTRICTED. A
+verifier MUST reject a malformed scope rather than ignoring the unparseable terms — a partially
+parsed scope would grant more than its author wrote.
+
+**Dimensions.** This version defines exactly two, both matched against fields the artifact itself
+declares:
+
+| Dimension | Matched against | Comparison |
+|---|---|---|
+| `artifact` | `meta.artifact_id` | Exact equality only. Never a prefix or glob. |
+| `industry` | `meta.industry` | Hierarchical, `/`-delimited: `financial` contains `financial/lending`. A match MUST fall on a segment boundary, so `financial` does NOT contain `financial-services`. |
+
+`jurisdiction` is deliberately absent. Real artifacts carry jurisdictions as free prose ("State of
+California", "NHS England"); a matcher over free prose would pass silently when an issuer writes a
+variant spelling, which is worse than not enforcing it. Jurisdiction scoping awaits a normalized
+identifier — see §8.2.
+
+**Fail closed, in two directions (normative).**
+
+1. If a scope constrains a dimension the artifact does not declare, the artifact is OUT of scope.
+   "You were authorized only for financial services, and this artifact does not say what it
+   covers" is not a pass.
+2. If a scope constrains a dimension the verifier does not recognize, the artifact is OUT of
+   scope. A verifier MUST NOT skip a constraint it cannot evaluate. This mirrors X.509's critical
+   extension rule: silently ignoring an unknown constraint would make every dimension added by a
+   future revision unenforceable against existing verifiers.
+
+**Narrowing is monotonic (normative).** The effective scope of a chain is the accumulation of
+every certificate's scope along it — the union of their terms, which is the intersection of the
+artifact sets they denote. Accumulation, not replacement, is what prevents a later certificate
+shedding an earlier constraint by simply not mentioning it.
+
+A certificate MAY constrain a dimension its parent leaves unconstrained, and MAY narrow a
+dimension its parent constrains. It MUST NOT widen one. A verifier encountering a widening
+certificate MUST fail the path with `OUT_OF_SCOPE` rather than silently intersecting it: a
+certificate that grants more than its issuer holds is a misissuance the relying party needs to
+see, and X.509 name constraints set the precedent of failing the path rather than repairing it.
+
+Omitting a narrowing certificate is not an escape route: the walk (§4.2) links certificates by
+kid, so a chain missing a link simply fails to resolve (`ISSUER_NOT_RECOGNIZED`) rather than
+resolving under the broader parent grant.
+
+**Ordering.** Scope MUST be evaluated only against a certificate whose signature has already
+verified (§3.3). An unverified certificate's scope string is attacker-supplied text.
 
 ---
 
@@ -233,6 +285,12 @@ A conformant verifier MUST distinguish:
 - **KEY_REVOKED** — the chain resolves cryptographically, but a key on the resolved path (root,
   an intermediate, or the leaf itself) has been revoked by its own parent (§5). Re-presenting the
   same chain will never resolve this; a different, unrevoked chain to the same artifact might.
+- **OUT_OF_SCOPE** — the chain resolves and no key on it is revoked, so the issuer IS recognized,
+  but the delegation did not cover this artifact (§3.4), or a certificate on the path tried to
+  widen its own grant. Only a broader, validly-issued delegation resolves this; re-presenting the
+  same authority differently never will. MUST NOT be collapsed into ISSUER_NOT_RECOGNIZED — that
+  would tell a caller its issuer is unknown when the issuer is known and simply wasn't authorized
+  here.
 - **SEAL_INVALID** — the chain resolves fully and no key on it is revoked, but the artifact
   itself fails its own seal check (NOMOS-SPEC-001 §8) — tampered after sealing. Re-presenting
   will never help; the artifact itself is bad.
@@ -240,8 +298,9 @@ A conformant verifier MUST distinguish:
   types, an oversized chain, an unsealed artifact). A client-side defect, not a trust finding.
 
 Collapsing any of these into another is a nonconformant implementation. A caller needs to react
-differently to each: only `ISSUER_NOT_RECOGNIZED` is fixed by presenting more or better
-certificates; none of the others are.
+differently to each: `ISSUER_NOT_RECOGNIZED` is fixed by presenting more or better certificates,
+`OUT_OF_SCOPE` only by obtaining a broader delegation, and none of the others by anything the
+presenter can do.
 
 ### 4.5 Bounds (normative)
 
@@ -353,6 +412,7 @@ Content-Type: application/json
 | `ESCALATED` | 202 |
 | `ISSUER_NOT_RECOGNIZED` | 403 |
 | `KEY_REVOKED` | 403 |
+| `OUT_OF_SCOPE` | 403 |
 | `DENIED` | 403 |
 | `SEAL_INVALID` | 422 |
 | `MALFORMED` | 400 |
@@ -427,7 +487,11 @@ described here beyond §3-4, which are the normative core.
    exactly, including the order-independence invariant (§4.3) and the five distinguishable
    outcomes (§4.4). A verifier that collapses any two of §4.4's outcomes into one MUST NOT claim
    conformance to this document.
-3. **Revocation** (§5) and **rule-evaluation composition** (§7) are each independently OPTIONAL
+3. **Scope** (§3.4): a verifier claiming conformance MUST enforce scope as specified — including
+   both fail-closed directions (undeclared dimension, unrecognized dimension) and monotonic
+   narrowing. A verifier that stores or displays `scope` without enforcing it MUST NOT claim
+   conformance; that is precisely the state this document's first draft described.
+4. **Revocation** (§5) and **rule-evaluation composition** (§7) are each independently OPTIONAL
    relative to §3-4 baseline conformance, in the same layered sense NOMOS-SPEC-006 treats its own
    §3-6 as optional relative to NOMOS-SPEC-001.
 
@@ -440,10 +504,14 @@ plainly rather than implying it is handled:
   the reference one (§8.3). No interoperability claim is made. This Draft exists specifically to
   invite a second, independent one; until that exists, this remains a tested prototype with a
   spec number, not proven interoperable infrastructure.
-- **`scope` is not enforced.** §3.1's `scope` field is carried as free text and signed, but no
-  normative behavior in this version constrains what a certified key may do based on its value.
-  A future revision may define enforcement; this version does not, and an implementation MUST
-  NOT claim to enforce a scope it only stores.
+- **Scope covers two dimensions, not every dimension.** §3.4 enforces `artifact` and `industry`.
+  `jurisdiction` is deliberately excluded: real artifacts carry jurisdictions as free prose
+  ("State of California", "NHS England"), and a matcher over free prose would pass silently on a
+  variant spelling — a constraint that looks enforced but isn't is worse than one openly absent.
+  Jurisdiction scoping awaits a normalized identifier, and this document does not claim it.
+- **`industry` matching trusts the issuer's own declaration.** A scope constrains what the
+  artifact SAYS it covers (`meta.industry`), not what it actually covers. Scope binds a delegation
+  to a declaration; it cannot detect a mislabelled artifact.
 - **No certificate-level revocation, only key-level.** §5 revokes a *key's* standing to sign
   entirely. Revoking one specific certificate while leaving the same key valid for other
   purposes is not specified in this version.
@@ -505,7 +573,20 @@ fixes the second, because the rules themselves said no. An implementation that m
 vocabularies to simplify its own error handling produces a caller-facing defect, not a
 simplification.
 
-### 10.2 The root key is the whole trust boundary
+### 10.2 Scope binds a declaration, not a reality
+
+§3.4 constrains what an artifact SAYS it covers. An issuer delegated `industry:financial` who
+signs an artifact declaring `meta.industry: "financial"` while its rules actually govern something
+else has not been stopped by scope — it has been stopped only from signing artifacts that *admit*
+to being out of scope. Scope narrows delegation; it does not audit content. Treat it as the
+analogue of an X.509 name constraint, which likewise binds what a certificate asserts rather than
+what a server ultimately does.
+
+The fail-closed rules exist because the alternative is worse: were an undeclared dimension to
+pass, omitting `meta.industry` would become the standard way to escape every industry-scoped
+delegation.
+
+### 10.3 The root key is the whole trust boundary
 
 Every property this document provides is only as strong as the relying party's own root-pinning
 decision. A relying party that pins a root it does not actually control or trust, or that accepts
@@ -514,7 +595,7 @@ has not gained anything from this protocol beyond what an unconditional accept w
 it. §6.1's `root_public_key_pem` MUST come from the relying party's own configuration, never from
 request content it does not independently control.
 
-### 10.3 Key compromise cascades exactly as far as certification does
+### 10.4 Key compromise cascades exactly as far as certification does
 
 Compromising an intermediate key compromises every leaf certified under it, and revoking that
 intermediate (§5) is the only way to sever all of those paths at once — §5.2's cascade-by-kid
@@ -523,7 +604,7 @@ reconstructs a different certificate path to the same compromised key. The corre
 key-protection guidance in NOMOS-SPEC-001 §8 (secrets manager, never embedded in code or an
 artifact) applies with proportionally higher stakes the closer a key sits to the root.
 
-### 10.4 A single implementation is a real, disclosed limitation
+### 10.5 A single implementation is a real, disclosed limitation
 
 Restated from §8.2 because it is a security property, not just a maturity note: a specification
 verified against only its own reference implementation has not yet demonstrated that its written
@@ -572,7 +653,22 @@ POST /verify
   "rule": "catch-all", "missing_inputs": [] }
 ```
 
-### 11.3 An unrecognized issuer
+### 11.3 A recognized issuer that wasn't delegated this artifact
+
+```
+POST /verify
+{ "version": "1", "artifact": { "meta": { "industry": "healthcare", ... }, ... },
+  "key_certs": [ { "scope": "industry:financial/lending", ... } ], "root_public_key_pem": "..." }
+
+→ 403 Forbidden
+{ "decision": "OUT_OF_SCOPE", "dimension": "industry",
+  "effective_scope": "industry:financial/lending",
+  "detail": "Scope permits industry \"financial/lending\"; this artifact declares \"healthcare\"." }
+```
+
+The chain is valid and the seal is intact. The issuer simply was not delegated authority here.
+
+### 11.4 An unrecognized issuer
 
 ```
 → 403 Forbidden
@@ -580,7 +676,7 @@ POST /verify
   "detail": "Chain breaks after kid 40ZaXrnpntaoD4dn — no certificate continues it toward the artifact's signing key." }
 ```
 
-### 11.4 A revoked key, reached via a different path than the one that was revoked
+### 11.5 A revoked key, reached via a different path than the one that was revoked
 
 ```
 → 403 Forbidden
@@ -588,7 +684,7 @@ POST /verify
   "detail": "Key intermediateKid1 in this chain has been revoked by its own parent." }
 ```
 
-### 11.5 A tampered artifact — chain resolves fine, seal does not
+### 11.6 A tampered artifact — chain resolves fine, seal does not
 
 ```
 → 422 Unprocessable Entity

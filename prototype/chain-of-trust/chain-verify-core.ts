@@ -20,10 +20,18 @@
 
 import * as crypto from "crypto";
 import { jcs, computeKid, verifyKeyCertificate, type KeyCertificate } from "./key-cert.js";
+import {
+  parseScope, isNarrowerOrEqual, mergeScopes, artifactInScope, formatScope,
+  UNRESTRICTED, type ScopeTerms,
+} from "./scope.js";
 
 export type ChainVerdict =
-  | { decision: "ALLOWED"; leaf_kid: string; path: string[] }
+  | { decision: "ALLOWED"; leaf_kid: string; path: string[]; effective_scope: string }
   | { decision: "ISSUER_NOT_RECOGNIZED"; reason: "no_certificate_for_root" | "chain_broken" | "cycle" | "bad_signature" | "expired" | "not_yet_valid"; detail: string }
+  /** Recognized issuer, but not delegated authority over THIS artifact (§3.4). Distinct from
+   *  ISSUER_NOT_RECOGNIZED: a broader, validly-issued delegation would fix this; nothing about
+   *  re-presenting fixes "I do not know you". */
+  | { decision: "OUT_OF_SCOPE"; dimension: string; effective_scope: string; detail: string }
   | { decision: "SEAL_INVALID"; detail: string }
   | { decision: "MALFORMED"; detail: string };
 
@@ -56,8 +64,10 @@ function verifyEd25519(payload: Buffer, signatureB64: string, pem: string): bool
 }
 
 type WalkResult =
-  | { ok: true; pem: string; path: string[] }
-  | { ok: false; reason: Extract<ChainVerdict, { decision: "ISSUER_NOT_RECOGNIZED" }>["reason"]; detail: string };
+  | { ok: true; pem: string; path: string[]; effectiveScope: ScopeTerms }
+  | { ok: false; kind: "ISSUER_NOT_RECOGNIZED"; reason: Extract<ChainVerdict, { decision: "ISSUER_NOT_RECOGNIZED" }>["reason"]; detail: string }
+  | { ok: false; kind: "OUT_OF_SCOPE"; dimension: string; effectiveScope: ScopeTerms; detail: string }
+  | { ok: false; kind: "MALFORMED"; detail: string };
 
 /**
  * INVARIANT: `chain` is an unordered SET, not a sequence. At every step this searches the whole
@@ -74,16 +84,17 @@ function walkChain(chain: KeyCertificate[], rootPublicKeyPem: string, targetKid:
   const remaining = [...chain];
   const visited = new Set<string>();
   const path: string[] = [rootKid];
+  let effectiveScope: ScopeTerms = UNRESTRICTED;
 
   while (currentKid !== targetKid) {
-    if (visited.has(currentKid)) return { ok: false, reason: "cycle", detail: `Chain contains a cycle at kid ${currentKid}.` };
+    if (visited.has(currentKid)) return { ok: false, kind: "ISSUER_NOT_RECOGNIZED", reason: "cycle", detail: `Chain contains a cycle at kid ${currentKid}.` };
     visited.add(currentKid);
 
     const idx = remaining.findIndex((c) => c.parent_kid === currentKid);
     if (idx === -1) {
       return currentKid === rootKid
-        ? { ok: false, reason: "no_certificate_for_root", detail: `No certificate in the presented chain is signed by the pinned root (kid ${rootKid}).` }
-        : { ok: false, reason: "chain_broken", detail: `Chain breaks after kid ${currentKid} — no certificate continues it toward the artifact's signing key.` };
+        ? { ok: false, kind: "ISSUER_NOT_RECOGNIZED", reason: "no_certificate_for_root", detail: `No certificate in the presented chain is signed by the pinned root (kid ${rootKid}).` }
+        : { ok: false, kind: "ISSUER_NOT_RECOGNIZED", reason: "chain_broken", detail: `Chain breaks after kid ${currentKid} — no certificate continues it toward the artifact's signing key.` };
     }
     const cert = remaining.splice(idx, 1)[0];
 
@@ -95,14 +106,30 @@ function walkChain(chain: KeyCertificate[], rootPublicKeyPem: string, targetKid:
           : result.reason === "not_yet_valid"
           ? `Certificate ${cert.parent_kid} → ${cert.child_kid} is not yet valid (issued_at ${cert.issued_at}).`
           : `Certificate ${cert.parent_kid} → ${cert.child_kid} has an invalid signature — forged or corrupted link.`;
-      return { ok: false, reason: result.reason, detail };
+      return { ok: false, kind: "ISSUER_NOT_RECOGNIZED", reason: result.reason, detail };
     }
+
+    // §3.4 — narrow the effective scope by this link. A certificate may add or tighten a
+    // constraint; it may never loosen one. Rejected loudly rather than silently intersected, so a
+    // misissued certificate surfaces instead of being quietly repaired.
+    const parsed = parseScope(cert.scope);
+    if (!parsed.ok) {
+      return { ok: false, kind: "MALFORMED", detail: `Certificate ${cert.parent_kid} \u2192 ${cert.child_kid}: ${parsed.detail}` };
+    }
+    const narrowing = isNarrowerOrEqual(parsed.scope, effectiveScope);
+    if (!narrowing.ok) {
+      return {
+        ok: false, kind: "OUT_OF_SCOPE", dimension: narrowing.dimension, effectiveScope,
+        detail: `Certificate ${cert.parent_kid} \u2192 ${cert.child_kid}: ${narrowing.detail}`,
+      };
+    }
+    effectiveScope = mergeScopes(effectiveScope, parsed.scope);
 
     currentKid = cert.child_kid;
     currentPem = cert.child_public_key_pem;
     path.push(currentKid);
   }
-  return { ok: true, pem: currentPem, path };
+  return { ok: true, pem: currentPem, path, effectiveScope };
 }
 
 /**
@@ -144,7 +171,23 @@ function verifyChainPresentationUnsafe(args: { artifact: any; chain: unknown; ro
   const chain = args.chain as KeyCertificate[];
 
   const walk = walkChain(chain, rootPublicKeyPem, seal.kid, now);
-  if (!walk.ok) return { decision: "ISSUER_NOT_RECOGNIZED", reason: walk.reason, detail: walk.detail };
+  if (!walk.ok) {
+    if (walk.kind === "MALFORMED") return { decision: "MALFORMED", detail: walk.detail };
+    if (walk.kind === "OUT_OF_SCOPE") {
+      return { decision: "OUT_OF_SCOPE", dimension: walk.dimension, effective_scope: formatScope(walk.effectiveScope), detail: walk.detail };
+    }
+    return { decision: "ISSUER_NOT_RECOGNIZED", reason: walk.reason, detail: walk.detail };
+  }
+
+  // §3.4 — the issuer is recognized; was it delegated authority over THIS artifact? Checked
+  // before the seal so an out-of-scope artifact is never reported as merely seal-valid.
+  const scopeCheck = artifactInScope(artifact, walk.effectiveScope);
+  if (!scopeCheck.ok) {
+    return {
+      decision: "OUT_OF_SCOPE", dimension: scopeCheck.dimension,
+      effective_scope: formatScope(walk.effectiveScope), detail: scopeCheck.detail,
+    };
+  }
 
   const payload = Object.fromEntries(Object.entries(artifact).filter(([k]) => k !== "seal" && k !== "attestations"));
   const computedHash = crypto.createHash("sha256").update(jcs(payload)).digest("hex");
@@ -155,5 +198,5 @@ function verifyChainPresentationUnsafe(args: { artifact: any; chain: unknown; ro
     return { decision: "SEAL_INVALID", detail: "Seal signature does not verify against the resolved chain key." };
   }
 
-  return { decision: "ALLOWED", leaf_kid: seal.kid, path: walk.path };
+  return { decision: "ALLOWED", leaf_kid: seal.kid, path: walk.path, effective_scope: formatScope(walk.effectiveScope) };
 }

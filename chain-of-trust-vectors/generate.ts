@@ -53,8 +53,8 @@ function loadKeypair(privatePem: string) {
   return { privateKeyPem, publicKeyPem, kid: kid(publicKey) };
 }
 
-function sealToyArtifact(signerKid: string, signerPrivateKeyPem: string, label: string) {
-  const unsealed = { meta: { artifact_id: `vector-${label}`, version: '1.0.0' }, logic: { decisions: [] } };
+function sealToyArtifact(signerKid: string, signerPrivateKeyPem: string, label: string, metaExtra: Record<string, unknown> = {}) {
+  const unsealed = { meta: { artifact_id: `vector-${label}`, version: '1.0.0', ...metaExtra }, logic: { decisions: [] } };
   const hash = crypto.createHash('sha256').update(jcs(unsealed)).digest('hex');
   const signed_by = `vectors:${label}`;
   const signature = crypto.sign(null, jcs({ hash, signed_by }), crypto.createPrivateKey(signerPrivateKeyPem)).toString('base64');
@@ -78,6 +78,21 @@ function main() {
   const intermediateToLeafExpired = createKeyCertificate({
     parentPrivateKeyPem: intermediate.privateKeyPem, parentKid: intermediate.kid, childPublicKeyPem: leaf.publicKeyPem,
     issuedAt: FIXED_ISSUED_AT, expiresAt: FIXED_EXPIRED_AT,
+  });
+
+  // §3.4 scope fixtures. Kept separate from the unscoped cases above so the original seven
+  // continue to prove that scope-less certificates behave exactly as they always did.
+  const rootToLeafLending = createKeyCertificate({
+    parentPrivateKeyPem: root.privateKeyPem, parentKid: root.kid, childPublicKeyPem: leaf.publicKeyPem,
+    scope: 'industry:financial/lending', issuedAt: FIXED_ISSUED_AT, expiresAt: FIXED_EXPIRES_AT,
+  });
+  const rootToIntermediateFinancial = createKeyCertificate({
+    parentPrivateKeyPem: root.privateKeyPem, parentKid: root.kid, childPublicKeyPem: intermediate.publicKeyPem,
+    scope: 'industry:financial', issuedAt: FIXED_ISSUED_AT, expiresAt: FIXED_EXPIRES_AT,
+  });
+  const intermediateWidens = createKeyCertificate({
+    parentPrivateKeyPem: intermediate.privateKeyPem, parentKid: intermediate.kid, childPublicKeyPem: leaf.publicKeyPem,
+    scope: 'industry:healthcare', issuedAt: FIXED_ISSUED_AT, expiresAt: FIXED_EXPIRES_AT,
   });
 
   const artifactHonored = sealToyArtifact(leaf.kid, leaf.privateKeyPem, 'honored');
@@ -125,6 +140,34 @@ function main() {
         artifact: artifactHonored,
         key_certs: Array.from({ length: 21 }, () => ({})),
         expected: { decision: 'MALFORMED' },
+      },
+      {
+        name: 'scope_in_scope',
+        artifact: sealToyArtifact(leaf.kid, leaf.privateKeyPem, 'lending', { industry: 'financial/lending' }),
+        key_certs: [rootToLeafLending],
+        expected: { decision: 'ALLOWED', leaf_kid: leaf.kid, path: [root.kid, leaf.kid], effective_scope: 'industry:financial/lending' },
+        note: 'The certificate delegates industry:financial/lending and the artifact declares exactly that.',
+      },
+      {
+        name: 'scope_out_of_scope',
+        artifact: sealToyArtifact(leaf.kid, leaf.privateKeyPem, 'triage', { industry: 'healthcare' }),
+        key_certs: [rootToLeafLending],
+        expected: { decision: 'OUT_OF_SCOPE', dimension: 'industry' },
+        note: 'Same valid chain, but the key was delegated lending and signed a healthcare artifact. MUST NOT be reported as ISSUER_NOT_RECOGNIZED — the issuer is recognized.',
+      },
+      {
+        name: 'scope_undeclared_dimension_fails_closed',
+        artifact: sealToyArtifact(leaf.kid, leaf.privateKeyPem, 'undeclared'),
+        key_certs: [rootToLeafLending],
+        expected: { decision: 'OUT_OF_SCOPE', dimension: 'industry' },
+        note: 'The artifact declares no meta.industry. A scope that constrains a dimension the artifact does not declare fails closed.',
+      },
+      {
+        name: 'scope_widening_rejected',
+        artifact: sealToyArtifact(leaf.kid, leaf.privateKeyPem, 'widened', { industry: 'healthcare' }),
+        key_certs: [rootToIntermediateFinancial, intermediateWidens],
+        expected: { decision: 'OUT_OF_SCOPE', dimension: 'industry' },
+        note: 'The intermediate holds industry:financial and issues industry:healthcare. A delegation can never grant more than the delegator holds.',
       },
       {
         name: 'malformed_unsealed_artifact',

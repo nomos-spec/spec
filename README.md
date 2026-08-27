@@ -45,7 +45,7 @@ A `.nomos` artifact now moves through three distinct moments, not two:
 | `spec/NOMOS-SPEC-004.md` | Composable artifacts (`extends`) + third-party attestations |
 | `spec/NOMOS-SPEC-005.md` | Public query extension — keyless authority queries, permanent transcripts |
 | `spec/NOMOS-SPEC-006.md` | Artifact revocation — detached issuer-signed statements, signed revocation list, `max_age` |
-| `spec/NOMOS-SPEC-007.md` | **Draft.** Chain-of-trust key certificates — an independent system recognizing an artifact's issuer with no prior relationship and no call home |
+| `spec/NOMOS-SPEC-007.md` | **Draft.** Chain-of-trust key certificates — recognizing an artifact's issuer with no prior relationship and no call home, with enforced delegation scope |
 | `schema/artifact.schema.json` | JSON Schema for `.nomos` artifact files |
 | `schema/rule.schema.json` | JSON Schema for a single rule object |
 | `schema/revocation-statement.schema.json` | JSON Schema for a NOMOS-SPEC-006 artifact revocation statement |
@@ -334,7 +334,7 @@ This repository tracks the NOMOS artifact format specification. Backward-incompa
 | NOMOS-SPEC-004 | Active | Composable artifacts (`extends`), third-party attestations |
 | NOMOS-SPEC-005 | Draft | Public query extension — keyless authority queries, permanent transcripts |
 | NOMOS-SPEC-006 | Active | Artifact revocation — detached issuer-signed statements, signed revocation list |
-| NOMOS-SPEC-007 | Draft | Chain-of-trust key certificates — an independent system recognizing an artifact's issuer with no prior relationship and no call home |
+| NOMOS-SPEC-007 | Draft | Chain-of-trust key certificates — an independent system recognizing an artifact's issuer with no prior relationship and no call home, with enforced delegation scope |
 
 NOMOS-SPEC-007 is published as a Draft specifically to invite what a Draft is for: independent
 implementation and scrutiny. It has exactly one implementation today — see

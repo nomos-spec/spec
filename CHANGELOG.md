@@ -34,8 +34,8 @@ exists. That is what publishing a Draft is for.
 - **Chain verification** (§4) — the normative walk algorithm from a pinned root to an artifact's
   own signing key. Order-independence is a required invariant, not an implementation detail: the
   presented chain is a set, verified by content matching at each step, never by array position.
-  Five distinguishable outcomes (ALLOWED, ISSUER_NOT_RECOGNIZED, KEY_REVOKED, SEAL_INVALID,
-  MALFORMED) that a conformant verifier MUST NOT collapse into one another.
+  Six distinguishable outcomes (ALLOWED, ISSUER_NOT_RECOGNIZED, KEY_REVOKED, OUT_OF_SCOPE,
+  SEAL_INVALID, MALFORMED) that a conformant verifier MUST NOT collapse into one another.
 - **Key revocation** (§5) — a key's own parent withdraws its standing to sign, checked by kid at
   every hop of the walk so a revoked intermediate is dead on every path a presenter might
   construct through it, not just the one that happened to be checked.
@@ -48,10 +48,40 @@ exists. That is what publishing a Draft is for.
 - **§9 (non-normative)** explicitly scopes out root governance (who should operate a shared
   trust root) as a separate, unresolved question this document does not answer.
 
+### Added — §3.4 delegation scope, enforced (2026-08-27, same Draft)
+
+`scope` was specified as carried-and-signed but explicitly unenforced: a certificate reading
+`scope: "industry:financial/lending"` placed no limit on what the certified key could sign. That
+made "under what conditions" the one dimension of a delegation that was decorative — "for how
+long" (expiry) and "to whom" (the chain) were both real. §3.4 now defines and requires
+enforcement:
+
+- **Grammar** — space-separated `dimension:value` terms, all of which must hold; absent means
+  unrestricted, so every certificate issued before this keeps its exact prior meaning.
+- **Two dimensions only** — `artifact` (exact match) and `industry` (hierarchical, on segment
+  boundaries). `jurisdiction` is deliberately excluded; see the gaps below.
+- **Fails closed twice** — a constrained dimension the artifact doesn't declare, or one the
+  verifier doesn't recognize, puts the artifact out of scope. The second is X.509's critical-
+  extension rule: silently skipping an unknown constraint would make every future dimension
+  unenforceable against today's verifiers.
+- **Monotonic narrowing** — effective scope accumulates along the chain (union of terms =
+  intersection of the artifact sets they denote), so a later certificate cannot shed an earlier
+  constraint by omitting it. A certificate that widens its own grant fails the path with
+  `OUT_OF_SCOPE` rather than being silently intersected.
+- **`OUT_OF_SCOPE`** — a new, distinct outcome (§4.4). A recognized issuer that wasn't delegated
+  this artifact is NOT `ISSUER_NOT_RECOGNIZED`; only a broader delegation fixes the former and
+  nothing the presenter does fixes the latter.
+
+Four interop vectors cover it, including the widening case. Reference implementation:
+`prototype/chain-of-trust/scope.ts`.
+
 ### Known gaps (disclosed, §8.2)
 
 - Exactly one implementation exists; no interoperability claim is made.
-- `scope` (§3.1) is carried and signed but not yet enforced.
+- Scope covers `artifact` and `industry`. `jurisdiction` is excluded until a normalized
+  identifier exists — matching free prose ("NHS England", "State of California") would pass
+  silently on a variant spelling, which is worse than an openly absent constraint.
+- Scope binds what an artifact DECLARES, not what it actually governs.
 - No certificate-level revocation, only key-level.
 - The `reason` field is overloaded by decision (a short code on `ISSUER_NOT_RECOGNIZED`, a full
   sentence on `AUTHORIZED`/`DENIED`/`ESCALATED`) — a genuine naming wart, not smoothed over.

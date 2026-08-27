@@ -11,7 +11,7 @@ yet.
 
 ## What's here
 
-`vectors.json` — seven cases, each an `{ artifact, key_certs, expected }` triple, plus a shared
+`vectors.json` — eleven cases, each an `{ artifact, key_certs, expected }` triple, plus a shared
 `root_public_key_pem` and a `check_at` timestamp (the `now` a checker should evaluate against —
 the fixtures are pinned to fixed 2026–2030 dates, not wall-clock time, so results stay
 reproducible indefinitely rather than silently expiring):
@@ -25,6 +25,10 @@ reproducible indefinitely rather than silently expiring):
 | `seal_invalid_tampered_after_sealing` | a chain that resolves fine still rejects an artifact edited after sealing — kept distinct from "not recognized" because the caller's correct next action differs |
 | `malformed_chain_over_length_cap` | an oversized `key_certs` array is rejected before any cryptographic work, not silently truncated |
 | `malformed_unsealed_artifact` | an artifact with no seal is rejected outright |
+| `scope_in_scope` | a scoped delegation allows an artifact that declares a matching industry (§3.4) |
+| `scope_out_of_scope` | the same valid chain refuses an artifact outside the delegated industry — reported as `OUT_OF_SCOPE`, never `ISSUER_NOT_RECOGNIZED`, because the issuer IS recognized |
+| `scope_undeclared_dimension_fails_closed` | an artifact declaring no `meta.industry` under an industry-scoped delegation is refused, not waved through |
+| `scope_widening_rejected` | an intermediate holding `industry:financial` cannot issue `industry:healthcare` — a delegation never grants more than the delegator holds |
 
 The private keys used to generate these fixtures (`generate.ts`) are published in the clear on
 purpose — they exist only to make the vectors regenerable and auditable, and must never be

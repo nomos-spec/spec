@@ -33,8 +33,12 @@ for (const testCase of vectors.cases) {
   const reasonMatches = testCase.expected.reason === undefined || (result as any).reason === testCase.expected.reason;
   const pathMatches = testCase.expected.path === undefined || JSON.stringify((result as any).path) === JSON.stringify(testCase.expected.path);
   const leafKidMatches = testCase.expected.leaf_kid === undefined || (result as any).leaf_kid === testCase.expected.leaf_kid;
+  // §3.4 fields — without these the scope cases would be verified on `decision` alone, which
+  // would pass even if an implementation blamed the wrong dimension or lost the effective scope.
+  const dimensionMatches = testCase.expected.dimension === undefined || (result as any).dimension === testCase.expected.dimension;
+  const scopeMatches = testCase.expected.effective_scope === undefined || (result as any).effective_scope === testCase.expected.effective_scope;
 
-  if (decisionMatches && reasonMatches && pathMatches && leafKidMatches) {
+  if (decisionMatches && reasonMatches && pathMatches && leafKidMatches && dimensionMatches && scopeMatches) {
     console.log(`  ✓ ${testCase.name}`);
     passed++;
   } else {

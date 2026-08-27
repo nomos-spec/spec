@@ -284,6 +284,172 @@
       }
     },
     {
+      "name": "scope_in_scope",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-lending",
+          "version": "1.0.0",
+          "industry": "financial/lending"
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "c37e4fc682e77863d314f21f3bad4c7ff6cfe201ee1d1fd718144a91b449501a",
+          "signature": "tole+IRKGb/Me3xPKNA0ZpN6hZPVkexYkMO4Pq+66YD9HN6Up7vDK/wYJGgRD8rnLgfAL1nGXQ0y9i7QUsmxCA==",
+          "algorithm": "Ed25519",
+          "kid": "k25GdGYvawXqFJrX",
+          "signed_by": "vectors:lending"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "child_kid": "k25GdGYvawXqFJrX",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx/ToUSXXlewl4xjIdlTM03SWJ2uUVWL9FxmiNWr8Gqo=\n-----END PUBLIC KEY-----\n",
+          "scope": "industry:financial/lending",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "fa7N3VnJsXM72ClDdAJgZuGCvOaJIyhtGwl1kojz2xyaLEryHpuk2tjYIlL0MncwD+i9s9mpNdV9ikKpyY/VDg=="
+        }
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "leaf_kid": "k25GdGYvawXqFJrX",
+        "path": [
+          "oce5bYh8xC2E7WZS",
+          "k25GdGYvawXqFJrX"
+        ],
+        "effective_scope": "industry:financial/lending"
+      },
+      "note": "The certificate delegates industry:financial/lending and the artifact declares exactly that."
+    },
+    {
+      "name": "scope_out_of_scope",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-triage",
+          "version": "1.0.0",
+          "industry": "healthcare"
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "6a7ba491efe5cd29775556463fb25bca98b3984a9f93ed2d9c8e6b076071f8ec",
+          "signature": "MkdXlaC0M3YYLFaz9or61I/wrYzrSIf173AZ8cN+15LjFvGHMf6n61VlU33kwVM+xRRadaEtSyRy4k+D6lQgCA==",
+          "algorithm": "Ed25519",
+          "kid": "k25GdGYvawXqFJrX",
+          "signed_by": "vectors:triage"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "child_kid": "k25GdGYvawXqFJrX",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx/ToUSXXlewl4xjIdlTM03SWJ2uUVWL9FxmiNWr8Gqo=\n-----END PUBLIC KEY-----\n",
+          "scope": "industry:financial/lending",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "fa7N3VnJsXM72ClDdAJgZuGCvOaJIyhtGwl1kojz2xyaLEryHpuk2tjYIlL0MncwD+i9s9mpNdV9ikKpyY/VDg=="
+        }
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "industry"
+      },
+      "note": "Same valid chain, but the key was delegated lending and signed a healthcare artifact. MUST NOT be reported as ISSUER_NOT_RECOGNIZED — the issuer is recognized."
+    },
+    {
+      "name": "scope_undeclared_dimension_fails_closed",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-undeclared",
+          "version": "1.0.0"
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "6e4faa37eaf57b6cb44b37ed45cc3136f945ec669bdd85efcad91d4082835e7e",
+          "signature": "NgJnSonPBcs9PJQbtRgkhwvRbjExfEPpB5Dc5k5Opcg0epu92Nz+Cg15sTEd0dgMn/4hwYILOOd6aVwmOt/bAw==",
+          "algorithm": "Ed25519",
+          "kid": "k25GdGYvawXqFJrX",
+          "signed_by": "vectors:undeclared"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "child_kid": "k25GdGYvawXqFJrX",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx/ToUSXXlewl4xjIdlTM03SWJ2uUVWL9FxmiNWr8Gqo=\n-----END PUBLIC KEY-----\n",
+          "scope": "industry:financial/lending",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "fa7N3VnJsXM72ClDdAJgZuGCvOaJIyhtGwl1kojz2xyaLEryHpuk2tjYIlL0MncwD+i9s9mpNdV9ikKpyY/VDg=="
+        }
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "industry"
+      },
+      "note": "The artifact declares no meta.industry. A scope that constrains a dimension the artifact does not declare fails closed."
+    },
+    {
+      "name": "scope_widening_rejected",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-widened",
+          "version": "1.0.0",
+          "industry": "healthcare"
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "dd5d440faea35b3ab930fee31e1f9cfc2b7eaf16fa3033a02537b791482b092d",
+          "signature": "lIOYFkrvIRyz/8LRAmBFNvMGFuPkD/tfeRHlb9uGoa3vdjkmWsD1Dv/XAQbhSwfgQ8cruk/ZbGoQbcO/acv5Bw==",
+          "algorithm": "Ed25519",
+          "kid": "k25GdGYvawXqFJrX",
+          "signed_by": "vectors:widened"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "child_kid": "PAEp-jMJnzvkwQSt",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcPJuoc1maNqykcc8VMFx2Ye7BZ/myCVurtXWAEMIKlc=\n-----END PUBLIC KEY-----\n",
+          "scope": "industry:financial",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "4UTkCjirQN4S0EERlcMjjnyS49EvSWKCL4q1Nk6uL8rHofzLDMtz1ha6yvvW+woKEKbu1VZPTv3qQzaJPwYIDQ=="
+        },
+        {
+          "parent_kid": "PAEp-jMJnzvkwQSt",
+          "child_kid": "k25GdGYvawXqFJrX",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx/ToUSXXlewl4xjIdlTM03SWJ2uUVWL9FxmiNWr8Gqo=\n-----END PUBLIC KEY-----\n",
+          "scope": "industry:healthcare",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "XJO4E6X2Z+TTxE047rdi66qRxU5l3ZDQOD593IG5phBokjBEVCuQnf4w8IHvy+CJqpJ6juF2wYJ25OIjvqJ8BQ=="
+        }
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "industry"
+      },
+      "note": "The intermediate holds industry:financial and issues industry:healthcare. A delegation can never grant more than the delegator holds."
+    },
+    {
       "name": "malformed_unsealed_artifact",
       "artifact": {
         "meta": {}

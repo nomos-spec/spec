@@ -6,7 +6,7 @@
  * plus an uncertified impostor) — never NOMOS_SIGNING_KEY, never anything durable — issues key
  * certificates between them, seals toy `.nomos` artifacts, and writes fixtures to ./fixtures/ so
  * verify-chain.ts (CLI) and receiver.ts/presenter.ts (real HTTP) can both be run against the
- * identical fixtures to exercise the same five distinguishable outcomes:
+ * identical fixtures to exercise the same distinguishable outcomes:
  *   1. ALLOWED                — full chain resolves, artifact honored
  *   2. ISSUER_NOT_RECOGNIZED  — an uncertified key sealed the artifact, chain doesn't connect
  *   3. ISSUER_NOT_RECOGNIZED  — the chain connects but a link expired (distinct reason)

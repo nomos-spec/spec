@@ -49,7 +49,7 @@ export interface KeyCertificate {
   child_public_key_pem: string;   // certified key's material, carried inline — there is no
                                    // central directory to resolve it from; that absence is the
                                    // entire point of a chain that verifies without calling home
-  scope?: string;                 // free text for v0 — not enforced yet, carried for later use
+  scope?: string;                 // delegation limits, ENFORCED per §3.4 — see scope.ts
   issued_at: string;              // ISO-8601, signed content
   expires_at: string;             // ISO-8601, signed content
   algorithm: "Ed25519";

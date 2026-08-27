@@ -9,6 +9,11 @@ until a second, independent implementation exists — see the spec's §8 for wha
 and does not establish. Do not depend on this as proven interoperable infrastructure yet; do
 treat it as a complete, tested starting point for anyone building a second implementation.
 
+**§3.4 delegation scope is enforced here** (`scope.ts`): a certificate's `scope` limits what the
+certified key may sign, narrowing monotonically down the chain and failing closed on a dimension
+the artifact doesn't declare or the verifier doesn't recognize. Until this existed the field was
+signed, carried, and never read — the badge said third floor and nothing checked the floor.
+
 ## Why this exists
 
 [Paper 5 / R-08 — "Bounded Contextual Authority"](https://www.nomosprotocol.com/paper-5) named a
