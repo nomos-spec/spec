@@ -30,7 +30,7 @@ for (const testCase of vectors.cases) {
   });
 
   const decisionMatches = result.decision === testCase.expected.decision;
-  const reasonMatches = testCase.expected.reason === undefined || (result as any).reason === testCase.expected.reason;
+  const reasonMatches = testCase.expected.reason_code === undefined || (result as any).reason_code === testCase.expected.reason_code;
   const pathMatches = testCase.expected.path === undefined || JSON.stringify((result as any).path) === JSON.stringify(testCase.expected.path);
   const leafKidMatches = testCase.expected.leaf_kid === undefined || (result as any).leaf_kid === testCase.expected.leaf_kid;
   // §3.4 fields — without these the scope cases would be verified on `decision` alone, which

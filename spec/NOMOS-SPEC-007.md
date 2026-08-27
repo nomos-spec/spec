@@ -196,11 +196,17 @@ declares:
 |---|---|---|
 | `artifact` | `meta.artifact_id` | Exact equality only. Never a prefix or glob. |
 | `industry` | `meta.industry` | Hierarchical, `/`-delimited: `financial` contains `financial/lending`. A match MUST fall on a segment boundary, so `financial` does NOT contain `financial-services`. |
+| `jurisdiction` | `meta.jurisdiction_codes` | ISO 3166 codes. A country contains its subdivisions: `US` contains `US-CA`; `US-CA` contains only itself. |
 
-`jurisdiction` is deliberately absent. Real artifacts carry jurisdictions as free prose ("State of
-California", "NHS England"); a matcher over free prose would pass silently when an issuer writes a
-variant spelling, which is worse than not enforcing it. Jurisdiction scoping awaits a normalized
-identifier — see §8.2.
+**`jurisdiction` reads `meta.jurisdiction_codes`, never `meta.jurisdictions` (normative).** The
+latter is free prose intended for humans ("State of California", "NHS England") and MUST NOT be
+used for authorization: matching it would pass silently on a variant spelling. A verifier MUST
+reject any value in `meta.jurisdiction_codes` that is not a well-formed ISO 3166 alpha-2 country
+or country-subdivision code, rather than falling back to string comparison.
+
+**Every declared jurisdiction MUST be in scope (normative).** If an artifact declares
+`["US-CA", "GB"]` under a `jurisdiction:US` delegation, it is OUT of scope. Requiring only an
+overlap would let an artifact launder any jurisdiction by also declaring one in-scope code.
 
 **Fail closed, in two directions (normative).**
 
@@ -285,6 +291,10 @@ A conformant verifier MUST distinguish:
 - **KEY_REVOKED** — the chain resolves cryptographically, but a key on the resolved path (root,
   an intermediate, or the leaf itself) has been revoked by its own parent (§5). Re-presenting the
   same chain will never resolve this; a different, unrevoked chain to the same artifact might.
+- **CERTIFICATE_REVOKED** — a certificate on the path was withdrawn by its issuer (§5.4), while
+  the key it certified remains validly certified elsewhere. Distinct from KEY_REVOKED because the
+  options differ: another certificate for the same key can still resolve this, whereas a revoked
+  key is dead on every path.
 - **OUT_OF_SCOPE** — the chain resolves and no key on it is revoked, so the issuer IS recognized,
   but the delegation did not cover this artifact (§3.4), or a certificate on the path tried to
   widen its own grant. Only a broader, validly-issued delegation resolves this; re-presenting the
@@ -355,6 +365,24 @@ key via a different set of certificates. A revoked intermediate key MUST be trea
 every chain that would otherwise resolve through it, regardless of which specific certificate
 object carries it into a given presentation.
 
+### 5.4 Certificate revocation
+
+§5.1 withdraws a KEY's standing to sign entirely. This withdraws ONE delegation while leaving the
+key able to act under any other certificate it holds — the difference between "this key is
+compromised" and "this particular grant was a mistake."
+
+A certificate is identified by its **fingerprint**: SHA-256 over its canonical signed payload
+(§3.2), hex-encoded. Content-derived deliberately — a certificate carries no id on the wire, so
+any verifier holding one can compute this offline, exactly as NOMOS-SPEC-006 §3.4 binds a
+revocation to `artifact_hash` rather than to a row. The fingerprint covers the signed payload and
+not the signature, so re-signing the same delegation does not evade a revocation of it.
+
+A certificate revocation is signed by that certificate's own PARENT — the same authority model as
+§5.1, one level finer. A verifier MUST check each certificate's fingerprint against the revocation
+set AFTER its signature verifies (an unverified certificate must never be probed for revocation
+status) and BEFORE applying its scope (a revoked certificate must never narrow anything). The
+outcome is `CERTIFICATE_REVOKED`, which a verifier MUST NOT report as `KEY_REVOKED`.
+
 ### 5.3 The revocation list
 
 A deployment supporting revocation SHOULD publish a signed, dated aggregate of current chain-key
@@ -411,6 +439,7 @@ Content-Type: application/json
 | `ALLOWED` / `AUTHORIZED` | 200 |
 | `ESCALATED` | 202 |
 | `ISSUER_NOT_RECOGNIZED` | 403 |
+| `CERTIFICATE_REVOKED` | 403 |
 | `KEY_REVOKED` | 403 |
 | `OUT_OF_SCOPE` | 403 |
 | `DENIED` | 403 |
@@ -504,22 +533,15 @@ plainly rather than implying it is handled:
   the reference one (§8.3). No interoperability claim is made. This Draft exists specifically to
   invite a second, independent one; until that exists, this remains a tested prototype with a
   spec number, not proven interoperable infrastructure.
-- **Scope covers two dimensions, not every dimension.** §3.4 enforces `artifact` and `industry`.
-  `jurisdiction` is deliberately excluded: real artifacts carry jurisdictions as free prose
-  ("State of California", "NHS England"), and a matcher over free prose would pass silently on a
-  variant spelling — a constraint that looks enforced but isn't is worse than one openly absent.
-  Jurisdiction scoping awaits a normalized identifier, and this document does not claim it.
-- **`industry` matching trusts the issuer's own declaration.** A scope constrains what the
-  artifact SAYS it covers (`meta.industry`), not what it actually covers. Scope binds a delegation
-  to a declaration; it cannot detect a mislabelled artifact.
-- **No certificate-level revocation, only key-level.** §5 revokes a *key's* standing to sign
-  entirely. Revoking one specific certificate while leaving the same key valid for other
-  purposes is not specified in this version.
-- **The `reason` field is overloaded by decision.** On `ISSUER_NOT_RECOGNIZED`, `reason` is one
-  of a fixed set of short codes (§4.4); on `AUTHORIZED`/`DENIED`/`ESCALATED` (§7.3), the same
-  field name carries a full human-readable sentence instead. This is a genuine naming wart in
-  the reference implementation, disclosed here rather than smoothed over — a future revision
-  should split these into distinct field names.
+- **Scope binds what an artifact DECLARES, not what it governs.** A scope constrains
+  `meta.industry` / `meta.jurisdiction_codes` / `meta.artifact_id`, not the actual content of the
+  rules. This is a property of the mechanism rather than an omission — X.509 name constraints bind
+  what a certificate asserts in exactly the same way — but it is stated plainly because a reader
+  could otherwise assume scope audits content. It does not.
+- **Adopting `jurisdiction` scope imposes a declaration requirement.** An issuer who scopes by
+  jurisdiction forces every artifact signed under that delegation to carry
+  `meta.jurisdiction_codes`; artifacts declaring only the free-prose `meta.jurisdictions` will
+  fail closed. That is the intended trade, named here so it is not a surprise.
 - **Root governance is out of scope of this document entirely.** See §9.
 
 ### 8.3 Reference implementation
@@ -672,7 +694,7 @@ The chain is valid and the seal is intact. The issuer simply was not delegated a
 
 ```
 → 403 Forbidden
-{ "decision": "ISSUER_NOT_RECOGNIZED", "reason": "chain_broken",
+{ "decision": "ISSUER_NOT_RECOGNIZED", "reason_code": "chain_broken",
   "detail": "Chain breaks after kid 40ZaXrnpntaoD4dn — no certificate continues it toward the artifact's signing key." }
 ```
 

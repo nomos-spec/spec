@@ -41,7 +41,7 @@ function printAndExit(verdict: ChainVerdict): never {
     console.log(`  path: ${verdict.path.join(" → ")}`);
     console.log(`\nResult: ALLOWED — chain resolves from the pinned root to the artifact's signing key, seal verifies.\n`);
   } else if (verdict.decision === "ISSUER_NOT_RECOGNIZED") {
-    console.error(`\n  [FAIL] ${verdict.detail}\n\nResult: ISSUER_NOT_RECOGNIZED (reason: ${verdict.reason})\n`);
+    console.error(`\n  [FAIL] ${verdict.detail}\n\nResult: ISSUER_NOT_RECOGNIZED (reason: ${verdict.reason_code})\n`);
   } else if (verdict.decision === "SEAL_INVALID") {
     console.error(`\n  [FAIL] ${verdict.detail}\n\nResult: SEAL_INVALID\n`);
   } else {

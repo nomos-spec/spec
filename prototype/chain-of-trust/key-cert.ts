@@ -94,6 +94,16 @@ export function createKeyCertificate(args: {
   return { ...unsigned, algorithm: "Ed25519", signature };
 }
 
+/**
+ * A certificate's stable identity: SHA-256 over its canonical signed payload (§3.2). Content-
+ * derived on purpose — a key certificate carries no id on the wire, so any verifier holding the
+ * certificate can compute this offline, exactly as NOMOS-SPEC-006 binds a revocation to
+ * `artifact_hash` rather than to a row.
+ */
+export function keyCertFingerprint(cert: Omit<KeyCertificate, "signature" | "algorithm">): string {
+  return crypto.createHash("sha256").update(keyCertPayload(cert)).digest("hex");
+}
+
 export type KeyCertVerifyResult =
   | { valid: true }
   | { valid: false; reason: "bad_signature" | "expired" | "not_yet_valid" };

@@ -143,7 +143,7 @@
       ],
       "expected": {
         "decision": "ISSUER_NOT_RECOGNIZED",
-        "reason": "chain_broken"
+        "reason_code": "chain_broken"
       }
     },
     {
@@ -187,7 +187,7 @@
       ],
       "expected": {
         "decision": "ISSUER_NOT_RECOGNIZED",
-        "reason": "expired"
+        "reason_code": "expired"
       }
     },
     {

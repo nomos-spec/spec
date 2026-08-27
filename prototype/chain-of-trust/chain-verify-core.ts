@@ -19,7 +19,7 @@
  */
 
 import * as crypto from "crypto";
-import { jcs, computeKid, verifyKeyCertificate, type KeyCertificate } from "./key-cert.js";
+import { jcs, computeKid, verifyKeyCertificate, keyCertFingerprint, type KeyCertificate } from "./key-cert.js";
 import {
   parseScope, isNarrowerOrEqual, mergeScopes, artifactInScope, formatScope,
   UNRESTRICTED, type ScopeTerms,
@@ -27,10 +27,11 @@ import {
 
 export type ChainVerdict =
   | { decision: "ALLOWED"; leaf_kid: string; path: string[]; effective_scope: string }
-  | { decision: "ISSUER_NOT_RECOGNIZED"; reason: "no_certificate_for_root" | "chain_broken" | "cycle" | "bad_signature" | "expired" | "not_yet_valid"; detail: string }
+  | { decision: "ISSUER_NOT_RECOGNIZED"; reason_code: "no_certificate_for_root" | "chain_broken" | "cycle" | "bad_signature" | "expired" | "not_yet_valid"; detail: string }
   /** Recognized issuer, but not delegated authority over THIS artifact (§3.4). Distinct from
    *  ISSUER_NOT_RECOGNIZED: a broader, validly-issued delegation would fix this; nothing about
    *  re-presenting fixes "I do not know you". */
+  | { decision: "CERTIFICATE_REVOKED"; revoked_fingerprint: string; detail: string }
   | { decision: "OUT_OF_SCOPE"; dimension: string; effective_scope: string; detail: string }
   | { decision: "SEAL_INVALID"; detail: string }
   | { decision: "MALFORMED"; detail: string };
@@ -65,8 +66,9 @@ function verifyEd25519(payload: Buffer, signatureB64: string, pem: string): bool
 
 type WalkResult =
   | { ok: true; pem: string; path: string[]; effectiveScope: ScopeTerms }
-  | { ok: false; kind: "ISSUER_NOT_RECOGNIZED"; reason: Extract<ChainVerdict, { decision: "ISSUER_NOT_RECOGNIZED" }>["reason"]; detail: string }
+  | { ok: false; kind: "ISSUER_NOT_RECOGNIZED"; reason: Extract<ChainVerdict, { decision: "ISSUER_NOT_RECOGNIZED" }>["reason_code"]; detail: string }
   | { ok: false; kind: "OUT_OF_SCOPE"; dimension: string; effectiveScope: ScopeTerms; detail: string }
+  | { ok: false; kind: "CERTIFICATE_REVOKED"; revoked_fingerprint: string; detail: string }
   | { ok: false; kind: "MALFORMED"; detail: string };
 
 /**
@@ -77,7 +79,7 @@ type WalkResult =
  * order, the wire format carrying these certs would start carrying trust semantics it shouldn't
  * (an implicit "as-transmitted sequence = as-intended chain" assumption).
  */
-function walkChain(chain: KeyCertificate[], rootPublicKeyPem: string, targetKid: string, now: Date): WalkResult {
+function walkChain(chain: KeyCertificate[], rootPublicKeyPem: string, targetKid: string, revokedCerts: Set<string>, now: Date): WalkResult {
   const rootKid = computeKid(rootPublicKeyPem);
   let currentKid = rootKid;
   let currentPem = rootPublicKeyPem;
@@ -87,14 +89,14 @@ function walkChain(chain: KeyCertificate[], rootPublicKeyPem: string, targetKid:
   let effectiveScope: ScopeTerms = UNRESTRICTED;
 
   while (currentKid !== targetKid) {
-    if (visited.has(currentKid)) return { ok: false, kind: "ISSUER_NOT_RECOGNIZED", reason: "cycle", detail: `Chain contains a cycle at kid ${currentKid}.` };
+    if (visited.has(currentKid)) return { ok: false, kind: "ISSUER_NOT_RECOGNIZED", reason_code: "cycle", detail: `Chain contains a cycle at kid ${currentKid}.` };
     visited.add(currentKid);
 
     const idx = remaining.findIndex((c) => c.parent_kid === currentKid);
     if (idx === -1) {
       return currentKid === rootKid
-        ? { ok: false, kind: "ISSUER_NOT_RECOGNIZED", reason: "no_certificate_for_root", detail: `No certificate in the presented chain is signed by the pinned root (kid ${rootKid}).` }
-        : { ok: false, kind: "ISSUER_NOT_RECOGNIZED", reason: "chain_broken", detail: `Chain breaks after kid ${currentKid} — no certificate continues it toward the artifact's signing key.` };
+        ? { ok: false, kind: "ISSUER_NOT_RECOGNIZED", reason_code: "no_certificate_for_root", detail: `No certificate in the presented chain is signed by the pinned root (kid ${rootKid}).` }
+        : { ok: false, kind: "ISSUER_NOT_RECOGNIZED", reason_code: "chain_broken", detail: `Chain breaks after kid ${currentKid} — no certificate continues it toward the artifact's signing key.` };
     }
     const cert = remaining.splice(idx, 1)[0];
 
@@ -106,7 +108,15 @@ function walkChain(chain: KeyCertificate[], rootPublicKeyPem: string, targetKid:
           : result.reason === "not_yet_valid"
           ? `Certificate ${cert.parent_kid} → ${cert.child_kid} is not yet valid (issued_at ${cert.issued_at}).`
           : `Certificate ${cert.parent_kid} → ${cert.child_kid} has an invalid signature — forged or corrupted link.`;
-      return { ok: false, kind: "ISSUER_NOT_RECOGNIZED", reason: result.reason, detail };
+      return { ok: false, kind: "ISSUER_NOT_RECOGNIZED", reason_code: result.reason, detail };
+    }
+
+    // §5.4 — a withdrawn delegation stops the walk. After the signature check so an unverified
+    // certificate is never probed, before scope so a revoked cert never narrows anything.
+    const fingerprint = keyCertFingerprint(cert);
+    if (revokedCerts.has(fingerprint)) {
+      return { ok: false, kind: "CERTIFICATE_REVOKED", revoked_fingerprint: fingerprint,
+        detail: `Certificate ${cert.parent_kid} \u2192 ${cert.child_kid} has been revoked by its issuer. The key may still be certified by another path.` };
     }
 
     // §3.4 — narrow the effective scope by this link. A certificate may add or tighten a
@@ -138,7 +148,7 @@ function walkChain(chain: KeyCertificate[], rootPublicKeyPem: string, targetKid:
  * malformed shape, bad PEM, non-base64 signature, or unexpected type must resolve to a verdict,
  * never propagate an exception to a caller (CLI or HTTP) that isn't prepared to catch one.
  */
-export function verifyChainPresentation(args: { artifact: any; chain: unknown; rootPublicKeyPem: string; now?: Date }): ChainVerdict {
+export function verifyChainPresentation(args: { artifact: any; chain: unknown; rootPublicKeyPem: string; revokedCerts?: Set<string>; now?: Date }): ChainVerdict {
   try {
     return verifyChainPresentationUnsafe(args);
   } catch (e: any) {
@@ -146,7 +156,7 @@ export function verifyChainPresentation(args: { artifact: any; chain: unknown; r
   }
 }
 
-function verifyChainPresentationUnsafe(args: { artifact: any; chain: unknown; rootPublicKeyPem: string; now?: Date }): ChainVerdict {
+function verifyChainPresentationUnsafe(args: { artifact: any; chain: unknown; rootPublicKeyPem: string; revokedCerts?: Set<string>; now?: Date }): ChainVerdict {
   const { artifact, rootPublicKeyPem } = args;
   const now = args.now ?? new Date();
 
@@ -170,13 +180,14 @@ function verifyChainPresentationUnsafe(args: { artifact: any; chain: unknown; ro
   }
   const chain = args.chain as KeyCertificate[];
 
-  const walk = walkChain(chain, rootPublicKeyPem, seal.kid, now);
+  const walk = walkChain(chain, rootPublicKeyPem, seal.kid, args.revokedCerts ?? new Set<string>(), now);
   if (!walk.ok) {
     if (walk.kind === "MALFORMED") return { decision: "MALFORMED", detail: walk.detail };
+    if (walk.kind === "CERTIFICATE_REVOKED") return { decision: "CERTIFICATE_REVOKED", revoked_fingerprint: walk.revoked_fingerprint, detail: walk.detail };
     if (walk.kind === "OUT_OF_SCOPE") {
       return { decision: "OUT_OF_SCOPE", dimension: walk.dimension, effective_scope: formatScope(walk.effectiveScope), detail: walk.detail };
     }
-    return { decision: "ISSUER_NOT_RECOGNIZED", reason: walk.reason, detail: walk.detail };
+    return { decision: "ISSUER_NOT_RECOGNIZED", reason_code: walk.reason_code, detail: walk.detail };
   }
 
   // §3.4 — the issuer is recognized; was it delegated authority over THIS artifact? Checked

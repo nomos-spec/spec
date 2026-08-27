@@ -71,14 +71,14 @@ test("ISSUER_NOT_RECOGNIZED — uncertified key sealed the artifact", () => {
   const f = buildBasicChain();
   const v = verifyChainPresentation({ artifact: f.artifactImpostor, chain: f.chainSuccess, rootPublicKeyPem: f.root.publicKeyPem });
   assert.equal(v.decision, "ISSUER_NOT_RECOGNIZED");
-  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason, "chain_broken");
+  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason_code, "chain_broken");
 });
 
 test("ISSUER_NOT_RECOGNIZED — expired certificate, distinct reason", () => {
   const f = buildBasicChain();
   const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: f.chainExpired, rootPublicKeyPem: f.root.publicKeyPem });
   assert.equal(v.decision, "ISSUER_NOT_RECOGNIZED");
-  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason, "expired");
+  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason_code, "expired");
 });
 
 test("order independence — reversed chain array reaches the identical verdict", () => {
@@ -150,7 +150,7 @@ test("ISSUER_NOT_RECOGNIZED, not a crash — a validly-signed certificate names 
   };
   const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: [rootToGarbage, garbageToLeaf], rootPublicKeyPem: f.root.publicKeyPem });
   assert.equal(v.decision, "ISSUER_NOT_RECOGNIZED");
-  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason, "bad_signature");
+  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason_code, "bad_signature");
 });
 
 test("ISSUER_NOT_RECOGNIZED, not an infinite loop — a real signed cycle that never reaches the target", () => {
@@ -163,7 +163,7 @@ test("ISSUER_NOT_RECOGNIZED, not an infinite loop — a real signed cycle that n
   // each other, so the walk must detect the cycle rather than loop forever.
   const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: [rootToA, aToRoot], rootPublicKeyPem: f.root.publicKeyPem });
   assert.equal(v.decision, "ISSUER_NOT_RECOGNIZED");
-  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason, "cycle");
+  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason_code, "cycle");
 });
 
 // ── Wire layer — real HTTP round trips against startReceiver(), not in-process function calls ──

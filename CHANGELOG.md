@@ -75,16 +75,35 @@ enforcement:
 Four interop vectors cover it, including the widening case. Reference implementation:
 `prototype/chain-of-trust/scope.ts`.
 
+### Added — jurisdiction scope, certificate revocation, `reason_code` (2026-08-27, same Draft)
+
+Three items previously listed as disclosed gaps. Two were work deferred rather than genuine
+limitations, and saying "disclosed" did not make them any less missing:
+
+- **`jurisdiction` scope now enforced.** Not by matching the free-prose `meta.jurisdictions`,
+  which was the reason it was excluded — it reads a new `meta.jurisdiction_codes` list of ISO
+  3166 codes and refuses anything that isn't a well-formed code. `US` contains `US-CA`. EVERY
+  declared jurisdiction must be in scope; requiring only an overlap would let an artifact launder
+  any jurisdiction by also declaring one in-scope code. The prose field stays where it belongs,
+  in front of humans.
+- **Certificate-level revocation** (§5.4) — withdraw ONE delegation while the key remains valid
+  under any other certificate it holds. Certificates are identified by fingerprint (SHA-256 over
+  the signed payload), content-derived so any verifier can check offline, and covering the payload
+  rather than the signature so re-signing the same delegation does not evade a revocation of it.
+  New outcome `CERTIFICATE_REVOKED`, which MUST NOT be reported as `KEY_REVOKED` — another
+  certificate can resolve the former, nothing resolves the latter.
+- **`reason` no longer overloaded.** Chain failures now carry `reason_code` (a fixed set of
+  machine-readable codes); `reason` is only ever a human-readable sentence from rule evaluation.
+  A wire change, made while this document is a Draft with no external implementations, precisely
+  so it does not have to be lived with later.
+
 ### Known gaps (disclosed, §8.2)
 
 - Exactly one implementation exists; no interoperability claim is made.
-- Scope covers `artifact` and `industry`. `jurisdiction` is excluded until a normalized
-  identifier exists — matching free prose ("NHS England", "State of California") would pass
-  silently on a variant spelling, which is worse than an openly absent constraint.
-- Scope binds what an artifact DECLARES, not what it actually governs.
-- No certificate-level revocation, only key-level.
-- The `reason` field is overloaded by decision (a short code on `ISSUER_NOT_RECOGNIZED`, a full
-  sentence on `AUTHORIZED`/`DENIED`/`ESCALATED`) — a genuine naming wart, not smoothed over.
+- Scope binds what an artifact DECLARES, not what it governs — a property of the mechanism
+  (X.509 name constraints work the same way), stated so no reader assumes scope audits content.
+- Adopting jurisdiction scope obliges every artifact under that delegation to declare
+  `meta.jurisdiction_codes`; prose-only artifacts fail closed. That is the intended trade.
 
 ---
 

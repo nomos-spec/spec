@@ -26,8 +26,9 @@
  * artifacts holds loose tokens ("library", "healthcare") and `meta.jurisdictions` holds free
  * prose ("State of California", "NHS England"). A matcher over free prose is string comparison
  * dressed up as authorization — it would pass silently when an issuer writes "CA" instead of
- * "State of California", which is strictly worse than today's honest no-op. So `jurisdiction:`
- * is deliberately NOT supported until a normalized identifier exists; see SPEC-007 §8.2.
+ * "State of California". So `jurisdiction:` does not read that field at all: it reads
+ * `meta.jurisdiction_codes`, an ISO 3166 code list, and refuses anything that isn't a
+ * well-formed code. The prose field stays where it belongs, in front of humans.
  *
  * ── Fail closed, twice ───────────────────────────────────────────────────────────────────────
  * 1. If a scope constrains a dimension the artifact does not declare, the artifact is OUT of
@@ -44,7 +45,7 @@ export interface ScopeTerms {
 }
 
 /** Dimensions this version knows how to evaluate. Anything else fails closed (see header). */
-export const KNOWN_SCOPE_DIMENSIONS = ['artifact', 'industry'] as const;
+export const KNOWN_SCOPE_DIMENSIONS = ['artifact', 'industry', 'jurisdiction'] as const;
 export type ScopeDimension = (typeof KNOWN_SCOPE_DIMENSIONS)[number];
 
 export const UNRESTRICTED: ScopeTerms = { terms: {} };
@@ -90,6 +91,12 @@ function valueContains(broader: string, narrower: string): boolean {
 
 function dimensionContains(dimension: string, broader: string, narrower: string): boolean {
   if (dimension === 'artifact') return broader === narrower; // exact only, never a prefix
+  if (dimension === 'jurisdiction') {
+    const b = normalizeJurisdictionCode(broader), n = normalizeJurisdictionCode(narrower);
+    // An unparseable code can never narrow anything — fail closed rather than fall through to
+    // string comparison, which is the whole reason this dimension took a normalized vocabulary.
+    return b !== null && n !== null && jurisdictionContains(b, n);
+  }
   return valueContains(broader, narrower);
 }
 
@@ -165,8 +172,68 @@ export function artifactInScope(artifact: any, scope: ScopeTerms): ScopeCheck {
       }
       continue;
     }
+
+    if (dimension === 'jurisdiction') {
+      // Deliberately reads meta.jurisdiction_codes, NOT meta.jurisdictions. The latter is free
+      // prose for humans ("State of California", "NHS England"); matching it would pass silently
+      // on a variant spelling, which is the failure mode that kept this dimension out entirely
+      // until a normalized field existed. Codes are ISO 3166 (see normalizeJurisdictionCode).
+      const declared = artifact?.meta?.jurisdiction_codes;
+      if (!Array.isArray(declared) || declared.length === 0) {
+        return {
+          ok: false, dimension,
+          detail: 'Scope constrains jurisdiction, but the artifact declares no meta.jurisdiction_codes. The free-prose meta.jurisdictions field is deliberately NOT used for authorization — it cannot be compared reliably.',
+        };
+      }
+      const requiredCode = normalizeJurisdictionCode(required);
+      if (!requiredCode) {
+        return { ok: false, dimension, detail: `Scope jurisdiction ${JSON.stringify(required)} is not a recognized ISO 3166 code.` };
+      }
+      // EVERY declared jurisdiction must fall inside the grant. A delegation for US-CA does not
+      // authorize an artifact that also claims to govern US-NY; "any overlap is enough" would let
+      // an artifact escape by declaring one in-scope jurisdiction alongside anything it liked.
+      for (const raw of declared) {
+        const code = typeof raw === 'string' ? normalizeJurisdictionCode(raw) : null;
+        if (!code) {
+          return { ok: false, dimension, detail: `Artifact declares jurisdiction code ${JSON.stringify(raw)}, which is not a recognized ISO 3166 code.` };
+        }
+        if (!jurisdictionContains(requiredCode, code)) {
+          return { ok: false, dimension, detail: `Scope permits jurisdiction ${JSON.stringify(requiredCode)}; this artifact also governs ${JSON.stringify(code)}.` };
+        }
+      }
+      continue;
+    }
   }
   return { ok: true };
+}
+
+// ── Jurisdiction codes (ISO 3166) ────────────────────────────────────────────────────────────
+//
+// Deliberately a borrowed, externally-maintained vocabulary rather than one invented here. The
+// containment relation a delegation needs — "US authorizes US-CA" — is exactly ISO 3166's own
+// country/subdivision relation, so nothing has to be defined beyond how to spell it.
+//
+// Structural validation only: this accepts any well-formed alpha-2 country or country-subdivision
+// code without shipping the full ISO register. A well-formed code naming a country that doesn't
+// exist simply matches nothing, which fails closed. What matters for authorization is that two
+// codes compare EXACTLY and hierarchically — not that the code is on a list.
+
+const ISO_COUNTRY = /^[A-Z]{2}$/;
+const ISO_SUBDIVISION = /^[A-Z]{2}-[A-Z0-9]{1,3}$/;
+
+/** Uppercases and validates shape. Returns null for anything that isn't a well-formed code —
+ *  including free prose, which is precisely what must never be silently accepted here. */
+export function normalizeJurisdictionCode(raw: string): string | null {
+  const code = raw.trim().toUpperCase();
+  if (ISO_COUNTRY.test(code) || ISO_SUBDIVISION.test(code)) return code;
+  return null;
+}
+
+/** `US` contains `US-CA`; `US-CA` contains only itself. Comparison is on the code structure, so
+ *  there is no prose, no locale, and no spelling variance anywhere in the decision. */
+function jurisdictionContains(broader: string, narrower: string): boolean {
+  if (broader === narrower) return true;
+  return ISO_COUNTRY.test(broader) && narrower.startsWith(broader + '-');
 }
 
 /** Human-readable rendering, for verdict details and audit records. */

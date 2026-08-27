@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nomosprotocol.com/schema/chain-verification-response.schema.json",
   "title": "NOMOS Chain Verification Response",
-  "description": "Response body from POST /verify (NOMOS-SPEC-007 \u00a74.4, \u00a76.2, \u00a77.3). Exactly one of eight decisions. The four refusals that precede rule evaluation (ISSUER_NOT_RECOGNIZED, KEY_REVOKED, OUT_OF_SCOPE, SEAL_INVALID) and the rule-evaluation outcome (DENIED) MUST remain distinguishable \u2014 collapsing 'the issuer was never established' or 'the issuer was not delegated this' into 'the rules said no' is a nonconformant implementation (\u00a710.1).",
+  "description": "Response body from POST /verify (NOMOS-SPEC-007 \u00a74.4, \u00a76.2, \u00a77.3). Exactly one of ten decisions. The four refusals that precede rule evaluation (ISSUER_NOT_RECOGNIZED, KEY_REVOKED, OUT_OF_SCOPE, SEAL_INVALID) and the rule-evaluation outcome (DENIED) MUST remain distinguishable \u2014 collapsing 'the issuer was never established' or 'the issuer was not delegated this' into 'the rules said no' is a nonconformant implementation (\u00a710.1).",
   "type": "object",
   "required": [
     "decision"
@@ -17,6 +17,7 @@
         "ESCALATED",
         "ISSUER_NOT_RECOGNIZED",
         "KEY_REVOKED",
+        "CERTIFICATE_REVOKED",
         "OUT_OF_SCOPE",
         "SEAL_INVALID",
         "MALFORMED"
@@ -35,7 +36,7 @@
     },
     "reason": {
       "type": "string",
-      "description": "Overloaded by decision, disclosed rather than hidden (NOMOS-SPEC-007 \u00a78.2): when decision is ISSUER_NOT_RECOGNIZED, one of a fixed set of short codes (no_certificate_for_root | chain_broken | cycle | bad_signature | expired | not_yet_valid) \u2014 see reason for that case below. When decision is AUTHORIZED, DENIED, or ESCALATED, a full human-readable explanation from rule evaluation instead. A future revision should consider splitting these into distinct field names."
+      "description": "Human-readable explanation from rule evaluation. Present when decision is AUTHORIZED, DENIED, or ESCALATED. Never a code \u2014 see reason_code."
     },
     "rule": {
       "type": [
@@ -61,7 +62,7 @@
     },
     "detail": {
       "type": "string",
-      "description": "Human-readable detail for ISSUER_NOT_RECOGNIZED, KEY_REVOKED, OUT_OF_SCOPE, SEAL_INVALID, or MALFORMED."
+      "description": "Human-readable detail for ISSUER_NOT_RECOGNIZED, KEY_REVOKED, CERTIFICATE_REVOKED, OUT_OF_SCOPE, SEAL_INVALID, or MALFORMED."
     },
     "dimension": {
       "type": "string",
@@ -70,6 +71,22 @@
     "effective_scope": {
       "type": "string",
       "description": "The accumulated scope of the resolved chain, rendered as space-separated dimension:value terms, or \"(unrestricted)\". Present on ALLOWED and on OUT_OF_SCOPE."
+    },
+    "reason_code": {
+      "type": "string",
+      "enum": [
+        "no_certificate_for_root",
+        "chain_broken",
+        "cycle",
+        "bad_signature",
+        "expired",
+        "not_yet_valid"
+      ],
+      "description": "Present only when decision is ISSUER_NOT_RECOGNIZED \u2014 the machine-readable reason the chain did not resolve (NOMOS-SPEC-007 \u00a74.4)."
+    },
+    "revoked_fingerprint": {
+      "type": "string",
+      "description": "Present only when decision is CERTIFICATE_REVOKED \u2014 SHA-256 of the revoked certificate's signed payload (\u00a75.4)."
     }
   },
   "examples": [
@@ -81,8 +98,8 @@
     },
     {
       "decision": "ISSUER_NOT_RECOGNIZED",
-      "reason": "chain_broken",
-      "detail": "Chain breaks after kid 40ZaXrnpntaoD4dn \u2014 no certificate continues it toward the artifact's signing key."
+      "detail": "Chain breaks after kid 40ZaXrnpntaoD4dn \u2014 no certificate continues it toward the artifact's signing key.",
+      "reason_code": "chain_broken"
     },
     {
       "decision": "OUT_OF_SCOPE",

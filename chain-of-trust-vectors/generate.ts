@@ -121,13 +121,13 @@ function main() {
         name: 'issuer_not_recognized_uncertified_key',
         artifact: artifactImpostor,
         key_certs: [rootToIntermediate, intermediateToLeaf],
-        expected: { decision: 'ISSUER_NOT_RECOGNIZED', reason: 'chain_broken' },
+        expected: { decision: 'ISSUER_NOT_RECOGNIZED', reason_code: 'chain_broken' },
       },
       {
         name: 'issuer_not_recognized_expired',
         artifact: artifactHonored,
         key_certs: [rootToIntermediate, intermediateToLeafExpired],
-        expected: { decision: 'ISSUER_NOT_RECOGNIZED', reason: 'expired' },
+        expected: { decision: 'ISSUER_NOT_RECOGNIZED', reason_code: 'expired' },
       },
       {
         name: 'seal_invalid_tampered_after_sealing',

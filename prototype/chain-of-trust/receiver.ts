@@ -48,6 +48,8 @@ const MAX_BODY_BYTES = 1_000_000;
 const STATUS: Record<ChainVerdict["decision"], number> = {
   ALLOWED: 200,
   ISSUER_NOT_RECOGNIZED: 403,
+  // One delegation withdrawn; the key may still be certified elsewhere (§5.4).
+  CERTIFICATE_REVOKED: 403,
   // Recognized issuer, not delegated authority over this artifact (§3.4). Shares 403 with the
   // other refusals; `decision` in the body is what a caller branches on.
   OUT_OF_SCOPE: 403,
