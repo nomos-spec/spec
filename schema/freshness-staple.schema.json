@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/freshness-staple.schema.json",
+  "title": "NOMOS Freshness Staple",
+  "description": "A short-lived, detached statement signed by a key's own PARENT — the same key permitted to revoke it (NOMOS-SPEC-007 §5.1) — asserting the child key is not revoked as of a point in time. A presenter attaches staples to a chain presentation so a verifier with no revocation source of its own (§5.5) gets a bounded, disclosed confidence upgrade from 'unchecked' to 'staple', instead of a silent 'unknown'. The root is out of scope: nothing certifies a root, so nothing but the relying party's own decision to un-pin it answers 'is my root still good'.",
+  "type": "object",
+  "required": ["child_kid", "parent_kid", "as_of", "valid_until", "algorithm", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "child_kid": {
+      "type": "string",
+      "description": "The kid this staple vouches for."
+    },
+    "parent_kid": {
+      "type": "string",
+      "description": "The signer — MUST be the same parent_kid that actually certified child_kid in some certificate the verifier is walking. A verifier MUST NOT verify a staple against any other key, regardless of what this field claims."
+    },
+    "as_of": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this staple was signed. Part of the signed payload."
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this staple stops being usable. Part of the signed payload. RECOMMENDED short — minutes to roughly an hour, not the years-long scale of a certificate's own expires_at. This document does not mandate an exact figure, matching NOMOS-SPEC-006 §6.2's treatment of max_age as advisory rather than fixed."
+    },
+    "algorithm": {
+      "type": "string",
+      "const": "Ed25519",
+      "description": "Ed25519 in this version."
+    },
+    "signature": {
+      "type": "string",
+      "description": "base64 Ed25519 signature over JCS({ child_kid, parent_kid, as_of, valid_until }) — produced with the PARENT's private key, the same key that certified child_kid."
+    }
+  },
+  "examples": [
+    {
+      "child_kid": "8kR2Xw5dF7hJmN1s",
+      "parent_kid": "V3HqL9zM2Nk4pQrT",
+      "as_of": "2026-08-28T00:00:00Z",
+      "valid_until": "2026-08-28T00:15:00Z",
+      "algorithm": "Ed25519",
+      "signature": "MEQCIF…"
+    }
+  ]
+}

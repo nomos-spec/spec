@@ -25,6 +25,12 @@
       "type": "string",
       "description": "The root the relying party's OWN configuration has decided to trust. MUST NOT be sourced from anything else in this request — see NOMOS-SPEC-007 §10.2."
     },
+    "freshness_staples": {
+      "type": "array",
+      "maxItems": 20,
+      "description": "Optional (NOMOS-SPEC-007 §5.5). Presenter-supplied proofs that specific keys on the chain are not revoked as of a recent point in time. Only ever consulted by a verifier that has NO revocation source of its own — a verifier with its own list ignores this field entirely. Never covers the pinned root itself.",
+      "items": { "$ref": "https://nomosprotocol.com/schema/freshness-staple.schema.json" }
+    },
     "facts": {
       "type": "object",
       "description": "Optional. When present, and only once the chain resolves to a recognized, unrevoked issuer (NOMOS-SPEC-007 §7), the artifact's own rules are evaluated against these facts."

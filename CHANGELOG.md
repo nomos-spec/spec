@@ -105,6 +105,57 @@ limitations, and saying "disclosed" did not make them any less missing:
 - Adopting jurisdiction scope obliges every artifact under that delegation to declare
   `meta.jurisdiction_codes`; prose-only artifacts fail closed. That is the intended trade.
 
+### Added — §5.5 freshness staples; walk-time revocation checks moved into the pure prototype (2026-08-28, same Draft)
+
+§5's revocation checks assumed a verifier holds an authoritative source — a live lookup, or a
+fetched copy of the §5.3 list. That assumption fails for exactly the relying party this document
+exists for: an independent system verifying a chain entirely offline, with no revocation source
+of its own. Left unaddressed, the primitive worked right up until the one property such a
+verifier most needs from it.
+
+- **Freshness staple** (§5.5) — a short-lived, Ed25519-signed "this key is not revoked as of T"
+  proof, signed by the SAME key that could revoke it (never a platform-wide key — a deliberate
+  rejection of the alternative that would recreate the "everyone depends on our server"
+  dependency chain verification exists to remove). A presenter attaches staples to a
+  presentation; a verifier with no revocation source of its own MAY use a valid one to raise a
+  kid's confidence from `unchecked` to `staple`. The root is explicitly out of scope — nothing
+  certifies a root, so nothing but the relying party's own decision to un-pin it answers "is my
+  root still good."
+- **`revocation_checked: "live" | "staple" | "unchecked"`** — new response field (§6.2), REQUIRED
+  on `ALLOWED` and, per §7 composition, REQUIRED on `AUTHORIZED`/`DENIED`/`ESCALATED` too — a real
+  permission decision MUST NOT silently drop the confidence disclosure the chain-authenticity
+  result it's computed from already carries. Always the WEAKEST result among every kid on the
+  resolved path, never the best; a caller MUST NOT see `unchecked` reported as if it were `live`
+  or `staple`. Staples cover key revocation (§5.1-5.2) only — a revoked certificate (§5.4) is
+  never staple-coverable, stated as scope rather than left to be assumed.
+- **Key revocation (§5.1-5.2) and certificate revocation (§5.4) walk-time checks are now in the
+  pure reference implementation**, not production-only. `chain-verify-core.ts` accepts caller-
+  supplied `revokedKids` / `revokedCerts` sets and rejects a chain resolving through either, at
+  every hop — the split in §8.3 is now stated precisely: checking a caller-supplied set needs no
+  key custody, so it's here; producing or signing the §5.1/§5.3 statement/list objects themselves
+  still does, so that stays production-only.
+- **Two latent bugs fixed while extending this code, found by adding a real typecheck pass this
+  reference implementation previously had no gate for**: `chain-verify-core.ts`'s internal
+  `WalkResult` type named a field `reason` while every construction site and its one consumer
+  used `reason_code` (`tsc` was never run against this file; `tsx` doesn't care); and
+  `verify-chain.ts`'s CLI exit-code map was missing `CERTIFICATE_REVOKED` and `OUT_OF_SCOPE`
+  entirely, so either verdict fell through to a printed `MALFORMED` and an exit code of 0 — a
+  failed verification reported and exited as success. Both fixed; the exit-code map is now a
+  `switch` so TypeScript enforces exhaustiveness on every future decision added.
+- **§4.4 heading** no longer states a count of outcomes — it had already gone stale twice as
+  outcomes were added since first published.
+- **§5 renumbered into document order** — §5.3 (the revocation list) and §5.4 (certificate
+  revocation) had drifted out of numeric order when certificate revocation was inserted between
+  them in the previous entry; reordered without renumbering, so every existing `§5.4` cross-
+  reference in this document, the reference implementation, and the schemas stays correct.
+- Cross-implementation payload check (not a §8.2 interoperability claim — same author, two
+  implementations): production's `server/lib/nomos-chain.ts` and this prototype's `key-cert.ts`
+  produce byte-identical signed payloads for both a key certificate and a freshness staple.
+- Reference implementation: 25/25 (`prototype/chain-of-trust/test.ts`, up from 17); interop
+  vectors: 14/14 (`chain-of-trust-vectors/`, up from 7), adding a revoked-key case and two
+  staple-coverage cases (full and partial hop coverage, pinning the weakest-link rule). New
+  schema `schema/freshness-staple.schema.json`.
+
 ---
 
 ## [NOMOS-SPEC-006 v1.6.0] — 2026-08-25

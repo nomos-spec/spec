@@ -34,6 +34,11 @@
       },
       "description": "Present only when decision is ALLOWED \u2014 the resolved kid path from root to leaf."
     },
+    "revocation_checked": {
+      "type": "string",
+      "enum": ["live", "staple", "unchecked"],
+      "description": "Present when decision is ALLOWED, and MUST also be present when \u00a77 composition normalizes the result to AUTHORIZED, DENIED, or ESCALATED \u2014 composing to a real permission decision MUST NOT silently drop this disclosure (NOMOS-SPEC-007 \u00a75.5). How confidently KEY revocation was checked across every kid on the resolved path \u2014 always the WEAKEST result among them, never the best. 'live': every kid checked against the verifier's own revocation source. 'staple': at least one kid relied on a presented freshness staple instead. 'unchecked': at least one kid (routinely the root, which no staple can ever cover) had neither. A verifier MUST NOT report 'unchecked' as if it were 'live' or 'staple'."
+    },
     "reason": {
       "type": "string",
       "description": "Human-readable explanation from rule evaluation. Present when decision is AUTHORIZED, DENIED, or ESCALATED. Never a code \u2014 see reason_code."
@@ -94,7 +99,8 @@
       "decision": "AUTHORIZED",
       "reason": "2 rules evaluated. No restriction fired.",
       "rule": "catch-all",
-      "missing_inputs": []
+      "missing_inputs": [],
+      "revocation_checked": "live"
     },
     {
       "decision": "ISSUER_NOT_RECOGNIZED",

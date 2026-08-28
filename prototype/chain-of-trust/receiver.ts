@@ -11,13 +11,22 @@
  * Wire shape, deliberately minimal — "the honest answer at this stage," not a header convention:
  *   POST /verify
  *   Content-Type: application/json
- *   { "artifact": { ... }, "key_certs": [ ... ] }
+ *   { "artifact": { ... }, "key_certs": [ ... ], "freshness_staples": [ ... ] }  (staples optional, §5.5)
  *
- *   → 200 { "decision": "ALLOWED", "leaf_kid": "...", "path": [...] }
- *   → 403 { "decision": "ISSUER_NOT_RECOGNIZED", "reason": "...", "detail": "..." }
+ *   → 200 { "decision": "ALLOWED", "leaf_kid": "...", "path": [...], "revocation_checked": "unchecked" | "staple" | "live" }
+ *   → 403 { "decision": "ISSUER_NOT_RECOGNIZED", "reason_code": "...", "detail": "..." }
+ *   → 403 { "decision": "KEY_REVOKED", "revoked_kid": "...", "detail": "..." }
+ *   → 403 { "decision": "CERTIFICATE_REVOKED", "revoked_fingerprint": "...", "detail": "..." }
+ *   → 403 { "decision": "OUT_OF_SCOPE", "dimension": "...", "detail": "..." }
  *   → 422 { "decision": "SEAL_INVALID", "detail": "..." }
  *   → 400 { "decision": "MALFORMED", "detail": "..." }
  *   → 413 { "decision": "MALFORMED", "detail": "..." }  (request body over the size limit)
+ *
+ * This process passes no `revokedKids`/`revokedCerts` to the verifier — it holds no revocation
+ * source of its own. `revocation_checked` on an ALLOWED verdict will read `staple` only when the
+ * presenter attached a valid one, `unchecked` otherwise. That is the honest, disclosed limit of
+ * what a receiver with no revocation list can know (§5.5, §10.1) — never silently reported as if
+ * it were `live`.
  *
  * HTTP status is a hint, not the authoritative signal — `decision` in the body is what a caller
  * should branch on. The three failure decisions are kept distinguishable on purpose: a caller
@@ -48,6 +57,8 @@ const MAX_BODY_BYTES = 1_000_000;
 const STATUS: Record<ChainVerdict["decision"], number> = {
   ALLOWED: 200,
   ISSUER_NOT_RECOGNIZED: 403,
+  // A key's standing to sign was withdrawn entirely by its own parent (§5.1-5.2).
+  KEY_REVOKED: 403,
   // One delegation withdrawn; the key may still be certified elsewhere (§5.4).
   CERTIFICATE_REVOKED: 403,
   // Recognized issuer, not delegated authority over this artifact (§3.4). Shares 403 with the
@@ -105,7 +116,13 @@ function startReceiver(rootPublicKeyPem: string, port: number, host = "127.0.0.1
         verdict = { decision: "MALFORMED", detail: "Body must be { artifact, key_certs }." };
       } else {
         // rootPublicKeyPem comes from this process's own startup argument — never from `body`.
-        verdict = verifyChainPresentation({ artifact: body.artifact, chain: body.key_certs, rootPublicKeyPem });
+        // This receiver supplies no revocation source of its own (no `revokedKids` argument
+        // below) — the real hasOwnKeySource=false case (§5.5): an optional `freshness_staples`
+        // in the body is the only way this process can gain any confidence beyond 'unchecked'.
+        verdict = verifyChainPresentation({
+          artifact: body.artifact, chain: body.key_certs, rootPublicKeyPem,
+          freshnessStaples: body.freshness_staples,
+        });
       }
       status = STATUS[verdict.decision];
     } catch (e: any) {

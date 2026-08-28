@@ -14,6 +14,19 @@ certified key may sign, narrowing monotonically down the chain and failing close
 the artifact doesn't declare or the verifier doesn't recognize. Until this existed the field was
 signed, carried, and never read — the badge said third floor and nothing checked the floor.
 
+**§5.1-5.2 key revocation and §5.4 certificate revocation are checked here** (`chain-verify-core.ts`):
+a caller may pass `revokedKids` / `revokedCerts` sets and the walk rejects a chain that resolves
+through either, at every hop it visits — not only the terminal target. What is NOT in this
+signer-agnostic module is producing or verifying the revocation statement/list objects themselves
+(§5.1, §5.3) — that needs a key custody model this module deliberately has none of; see §8.3.
+
+**§5.5 freshness staples are implemented here.** A verifier with no revocation source of its own —
+this prototype's whole reason for existing — can still raise its confidence in one kid's
+non-revoked status from `unchecked` to `staple` if the presenter attaches a short-lived proof
+signed by that kid's actual certifying parent. `revocation_checked: "live" | "staple" | "unchecked"`
+is disclosed on every `ALLOWED` verdict, always the weakest result among every kid on the path —
+never silently reported as better than it is.
+
 ## Why this exists
 
 [Paper 5 / R-08 — "Bounded Contextual Authority"](https://www.nomosprotocol.com/paper-5) named a
@@ -138,7 +151,8 @@ A dedicated pass found and fixed real issues, rather than assuming the happy-pat
 
 `test.ts` (`npx tsx --test test.ts`, `node:test` + `node:assert`, zero deps) runs all of the above
 as real assertions — including two real HTTP round trips per wire test via `startReceiver()`, not
-in-process shortcuts — plus every scenario from the walkthrough above. 17 assertions, all passing.
+in-process shortcuts — plus every scenario from the walkthrough above, key revocation (§5.1-5.2),
+and freshness-staple confidence (§5.5). 25 assertions, all passing.
 
 **What "hardened" means here, precisely:** this pass makes the *verification code* solid against
 malformed and adversarial input. It does not, and cannot, resolve the property this prototype
@@ -158,10 +172,11 @@ other side of the handshake either.
 
 ## Explicitly out of scope here
 
-- **Revoking a key certificate itself.** SPEC-006 revokes *artifacts*; revoking a *certificate*
-  is a different operation with a nastier property — revoking an intermediate should invalidate
-  every leaf certified under it, and whether that's checked at verify time or precomputed is a
-  real design question deferred until the simpler expiry-only version has been exercised.
+- **Producing or persisting the §5.1/§5.3 revocation statement and list objects.** This module
+  checks a caller-supplied `revokedKids` / `revokedCerts` set at walk time (§5.2, §5.4) — that
+  needed no key custody, so it's here. Actually *creating* a signed revocation statement, or
+  signing the aggregate list, needs a key custody model this signer-agnostic module deliberately
+  has none of; that lives in the production deployment (§8.3).
 - **A standardized wire protocol.** What's here is a minimal, real demonstration of the shape —
   not a header convention, not versioned, not an MCP tool binding, not reviewed by anyone but
   this exercise. Standardizing the actual handshake should follow more of this kind of contact,

@@ -49,8 +49,10 @@
           "oce5bYh8xC2E7WZS",
           "PAEp-jMJnzvkwQSt",
           "k25GdGYvawXqFJrX"
-        ]
-      }
+        ],
+        "revocation_checked": "unchecked"
+      },
+      "note": "The checker supplies no revocation source and no staples — revocation_checked MUST be the honest \"unchecked\" (§5.5), never silently reported as if it were live."
     },
     {
       "name": "allowed_reversed_order",
@@ -458,6 +460,184 @@
       "expected": {
         "decision": "MALFORMED"
       }
+    },
+    {
+      "name": "key_revoked_intermediate",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-honored",
+          "version": "1.0.0"
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
+          "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
+          "algorithm": "Ed25519",
+          "kid": "k25GdGYvawXqFJrX",
+          "signed_by": "vectors:honored"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "child_kid": "PAEp-jMJnzvkwQSt",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcPJuoc1maNqykcc8VMFx2Ye7BZ/myCVurtXWAEMIKlc=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "eBkZfc6nyoxt+T0IC4owth8rri/h2frIKjg1MhNfAY3o29wPIP+4eppgUZDYSZnNI/TDRxvavlR1CI8meWDpDg=="
+        },
+        {
+          "parent_kid": "PAEp-jMJnzvkwQSt",
+          "child_kid": "k25GdGYvawXqFJrX",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx/ToUSXXlewl4xjIdlTM03SWJ2uUVWL9FxmiNWr8Gqo=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "JB40nQ8EpBcVpr2i54wyhy5FkwIShr7/Xo5Qn6DSZdYIvFWrEiTe6P9Eur9YN8edBa7QaS26aIhtvYfHIRVEBw=="
+        }
+      ],
+      "revoked_kids": [
+        "PAEp-jMJnzvkwQSt"
+      ],
+      "expected": {
+        "decision": "KEY_REVOKED",
+        "revoked_kid": "PAEp-jMJnzvkwQSt"
+      },
+      "note": "§5.2 cascade: the intermediate is revoked, so every chain resolving through its kid is dead — checked at every hop the walk visits, not only the terminal target."
+    },
+    {
+      "name": "freshness_staple_full_coverage",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-honored",
+          "version": "1.0.0"
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
+          "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
+          "algorithm": "Ed25519",
+          "kid": "k25GdGYvawXqFJrX",
+          "signed_by": "vectors:honored"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "child_kid": "PAEp-jMJnzvkwQSt",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcPJuoc1maNqykcc8VMFx2Ye7BZ/myCVurtXWAEMIKlc=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "eBkZfc6nyoxt+T0IC4owth8rri/h2frIKjg1MhNfAY3o29wPIP+4eppgUZDYSZnNI/TDRxvavlR1CI8meWDpDg=="
+        },
+        {
+          "parent_kid": "PAEp-jMJnzvkwQSt",
+          "child_kid": "k25GdGYvawXqFJrX",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx/ToUSXXlewl4xjIdlTM03SWJ2uUVWL9FxmiNWr8Gqo=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "JB40nQ8EpBcVpr2i54wyhy5FkwIShr7/Xo5Qn6DSZdYIvFWrEiTe6P9Eur9YN8edBa7QaS26aIhtvYfHIRVEBw=="
+        }
+      ],
+      "freshness_staples": [
+        {
+          "child_kid": "PAEp-jMJnzvkwQSt",
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "as_of": "2026-12-15T00:00:00.000Z",
+          "valid_until": "2027-02-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "hE1YaEli3vs77+KB1czy3RXo6wmXZ5kKN4v7j8iRamXQFIVRN2lzzp3U2LLUhoSLnOyKlkDeihCMz6iln+WUCg=="
+        },
+        {
+          "child_kid": "k25GdGYvawXqFJrX",
+          "parent_kid": "PAEp-jMJnzvkwQSt",
+          "as_of": "2026-12-15T00:00:00.000Z",
+          "valid_until": "2027-02-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "uiQbcAEqatgEgURvyOsOshpUVtksygvfYIAqyRnUQBJ25gVFibwdQPkKL1MHdwNqetS0zONfWRZOiJ8yCXZvDw=="
+        }
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "leaf_kid": "k25GdGYvawXqFJrX",
+        "path": [
+          "oce5bYh8xC2E7WZS",
+          "PAEp-jMJnzvkwQSt",
+          "k25GdGYvawXqFJrX"
+        ],
+        "revocation_checked": "staple"
+      },
+      "note": "§5.5: the checker has no revocation source of its own, but every delegated hop is covered by a valid staple signed by its actual parent — revocation_checked upgrades from unchecked to staple. The root itself is never staple-covered (nothing certifies a root); this case still resolves to staple because the root is not the target here."
+    },
+    {
+      "name": "freshness_staple_partial_coverage_stays_unchecked",
+      "artifact": {
+        "meta": {
+          "artifact_id": "vector-honored",
+          "version": "1.0.0"
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
+          "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
+          "algorithm": "Ed25519",
+          "kid": "k25GdGYvawXqFJrX",
+          "signed_by": "vectors:honored"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "child_kid": "PAEp-jMJnzvkwQSt",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAcPJuoc1maNqykcc8VMFx2Ye7BZ/myCVurtXWAEMIKlc=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "eBkZfc6nyoxt+T0IC4owth8rri/h2frIKjg1MhNfAY3o29wPIP+4eppgUZDYSZnNI/TDRxvavlR1CI8meWDpDg=="
+        },
+        {
+          "parent_kid": "PAEp-jMJnzvkwQSt",
+          "child_kid": "k25GdGYvawXqFJrX",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAx/ToUSXXlewl4xjIdlTM03SWJ2uUVWL9FxmiNWr8Gqo=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "JB40nQ8EpBcVpr2i54wyhy5FkwIShr7/Xo5Qn6DSZdYIvFWrEiTe6P9Eur9YN8edBa7QaS26aIhtvYfHIRVEBw=="
+        }
+      ],
+      "freshness_staples": [
+        {
+          "child_kid": "PAEp-jMJnzvkwQSt",
+          "parent_kid": "oce5bYh8xC2E7WZS",
+          "as_of": "2026-12-15T00:00:00.000Z",
+          "valid_until": "2027-02-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "hE1YaEli3vs77+KB1czy3RXo6wmXZ5kKN4v7j8iRamXQFIVRN2lzzp3U2LLUhoSLnOyKlkDeihCMz6iln+WUCg=="
+        }
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "leaf_kid": "k25GdGYvawXqFJrX",
+        "path": [
+          "oce5bYh8xC2E7WZS",
+          "PAEp-jMJnzvkwQSt",
+          "k25GdGYvawXqFJrX"
+        ],
+        "revocation_checked": "unchecked"
+      },
+      "note": "Same chain as freshness_staple_full_coverage, but the leaf hop's staple is withheld. revocation_checked MUST reflect the weakest hop, not the best one — one uncovered kid pulls the whole aggregate down to unchecked."
     }
   ]
 }

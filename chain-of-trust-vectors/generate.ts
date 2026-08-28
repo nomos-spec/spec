@@ -17,7 +17,7 @@ import crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { createKeyCertificate, jcs } from '../prototype/chain-of-trust/key-cert.js';
+import { createKeyCertificate, createFreshnessStaple, jcs } from '../prototype/chain-of-trust/key-cert.js';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const FIXED_ISSUED_AT = new Date('2026-01-01T00:00:00.000Z');
@@ -95,6 +95,20 @@ function main() {
     scope: 'industry:healthcare', issuedAt: FIXED_ISSUED_AT, expiresAt: FIXED_EXPIRES_AT,
   });
 
+  // §5.5 freshness-staple fixtures. Staples must be valid AT check_at (2027-01-01) — a validity
+  // window straddling it, not overlapping FIXED_ISSUED_AT/FIXED_EXPIRES_AT which govern the
+  // certificates themselves, not the staples.
+  const STAPLE_ISSUED_AT = new Date('2026-12-15T00:00:00.000Z');
+  const STAPLE_VALID_UNTIL = new Date('2027-02-01T00:00:00.000Z');
+  const stapleRootToIntermediate = createFreshnessStaple({
+    parentPrivateKeyPem: root.privateKeyPem, parentKid: root.kid, childKid: intermediate.kid,
+    issuedAt: STAPLE_ISSUED_AT, validUntil: STAPLE_VALID_UNTIL,
+  });
+  const stapleIntermediateToLeaf = createFreshnessStaple({
+    parentPrivateKeyPem: intermediate.privateKeyPem, parentKid: intermediate.kid, childKid: leaf.kid,
+    issuedAt: STAPLE_ISSUED_AT, validUntil: STAPLE_VALID_UNTIL,
+  });
+
   const artifactHonored = sealToyArtifact(leaf.kid, leaf.privateKeyPem, 'honored');
   const artifactImpostor = sealToyArtifact(impostor.kid, impostor.privateKeyPem, 'impostor');
   const artifactTampered = { ...artifactHonored, logic: { decisions: [{ injected: true }] } };
@@ -108,7 +122,8 @@ function main() {
         name: 'allowed',
         artifact: artifactHonored,
         key_certs: [rootToIntermediate, intermediateToLeaf],
-        expected: { decision: 'ALLOWED', leaf_kid: leaf.kid, path: [root.kid, intermediate.kid, leaf.kid] },
+        expected: { decision: 'ALLOWED', leaf_kid: leaf.kid, path: [root.kid, intermediate.kid, leaf.kid], revocation_checked: 'unchecked' },
+        note: 'The checker supplies no revocation source and no staples — revocation_checked MUST be the honest "unchecked" (§5.5), never silently reported as if it were live.',
       },
       {
         name: 'allowed_reversed_order',
@@ -174,6 +189,30 @@ function main() {
         artifact: { meta: {} },
         key_certs: [],
         expected: { decision: 'MALFORMED' },
+      },
+      {
+        name: 'key_revoked_intermediate',
+        artifact: artifactHonored,
+        key_certs: [rootToIntermediate, intermediateToLeaf],
+        revoked_kids: [intermediate.kid],
+        expected: { decision: 'KEY_REVOKED', revoked_kid: intermediate.kid },
+        note: '§5.2 cascade: the intermediate is revoked, so every chain resolving through its kid is dead — checked at every hop the walk visits, not only the terminal target.',
+      },
+      {
+        name: 'freshness_staple_full_coverage',
+        artifact: artifactHonored,
+        key_certs: [rootToIntermediate, intermediateToLeaf],
+        freshness_staples: [stapleRootToIntermediate, stapleIntermediateToLeaf],
+        expected: { decision: 'ALLOWED', leaf_kid: leaf.kid, path: [root.kid, intermediate.kid, leaf.kid], revocation_checked: 'staple' },
+        note: '§5.5: the checker has no revocation source of its own, but every delegated hop is covered by a valid staple signed by its actual parent — revocation_checked upgrades from unchecked to staple. The root itself is never staple-covered (nothing certifies a root); this case still resolves to staple because the root is not the target here.',
+      },
+      {
+        name: 'freshness_staple_partial_coverage_stays_unchecked',
+        artifact: artifactHonored,
+        key_certs: [rootToIntermediate, intermediateToLeaf],
+        freshness_staples: [stapleRootToIntermediate],
+        expected: { decision: 'ALLOWED', leaf_kid: leaf.kid, path: [root.kid, intermediate.kid, leaf.kid], revocation_checked: 'unchecked' },
+        note: 'Same chain as freshness_staple_full_coverage, but the leaf hop\'s staple is withheld. revocation_checked MUST reflect the weakest hop, not the best one — one uncovered kid pulls the whole aggregate down to unchecked.',
       },
     ],
   };

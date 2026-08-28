@@ -3,18 +3,20 @@
  *
  * Run: npx tsx --test test.ts
  *
- * Asserts on `decision` / `reason` / HTTP status fields, never on printed text, so these tests
- * stay stable if console formatting changes later. Covers the five behavioral outcomes plus the
- * hardening added in response to a security pass: shape validation, the chain-length cap, cycle
- * detection with a REAL signed cycle (not just traced by reading the code), and the wire-layer
- * edge cases (oversized body, wrong content-type, and confirming a request cannot smuggle in its
- * own root key).
+ * Asserts on `decision` / `reason_code` / HTTP status fields, never on printed text, so these
+ * tests stay stable if console formatting changes later. Covers the core chain-authenticity
+ * outcomes, the hardening added in response to a security pass (shape validation, the
+ * chain-length cap, cycle detection with a REAL signed cycle rather than one traced by reading
+ * the code), §5.1-5.2 key revocation, §5.5 freshness-staple confidence, and the wire-layer edge
+ * cases (oversized body, wrong content-type, confirming a request cannot smuggle in its own root
+ * key). §3.4 scope and §5.4 certificate revocation are covered by chain-of-trust-vectors/ instead
+ * of here — not duplicated in both places.
  */
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as crypto from "crypto";
-import { computeKid, createKeyCertificate, keyCertPayload, type KeyCertificate } from "./key-cert.js";
+import { computeKid, createKeyCertificate, createFreshnessStaple, keyCertPayload, type KeyCertificate } from "./key-cert.js";
 import { verifyChainPresentation } from "./chain-verify-core.js";
 import { generateKeypair, sealToyArtifact } from "./test-helpers.js";
 import { startReceiver } from "./receiver.js";
@@ -164,6 +166,78 @@ test("ISSUER_NOT_RECOGNIZED, not an infinite loop — a real signed cycle that n
   const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: [rootToA, aToRoot], rootPublicKeyPem: f.root.publicKeyPem });
   assert.equal(v.decision, "ISSUER_NOT_RECOGNIZED");
   if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason_code, "cycle");
+});
+
+// ── §5.1-5.2 key revocation + §5.5 freshness staples ──────────────────────────────────────────
+
+test("KEY_REVOKED — an own revocation source overrides everything, staples included", () => {
+  const f = buildBasicChain();
+  const revoked = verifyChainPresentation({ artifact: f.artifactHonored, chain: f.chainSuccess, rootPublicKeyPem: f.root.publicKeyPem, revokedKids: new Set([f.intermediateKid]) });
+  assert.equal(revoked.decision, "KEY_REVOKED");
+  if (revoked.decision === "KEY_REVOKED") assert.equal(revoked.revoked_kid, f.intermediateKid);
+
+  const clean = verifyChainPresentation({ artifact: f.artifactHonored, chain: f.chainSuccess, rootPublicKeyPem: f.root.publicKeyPem, revokedKids: new Set(), revokedCerts: new Set() });
+  assert.equal(clean.decision, "ALLOWED");
+  if (clean.decision === "ALLOWED") assert.equal(clean.revocation_checked, "live");
+});
+
+test("no own source, no staple — fails open exactly as before, but now says so honestly", () => {
+  const f = buildBasicChain();
+  const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: f.chainSuccess, rootPublicKeyPem: f.root.publicKeyPem });
+  assert.equal(v.decision, "ALLOWED");
+  if (v.decision === "ALLOWED") assert.equal(v.revocation_checked, "unchecked");
+});
+
+test("THE REGRESSION THIS TEST EXISTS FOR — a single staple-covered hop must not be dragged to 'unchecked' by the root's own inherent un-stapleable status", () => {
+  const f = buildBasicChain();
+  // Only the deepest hop needs a staple to exercise the bug: seeding revocationConfidence from
+  // the ROOT's own (always-unchecked, since nothing certifies a root) confidence would drag this
+  // down to 'unchecked' even though every hop that COULD be covered, was.
+  const stapleRootToIntermediate = createFreshnessStaple({ parentPrivateKeyPem: f.root.privateKeyPem, parentKid: f.rootKid, childKid: f.intermediateKid, validUntil: ONE_YEAR });
+  const stapleIntermediateToLeaf = createFreshnessStaple({ parentPrivateKeyPem: f.intermediate.privateKeyPem, parentKid: f.intermediateKid, childKid: f.leafKid, validUntil: ONE_YEAR });
+  const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: f.chainSuccess, rootPublicKeyPem: f.root.publicKeyPem, freshnessStaples: [stapleRootToIntermediate, stapleIntermediateToLeaf] });
+  assert.equal(v.decision, "ALLOWED");
+  if (v.decision === "ALLOWED") assert.equal(v.revocation_checked, "staple");
+});
+
+test("multi-hop weakest link — one uncovered hop pulls the whole aggregate down to 'unchecked'", () => {
+  const f = buildBasicChain();
+  const stapleRootToIntermediate = createFreshnessStaple({ parentPrivateKeyPem: f.root.privateKeyPem, parentKid: f.rootKid, childKid: f.intermediateKid, validUntil: ONE_YEAR });
+  // Leaf hop's staple deliberately withheld.
+  const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: f.chainSuccess, rootPublicKeyPem: f.root.publicKeyPem, freshnessStaples: [stapleRootToIntermediate] });
+  assert.equal(v.decision, "ALLOWED");
+  if (v.decision === "ALLOWED") assert.equal(v.revocation_checked, "unchecked");
+});
+
+test("a forged staple (wrong signer, real label) is rejected, not trusted", () => {
+  const f = buildBasicChain();
+  const attacker = generateKeypair();
+  const forged = createFreshnessStaple({ parentPrivateKeyPem: attacker.privateKeyPem, parentKid: f.intermediateKid, childKid: f.leafKid, validUntil: ONE_YEAR });
+  const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: f.chainSuccess, rootPublicKeyPem: f.root.publicKeyPem, freshnessStaples: [forged] });
+  assert.equal(v.decision, "ALLOWED");
+  if (v.decision === "ALLOWED") assert.equal(v.revocation_checked, "unchecked");
+});
+
+test("an expired staple counts as no staple at all", () => {
+  const f = buildBasicChain();
+  const expired = createFreshnessStaple({ parentPrivateKeyPem: f.intermediate.privateKeyPem, parentKid: f.intermediateKid, childKid: f.leafKid, issuedAt: new Date(Date.now() - 2 * 3600_000), validUntil: new Date(Date.now() - 3600_000) });
+  const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: f.chainSuccess, rootPublicKeyPem: f.root.publicKeyPem, freshnessStaples: [expired] });
+  assert.equal(v.decision, "ALLOWED");
+  if (v.decision === "ALLOWED") assert.equal(v.revocation_checked, "unchecked");
+});
+
+test("degenerate case — the root itself signed the artifact directly, nothing to staple-cover", () => {
+  const f = buildBasicChain();
+  const artifactSignedByRoot = sealToyArtifact(f.rootKid, f.root.privateKeyPem, "root-signed");
+  const v = verifyChainPresentation({ artifact: artifactSignedByRoot, chain: [], rootPublicKeyPem: f.root.publicKeyPem });
+  assert.equal(v.decision, "ALLOWED");
+  if (v.decision === "ALLOWED") assert.equal(v.revocation_checked, "unchecked");
+});
+
+test("MALFORMED — a freshness staple's shape is invalid", () => {
+  const f = buildBasicChain();
+  const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: f.chainSuccess, rootPublicKeyPem: f.root.publicKeyPem, freshnessStaples: [{ not: "a staple" }] });
+  assert.equal(v.decision, "MALFORMED");
 });
 
 // ── Wire layer — real HTTP round trips against startReceiver(), not in-process function calls ──

@@ -132,3 +132,73 @@ export function verifyKeyCertificate(cert: KeyCertificate, parentPublicKeyPem: s
   if (now.getTime() < Date.parse(cert.issued_at)) return { valid: false, reason: "not_yet_valid" };
   return { valid: true };
 }
+
+// ── Freshness staples (NOMOS-SPEC-007 §5.5) — offline revocation checking, not a live call ───
+//
+// The walk in chain-verify-core.ts answers "is this key still certified?" from the presented
+// chain alone. It says nothing about revocation unless the CALLER supplies a revocation source —
+// and building that source has always meant a live lookup or fetching a published CRL-equivalent
+// yourself. A staple is the third option: the PRESENTER periodically asks their own issuing
+// parent for a short-lived "this key is not revoked as of T" proof and attaches it to what they
+// present, so a verifier with no revocation source of its own — the exact case THIS standalone
+// reference implementation is built for — gets a bounded, disclosed freshness guarantee instead
+// of a silent "unknown".
+//
+// Signed by the PARENT of the kid it vouches for — the same key that would sign a revocation for
+// that kid, never a platform-wide key. A staple therefore requires no infrastructure beyond what
+// revocation already requires; it does not concentrate freshness authority anywhere revocation
+// authority doesn't already sit. This is a deliberate rejection of a platform-signed alternative:
+// centralizing freshness in one operator's key would recreate exactly the "everyone depends on
+// our server" dependency this whole rail exists to avoid.
+//
+// The root is explicitly OUT OF SCOPE. Nothing certifies a root — it is the relying party's own
+// out-of-band pinned anchor — so nothing but the relying party's own decision to un-pin it can
+// ever answer "is my root still good".
+
+export interface FreshnessStaple {
+  child_kid: string;
+  parent_kid: string;
+  as_of: string;
+  valid_until: string;
+  algorithm: "Ed25519";
+  signature: string;
+}
+
+/** The exact signed content — everything except the signature itself. */
+export function freshnessStaplePayload(s: Omit<FreshnessStaple, "signature" | "algorithm">): Buffer {
+  return jcs({ child_kid: s.child_kid, parent_kid: s.parent_kid, as_of: s.as_of, valid_until: s.valid_until });
+}
+
+/** Signed with the PARENT's private key — the same key that certified child_kid in the first
+ *  place. RECOMMENDED validity window: short, minutes to roughly an hour — this document does
+ *  not mandate an exact figure, matching NOMOS-SPEC-006 §6.2's treatment of max_age. */
+export function createFreshnessStaple(args: {
+  parentPrivateKeyPem: string; parentKid: string; childKid: string;
+  issuedAt?: Date; validUntil: Date;
+}): FreshnessStaple {
+  const as_of = (args.issuedAt ?? new Date()).toISOString();
+  const valid_until = args.validUntil.toISOString();
+  const unsigned = { child_kid: args.childKid, parent_kid: args.parentKid, as_of, valid_until };
+  const signature = crypto
+    .sign(null, freshnessStaplePayload(unsigned), crypto.createPrivateKey(args.parentPrivateKeyPem))
+    .toString("base64");
+  return { ...unsigned, algorithm: "Ed25519", signature };
+}
+
+/** Never throws — a staple travels over the same keyless, unauthenticated path a presented chain
+ *  does. `parentPublicKeyPem` is the key resolved as having certified `staple.child_kid` in the
+ *  chain being walked; a caller MUST NOT verify a staple against any other key. */
+export function verifyFreshnessStaple(staple: FreshnessStaple, parentPublicKeyPem: string, now: Date = new Date()): boolean {
+  try {
+    const valid = crypto.verify(
+      null,
+      freshnessStaplePayload(staple),
+      crypto.createPublicKey(parentPublicKeyPem),
+      Buffer.from(staple.signature, "base64"),
+    );
+    if (!valid) return false;
+  } catch {
+    return false;
+  }
+  return now.getTime() <= Date.parse(staple.valid_until) && now.getTime() >= Date.parse(staple.as_of);
+}

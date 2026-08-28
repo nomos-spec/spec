@@ -13,10 +13,15 @@
  * pinned root actually vouches for" — without looking anything up in a central directory.
  *
  * Usage:
- *   npx tsx verify-chain.ts <artifact.nomos> --chain <certs.json> --root-pubkey <root.pub.pem>
+ *   npx tsx verify-chain.ts <artifact.nomos> --chain <certs.json> --root-pubkey <root.pub.pem> [--staples <staples.json>]
  *
  * --chain is a SET of certificates, not a sequence — presentation order must not affect the
  * verdict (see chain-verify-core.ts's walkChain() invariant).
+ *
+ * This CLI has no revocation source of its own (no --revoked-kids flag exists) — it always runs
+ * the hasOwnKeySource=false path (§5.5). --staples is the one way it can report anything better
+ * than "unchecked" for a key's revocation status: a freshness staple file, signed by the actual
+ * parent that certified the kid it vouches for.
  *
  * There is deliberately NO default for --root-pubkey and no fallback to any NOMOS-hosted key.
  * The relying party must supply the one root key it has independently decided to trust. That
@@ -29,23 +34,45 @@ import * as fs from "fs";
 import * as path from "path";
 import { verifyChainPresentation, type ChainVerdict } from "./chain-verify-core.js";
 
+// Exhaustive by construction (TypeScript enforces every ChainVerdict decision has an entry) —
+// this is what caught, at typecheck time, that CERTIFICATE_REVOKED and OUT_OF_SCOPE had silently
+// fallen through printAndExit's if/else chain into a wrong "Result: MALFORMED" with exit code 0
+// (a failed verification reported and exited as success) once those decisions were added.
 const EXIT_CODE: Record<ChainVerdict["decision"], number> = {
   ALLOWED: 0,
   ISSUER_NOT_RECOGNIZED: 2,
+  KEY_REVOKED: 4,
+  CERTIFICATE_REVOKED: 5,
+  OUT_OF_SCOPE: 6,
   SEAL_INVALID: 3,
   MALFORMED: 1,
 };
 
 function printAndExit(verdict: ChainVerdict): never {
-  if (verdict.decision === "ALLOWED") {
-    console.log(`  path: ${verdict.path.join(" → ")}`);
-    console.log(`\nResult: ALLOWED — chain resolves from the pinned root to the artifact's signing key, seal verifies.\n`);
-  } else if (verdict.decision === "ISSUER_NOT_RECOGNIZED") {
-    console.error(`\n  [FAIL] ${verdict.detail}\n\nResult: ISSUER_NOT_RECOGNIZED (reason: ${verdict.reason_code})\n`);
-  } else if (verdict.decision === "SEAL_INVALID") {
-    console.error(`\n  [FAIL] ${verdict.detail}\n\nResult: SEAL_INVALID\n`);
-  } else {
-    console.error(`\n  [FAIL] ${verdict.detail}\n\nResult: MALFORMED\n`);
+  switch (verdict.decision) {
+    case "ALLOWED":
+      console.log(`  path: ${verdict.path.join(" → ")}`);
+      console.log(`  revocation checked: ${verdict.revocation_checked}`);
+      console.log(`\nResult: ALLOWED — chain resolves from the pinned root to the artifact's signing key, seal verifies.\n`);
+      break;
+    case "ISSUER_NOT_RECOGNIZED":
+      console.error(`\n  [FAIL] ${verdict.detail}\n\nResult: ISSUER_NOT_RECOGNIZED (reason: ${verdict.reason_code})\n`);
+      break;
+    case "KEY_REVOKED":
+      console.error(`\n  [FAIL] ${verdict.detail}\n\nResult: KEY_REVOKED (kid: ${verdict.revoked_kid})\n`);
+      break;
+    case "CERTIFICATE_REVOKED":
+      console.error(`\n  [FAIL] ${verdict.detail}\n\nResult: CERTIFICATE_REVOKED (fingerprint: ${verdict.revoked_fingerprint})\n`);
+      break;
+    case "OUT_OF_SCOPE":
+      console.error(`\n  [FAIL] ${verdict.detail}\n\nResult: OUT_OF_SCOPE (dimension: ${verdict.dimension})\n`);
+      break;
+    case "SEAL_INVALID":
+      console.error(`\n  [FAIL] ${verdict.detail}\n\nResult: SEAL_INVALID\n`);
+      break;
+    case "MALFORMED":
+      console.error(`\n  [FAIL] ${verdict.detail}\n\nResult: MALFORMED\n`);
+      break;
   }
   process.exit(EXIT_CODE[verdict.decision]);
 }
@@ -59,18 +86,21 @@ function main(): void {
   const artifactPath = path.resolve(args[0]);
   let chainPath: string | null = null;
   let rootPubkeyPath: string | null = null;
+  let staplesPath: string | null = null;
   for (let i = 1; i < args.length; i++) {
     if (args[i] === "--chain" && args[i + 1]) chainPath = path.resolve(args[++i]);
     else if (args[i] === "--root-pubkey" && args[i + 1]) rootPubkeyPath = path.resolve(args[++i]);
+    else if (args[i] === "--staples" && args[i + 1]) staplesPath = path.resolve(args[++i]);
   }
   if (!rootPubkeyPath) printAndExit({ decision: "MALFORMED", detail: "--root-pubkey is required. There is no default root — you must supply the key you've decided to trust." });
   if (!chainPath) printAndExit({ decision: "MALFORMED", detail: "--chain <certs.json> is required — the set of key certificates presented alongside the artifact (order does not matter)." });
 
-  let artifact: any, chain: unknown, rootPublicKeyPem: string;
+  let artifact: any, chain: unknown, rootPublicKeyPem: string, freshnessStaples: unknown;
   try {
     artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
     chain = JSON.parse(fs.readFileSync(chainPath, "utf8"));
     rootPublicKeyPem = fs.readFileSync(rootPubkeyPath, "utf8");
+    freshnessStaples = staplesPath ? JSON.parse(fs.readFileSync(staplesPath, "utf8")) : undefined;
   } catch (e: any) {
     printAndExit({ decision: "MALFORMED", detail: `Could not read/parse input files: ${e?.message ?? e}` });
   }
@@ -78,7 +108,7 @@ function main(): void {
   console.log(`\nVerifying chain for: ${artifactPath}`);
   console.log(`  target kid (artifact signer) : ${artifact?.seal?.kid ?? "—"}`);
 
-  printAndExit(verifyChainPresentation({ artifact, chain, rootPublicKeyPem }));
+  printAndExit(verifyChainPresentation({ artifact, chain, rootPublicKeyPem, freshnessStaples }));
 }
 
 main();

@@ -279,7 +279,7 @@ implicit "as-transmitted sequence = as-intended chain" assumption that does not 
 primitive. The reference implementation verifies this empirically — a forward and a reversed
 presentation of the same chain produce byte-identical verdicts (§8.3).
 
-### 4.4 The four (or five) outcomes are not interchangeable
+### 4.4 The outcomes are not interchangeable
 
 A conformant verifier MUST distinguish:
 
@@ -365,24 +365,6 @@ key via a different set of certificates. A revoked intermediate key MUST be trea
 every chain that would otherwise resolve through it, regardless of which specific certificate
 object carries it into a given presentation.
 
-### 5.4 Certificate revocation
-
-§5.1 withdraws a KEY's standing to sign entirely. This withdraws ONE delegation while leaving the
-key able to act under any other certificate it holds — the difference between "this key is
-compromised" and "this particular grant was a mistake."
-
-A certificate is identified by its **fingerprint**: SHA-256 over its canonical signed payload
-(§3.2), hex-encoded. Content-derived deliberately — a certificate carries no id on the wire, so
-any verifier holding one can compute this offline, exactly as NOMOS-SPEC-006 §3.4 binds a
-revocation to `artifact_hash` rather than to a row. The fingerprint covers the signed payload and
-not the signature, so re-signing the same delegation does not evade a revocation of it.
-
-A certificate revocation is signed by that certificate's own PARENT — the same authority model as
-§5.1, one level finer. A verifier MUST check each certificate's fingerprint against the revocation
-set AFTER its signature verifies (an unverified certificate must never be probed for revocation
-status) and BEFORE applying its scope (a revoked certificate must never narrow anything). The
-outcome is `CERTIFICATE_REVOKED`, which a verifier MUST NOT report as `KEY_REVOKED`.
-
 ### 5.3 The revocation list
 
 A deployment supporting revocation SHOULD publish a signed, dated aggregate of current chain-key
@@ -403,6 +385,118 @@ Reference deployment: `GET /.well-known/nomos-chain-revocations`, `Cache-Control
 max-age=60` — short-lived, matching NOMOS-SPEC-006 §4.2's sibling endpoint's freshness treatment,
 since revocation is time-sensitive in a way most other cached protocol responses are not.
 
+### 5.4 Certificate revocation
+
+§5.1 withdraws a KEY's standing to sign entirely. This withdraws ONE delegation while leaving the
+key able to act under any other certificate it holds — the difference between "this key is
+compromised" and "this particular grant was a mistake."
+
+A certificate is identified by its **fingerprint**: SHA-256 over its canonical signed payload
+(§3.2), hex-encoded. Content-derived deliberately — a certificate carries no id on the wire, so
+any verifier holding one can compute this offline, exactly as NOMOS-SPEC-006 §3.4 binds a
+revocation to `artifact_hash` rather than to a row. The fingerprint covers the signed payload and
+not the signature, so re-signing the same delegation does not evade a revocation of it.
+
+A certificate revocation is signed by that certificate's own PARENT — the same authority model as
+§5.1, one level finer. A verifier MUST check each certificate's fingerprint against the revocation
+set AFTER its signature verifies (an unverified certificate must never be probed for revocation
+status) and BEFORE applying its scope (a revoked certificate must never narrow anything). The
+outcome is `CERTIFICATE_REVOKED`, which a verifier MUST NOT report as `KEY_REVOKED`.
+
+### 5.5 Freshness staples
+
+§5.1-5.4 assume a verifier holds an authoritative revocation source — a live lookup, or a fetched
+copy of §5.3's list. That assumption fails for exactly the relying party this document was written
+for: an independent system with no prior relationship to the issuer, verifying a chain entirely
+offline. Without a revocation source, such a verifier cannot say a key is unrevoked — only that it
+was validly certified, which says nothing about whether that certification still holds. Leaving
+that silently unaddressed would mean the primitive works right up until the one property (can I
+trust this right now) a relying party most needs from it.
+
+A freshness staple is the third option, alongside "have a live source" and "fetch the list
+yourself": the PRESENTER periodically asks their own issuing parent for a short-lived "this key is
+not revoked as of T" proof, signed by that parent, and attaches it to what they present. A
+verifier with no revocation source of its own MAY use a valid staple to raise its confidence in one
+kid's non-revoked status from `unchecked` to `staple` — a bounded, disclosed guarantee, never
+silently promoted to `live`.
+
+```jsonc
+{
+  "child_kid":   "8kR2Xw5dF7hJmN1s",
+  "parent_kid":  "V3HqL9zM2Nk4pQrT",
+  "as_of":       "2026-08-28T00:00:00Z",
+  "valid_until": "2026-08-28T00:15:00Z",
+  "algorithm":   "Ed25519",
+  "signature":   "MEQCIF…"
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `child_kid` | string | The kid this staple vouches for. |
+| `parent_kid` | string | The signer. MUST be the same `parent_kid` that actually certified `child_kid` in some certificate the verifier is walking. |
+| `as_of` | string (ISO 8601 UTC) | When this staple was signed. Signed content. |
+| `valid_until` | string (ISO 8601 UTC) | When this staple stops being usable. Signed content. RECOMMENDED short — minutes to roughly an hour, not the years-long scale of a certificate's own `expires_at`. This document does not mandate an exact figure, matching §6.2's own treatment of `max_age` in NOMOS-SPEC-006. |
+| `algorithm` | string | `"Ed25519"`. |
+| `signature` | string | base64 Ed25519 signature over `JCS({ child_kid, parent_kid, as_of, valid_until })`. |
+
+**Signed by the same key that could revoke the kid, never a platform-wide key (normative).** A
+staple for `child_kid` MUST be signed by the exact key that holds `parent_kid` in a certificate
+the verifier has independently validated as certifying `child_kid` — the same authority §5.1
+already requires for a revocation statement. This is a deliberate rejection of a platform-signed
+alternative: a deployment operator's own key vouching for freshness across every delegation in the
+system would recreate, inside the one mechanism designed to avoid it, exactly the "everyone
+depends on our server" dependency chain verification exists to remove. A staple therefore requires
+no infrastructure beyond what §5.1 revocation already requires — it does not concentrate freshness
+authority anywhere revocation authority doesn't already sit.
+
+**The root is explicitly out of scope (normative).** Nothing certifies a root — it is the relying
+party's own out-of-band pinned anchor (§4.1) — so nothing but the relying party's own decision to
+un-pin it can ever answer "is my root still good." A verifier MUST NOT accept a staple whose
+`child_kid` is the pinned root, and MUST NOT treat the root's own confidence as anything but
+`unchecked` when no live source covers it, regardless of how many other kids on the path a staple
+covers.
+
+**Confidence is a tri-state, computed per kid and combined as the weakest link (normative):**
+
+- `live` — the kid was checked against the verifier's own revocation source.
+- `staple` — the verifier had no source of its own for this kid, but a valid, unexpired staple
+  signed by the kid's actual certifying parent was presented and used instead.
+- `unchecked` — neither was available. Fail-open, matching every other revocation check in this
+  document (§10.1) — but never fail-**silent**: `unchecked` MUST be disclosed on the response,
+  never collapsed into `live` or `staple`.
+
+A verifier computes this once per kid on the resolved path (root included) and combines them by
+taking the **weakest** result across the whole path — `unchecked` beats `staple` beats `live`. One
+uncovered kid MUST pull the entire path's confidence down; a verifier MUST NOT report the best
+result among several kids as if it applied to all of them.
+
+**A verifier with its own revocation source MUST NOT consult staples at all (normative).** If a
+verifier holds a revocation source — even an explicitly empty one, checked and found clean — every
+kid's confidence is `live`, full stop. A staple can only ever raise confidence in a kid that would
+otherwise be `unchecked`; it can never substitute for, override, or be checked against a real
+source that already answered the question. This is what prevents a compromised or malicious
+presenter from using its own staple to launder a "not revoked" past a verifier whose own list says
+otherwise: if the verifier already knows, the presenter's staple is never even read.
+
+**Reported on the response (normative).** An `ALLOWED` verdict (§6.2) MUST carry
+`revocation_checked: "live" | "staple" | "unchecked"`. When §7 composes chain verification with
+rule evaluation, `revocation_checked` MUST also be present on the resulting
+`AUTHORIZED`/`DENIED`/`ESCALATED` response — composing to a real permission decision MUST NOT
+silently drop the confidence disclosure the chain-authenticity result it is computed from already
+carries; a caller deciding how much to trust an `AUTHORIZED` verdict needs this exactly as much as
+it needs it on bare chain authenticity. A caller that requires a stronger guarantee than
+`unchecked` or `staple` provide MAY decline to rely on the verdict and instead re-verify against a
+live source of its own — the same choice §10.1 already reserves for every fail-open outcome in
+this document.
+
+**Scope of this version (disclosed, not hidden).** Staples cover KEY revocation (§5.1-5.2) only.
+A revoked certificate (§5.4) is never staple-coverable — the two are different objects with
+different authority models, and conflating them would let a stale "key not revoked" staple paper
+over a specifically and deliberately withdrawn delegation. A verifier MUST check certificate
+revocation independently of any staple, and MUST NOT let a staple suppress a `CERTIFICATE_REVOKED`
+result.
+
 ---
 
 ## 6. The Verification Request/Response
@@ -418,6 +512,7 @@ Content-Type: application/json
   "artifact":              { /* sealed .nomos artifact */ },
   "key_certs":             [ /* key certificate objects, §3, any order */ ],
   "root_public_key_pem":  "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----\n",
+  "freshness_staples":     [ /* optional — freshness staple objects, §5.5 */ ],
   "facts":                 { /* optional — see §7 */ },
   "action":                "optional human-readable label"
 }
@@ -429,6 +524,7 @@ Content-Type: application/json
 | `artifact` | REQUIRED | The sealed artifact being presented. |
 | `key_certs` | REQUIRED | The chain, §4. MAY be empty if the artifact's own signing key equals the pinned root. |
 | `root_public_key_pem` | REQUIRED | The root the CALLER (the relying party's own configuration) has decided to trust. MUST NOT be sourced from anything in the request body — see §9. |
+| `freshness_staples` | OPTIONAL | See §5.5. Only ever consulted by a verifier with no revocation source of its own; a verifier that holds one ignores this field entirely. |
 | `facts` | OPTIONAL | See §7. |
 | `action` | OPTIONAL | Human-readable label for what is being asked, for the caller's own logging — has no normative effect on the verdict. |
 
@@ -546,27 +642,49 @@ plainly rather than implying it is handled:
 
 ### 8.3 Reference implementation
 
-- **Pure primitive** (§3-4), signer-agnostic, no persistence:
+The split below is deliberate, not incidental: it is the difference between checking a caller-
+supplied set at walk time (needs nothing but the set) and producing, signing, or persisting the
+statements that populate that set (needs key custody). Stated precisely rather than as a blanket
+"production has §5, prototype doesn't" — that framing stopped being accurate once walk-time
+revocation checks landed in the prototype, and restating it precisely here is part of this
+change, not a separate cleanup.
+
+- **Pure primitive** (§3-4, §6's envelope), signer-agnostic, no persistence:
   [`prototype/chain-of-trust/`](https://github.com/nomos-spec/spec/tree/main/prototype/chain-of-trust)
   in this repository — `key-cert.ts`, `chain-verify-core.ts`, a standalone CLI verifier
   (`verify-chain.ts`), and a minimal `node:http` reference receiver/presenter pair
   (`receiver.ts` / `presenter.ts`) demonstrating §6's envelope over an actual socket. Order
-  independence (§4.3) is verified empirically in `test.ts` (17 assertions), not just asserted
+  independence (§4.3) is verified empirically in `test.ts` (25 assertions), not just asserted
   from reading the code.
-- **Production deployment**, including §5 revocation and §7 rule-evaluation composition:
+- **§5's walk-time checks ARE in the pure prototype**: §5.2's cascade (a caller-supplied
+  `revokedKids` set), §5.4's certificate revocation (`revokedCerts`), and §5.5's freshness-staple
+  confidence arithmetic are all implemented in `chain-verify-core.ts` and exercised in `test.ts`.
+  What is NOT in the prototype is producing or verifying a §5.1 revocation statement, or signing
+  a §5.3 revocation list — those need a key custody model this signer-agnostic module deliberately
+  has none of.
+- **Production deployment** additionally provides §5.1/§5.3's statement/list machinery
+  (persistence, org key custody, issuance) and §7's rule-evaluation composition:
   `nomosprotocol.com`'s `POST /api/v1/chain-of-trust/verify` (`@nomosprotocol/sdk`'s
-  `nomos.can({ artifact, key_certs, root_public_key_pem, ...facts })`). This is the fuller
-  implementation §5 and §7 describe; the pure prototype above covers §3-4 and §6's envelope
-  without persistence or rule evaluation.
+  `nomos.can({ artifact, key_certs, root_public_key_pem, ...facts })`). This is where a real
+  revocation statement gets created, signed, and published; the pure prototype above can only
+  ever check against a set someone else populated.
 - **Test vectors**: [`chain-of-trust-vectors/`](https://github.com/nomos-spec/spec/tree/main/chain-of-trust-vectors)
-  — seven fixed `{ artifact, key_certs, expected }` cases (a resolved chain, reversed-order
-  equivalence, an uncertified issuer, an expired certificate, a tampered artifact, and two
-  malformed inputs), confirmed self-consistent with the reference implementation
-  (`check.ts`), specifically so a second implementer has something concrete to check their own
-  verifier against rather than only prose to interpret.
-- **Schemas**: `schema/key-certificate.schema.json`, `schema/chain-verification-request.schema.json`,
-  `schema/chain-verification-response.schema.json`, `schema/chain-revocation-statement.schema.json`,
-  `schema/chain-revocation-list.schema.json`.
+  — fourteen fixed `{ artifact, key_certs, expected }` cases (a resolved chain, reversed-order
+  equivalence, an uncertified issuer, an expired certificate, a tampered artifact, malformed
+  inputs, delegation-scope cases, a revoked key, and staple-coverage cases at full and partial
+  hop coverage), confirmed self-consistent with the reference implementation (`check.ts`),
+  specifically so a second implementer has something concrete to check their own verifier against
+  rather than only prose to interpret.
+- **Cross-implementation payload check**: the production deployment's `server/lib/nomos-chain.ts`
+  and this prototype's `key-cert.ts` are two independently-typed TypeScript modules (one keyed to
+  `crypto.KeyObject`, the other to PEM strings) that must still produce byte-identical signed
+  payloads for both a key certificate and a freshness staple — the actual property a second real
+  implementer needs to match, verified directly rather than assumed from both following the same
+  prose. This does not satisfy §8.2's "single implementation" gap — two implementations by the
+  same author are not independent — it confirms wire compatibility between them, nothing more.
+- **Schemas**: `schema/key-certificate.schema.json`, `schema/freshness-staple.schema.json`,
+  `schema/chain-verification-request.schema.json`, `schema/chain-verification-response.schema.json`,
+  `schema/chain-revocation-statement.schema.json`, `schema/chain-revocation-list.schema.json`.
 
 ---
 
@@ -672,7 +790,7 @@ POST /verify
 
 → 200 OK
 { "decision": "AUTHORIZED", "reason": "2 rules evaluated. No restriction fired.",
-  "rule": "catch-all", "missing_inputs": [] }
+  "rule": "catch-all", "missing_inputs": [], "revocation_checked": "live" }
 ```
 
 ### 11.3 A recognized issuer that wasn't delegated this artifact
