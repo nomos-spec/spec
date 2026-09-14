@@ -7,6 +7,53 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Repository] — 2026-09-14 (Disclosed gap: `budget` constraints and cumulative enforcement)
+
+Implementation/conformance disclosure only. No spec text or schema changes: §3.7's text and
+`schema/artifact.schema.json` already describe the `budget` constraint type correctly as
+written; the gap is between that text and what a caller might reasonably assume it guarantees
+for a *cumulative* budget specifically.
+
+### Why
+
+While building a vertical slice for R-12 (conserved-state constraints — a running total checked
+across calls, not a per-request threshold; design note:
+`docs/design-notes/conserved-state-authority.md` in the AI_Navigator reference implementation,
+public mirror at computableauthority.com/research/conserved-state-authority), traced how a
+cumulative budget would actually be declared under the existing §3.7 `governance.constraints`
+shape and found the spec's own `budget` type doesn't distinguish the case it can enforce from
+the case it can't.
+
+### Known gap (non-normative — no spec text changes)
+
+§3.7 states: *"Constraints MUST be enforced on every execution."* For a constraint whose `rule`
+expression is evaluable entirely from the facts supplied with a single request (e.g.
+`amount <= 5000`), that guarantee holds — the reference evaluator has everything it needs at
+evaluation time. It does **not** hold for a constraint whose `rule` references a *cumulative*
+quantity (e.g. `annual_spend <= 20000`), because `annual_spend` is not something `can()` — or
+any conformant, stateless evaluator — can independently verify. It arrives as an ordinary
+caller-supplied fact, the same as any other input, and a caller can supply a false one.
+
+§3.7 declares one `budget` type for both cases and states one enforcement guarantee for both,
+with no field distinguishing "checkable from this call's own facts" from "checkable only
+against external, caller-reported state." An artifact author writing `type: "budget"` in good
+faith may reasonably read §3.7's "MUST be enforced" as covering the cumulative case too — it
+does not, and nothing in the current text says so.
+
+This is the same shape of disclosed-but-unfixed gap as the `conflict_policy`/`tie_breaker`
+entry below (2026-08-18): a declaration whose enforcement the spec asserts more strongly than
+any conformant stateless evaluator can actually deliver. Tracked here so it isn't rediscovered
+as a surprise later, not fixed here — closing it properly means either (a) adding a field that
+lets an artifact declare a constraint as cumulative, requiring a conformant runtime to source
+that quantity from a stated external mechanism rather than an unauthenticated input fact, or
+(b) explicitly scoping `budget` in §3.7 to the single-request case and naming the cumulative
+case as a distinct, not-yet-specified concern. Neither is decided; R-12's design note names
+several structural prerequisites (who scopes a cumulative ledger, who may draw against it, how
+a stale claim against it is detected) that would need answers before either option could be
+specified responsibly.
+
+---
+
 ## [NOMOS-SPEC-007 v1.7.0 — Draft] — 2026-08-27
 
 Every trust mechanism through NOMOS-SPEC-006 resolves a key by looking it up somewhere the
