@@ -4,16 +4,18 @@
 issuer's chain (NOMOS-SPEC-007 rev. 1.8 target-first resolution); every testimony statement
 against its witness's `claim` scope; every fact against the channel its input declares; the sealed
 rules over exactly those facts; and, for escalations, consents signed over this Act's binding
-digest by distinct keys holding the required role.
+digest by distinct keys holding the required role. Rules are evaluated three-valued: a missing fact is
+undecided, never false, and nothing commits while a rule that could stop the action is undecided (§6.2).
 
 ```
 pip install cryptography
-python3 generate.py path/to/pub_lending_v1.nomos > vectors.json   # deterministic
+python3 generate.py pub_lending_v1.nomos > vectors.json   # deterministic, byte-identical
 python3 check.py vectors.json
-19 passed, 0 failed
+21 passed, 0 failed
 ```
 
-`generate.py` derives every key from a published seed. **These private keys are public on
+`pub_lending_v1.nomos` is the generator's input: the public Consumer Loan Approval policy, which `generate.py`
+re-seals with declared fact sources and an explicit allow rule. `generate.py` derives every key from a published seed. **These private keys are public on
 purpose. Never use them as trust material.**
 
 ## Cases
@@ -39,5 +41,7 @@ purpose. Never use them as trust material.**
 | testimony_about_someone_else | TESTIMONY_INVALID | Genuine fact, wrong applicant |
 | rules_from_uncertified_issuer | ISSUER_NOT_RECOGNIZED | Unchanged SPEC-007 behavior |
 | tree_pool_presented_in_reverse | AUTHORIZED | Order independence for tree-shaped certificate sets |
+| omitted_fact_withholds_authorization | INCOMPLETE | Leaving out the bankruptcy statement leaves R1 undecided; nothing commits |
+| omitted_fact_cannot_be_consented_away | INCOMPLETE | Two valid consents cannot stand in for a withheld DTI statement |
 
 One implementation, by the spec's authors: no interoperability claim.

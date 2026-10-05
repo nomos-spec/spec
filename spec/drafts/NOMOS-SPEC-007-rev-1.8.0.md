@@ -148,7 +148,7 @@ issuer call for different remedies.
 ## §8.2 Known gaps (updated)
 
 - **Single implementation of §4.6.** The statement resolution in this revision has one
-  implementation (`act-vectors/act_verify.py`) and nineteen test vectors
+  implementation (`act-vectors/act_verify.py`) and twenty-one test vectors
   (`act-vectors/vectors.json`). The same disclosure as 1.7.0 §8.2 applies.
 - **Earlier-revision verifiers remain vulnerable to the §4.2 ordering defect** on tree-shaped
   sets. A presenter can avoid triggering it by sending one artifact's path only, but a relying
