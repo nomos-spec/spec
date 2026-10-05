@@ -7,6 +7,34 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-008 0.2.0, Draft] — 2026-10-05 (Withheld facts: three-valued evaluation)
+
+### Why
+
+Porting the SPEC-008 reference verifier found that 0.1.0 closed "the presenter supplies a false
+fact" but not "the presenter leaves a fact out". The reference evaluator read a missing fact as
+false, so an Act that omitted the bureau's bankruptcy statement was still AUTHORIZED by the allow
+rule — and an Act that omitted the DTI statement on a $250,000 loan could be escalated and then
+AUTHORIZED by two consents, although the rule that denies high-DTI loans outranks the escalation.
+
+### Changed (normative)
+
+- §6.2 (new): conditions evaluate to TRUE, FALSE or UNDECIDED (an absent or null fact makes any
+  primitive that reads it UNDECIDED; Kleene logic for and/or/not; `exists` is always decided).
+  An `allow` or `escalate` outcome commits only when no `block` or `escalate` decision that
+  outranks it is UNDECIDED; otherwise the verdict is `INCOMPLETE` with `open_rules` and
+  `open_facts`, and consents are not counted.
+- §6 tables, §7, §11.6, §12 updated to match; abstract names the fourth gap.
+
+### Vectors
+
+21 cases (was 19): `omitted_fact_withholds_authorization`, `omitted_fact_cannot_be_consented_away`.
+The bureau now testifies `delinquency_severity: "none"` explicitly in the cases that previously
+relied on silence. `act-vectors/pub_lending_v1.nomos`, the generator's input, is committed
+(reconstructed from the 0.1.0 vectors; regenerating from it reproduced them byte for byte).
+
+---
+
 ## [Repository] — 2026-09-14 (Disclosed gap: `budget` constraints and cumulative enforcement)
 
 Implementation/conformance disclosure only. No spec text or schema changes: §3.7's text and

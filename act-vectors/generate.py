@@ -89,7 +89,10 @@ def consent(approver, a, role="SENIOR_APPROVER"):
     c["signature"] = sign(approver, consent_payload(c)); return c
 
 def good_profile(credit, dti):
-    return [testimony(BUREAU, "credit_score", credit), testimony(BUREAU, "dti_ratio", dti), testimony(BUREAU, "bankruptcy_active", False)]
+    # The bureau states the absence of a 90-day delinquency explicitly: under SPEC-008 §6.2 an
+    # unstated fact is undecided, not false, so silence cannot clear the delinquency rule R4.
+    return [testimony(BUREAU, "credit_score", credit), testimony(BUREAU, "dti_ratio", dti), testimony(BUREAU, "bankruptcy_active", False),
+            testimony(BUREAU, "delinquency_severity", "none")]
 
 def main():
     art = build_artifact(json.load(open(sys.argv[1])))
@@ -104,10 +107,10 @@ def main():
     add("denied_by_rule", act(2, {"amount": 250000, "loan_purpose": "home_improvement", "has_cosigner": False}, good_profile(702, 0.58), art),
         {"decision": "DENIED", "rule": "R3", "commit": False}, "The bureau testifies DTI 58%. R3 (priority 100) outranks the $250k escalation R6 (85).")
     lie = act(3, {"amount": 250000, "loan_purpose": "home_improvement", "has_cosigner": False},
-              [testimony(BUREAU, "credit_score", 702), testimony(BUREAU, "bankruptcy_active", False)], art, presenter_facts={"dti_ratio": 0.38})
+              [testimony(BUREAU, "credit_score", 702), testimony(BUREAU, "bankruptcy_active", False), testimony(BUREAU, "delinquency_severity", "none")], art, presenter_facts={"dti_ratio": 0.38})
     add("agent_asserts_a_testimony_fact", lie, {"decision": "FACT_SOURCE_VIOLATION", "field": "dti_ratio"},
         "The agent supplies dti_ratio itself. The artifact declares that input's source as testimony, so the agent's value is refused rather than evaluated.")
-    forged = act(4, small, [testimony(BUREAU, "credit_score", 768), testimony(ISSUER, "dti_ratio", 0.22), testimony(BUREAU, "bankruptcy_active", False)], art)
+    forged = act(4, small, [testimony(BUREAU, "credit_score", 768), testimony(ISSUER, "dti_ratio", 0.22), testimony(BUREAU, "bankruptcy_active", False), testimony(BUREAU, "delinquency_severity", "none")], art)
     add("rule_issuer_cannot_testify", forged, {"decision": "TESTIMONY_OUT_OF_SCOPE", "claim": "dti_ratio", "dimension": "claim"},
         "The key that sealed the rules is fully trusted to issue rules, but carries no claim: scope, so it cannot manufacture facts.")
     beyond = act(5, small, good_profile(768, 0.22) + [testimony(BUREAU, "employment_type", "salaried")], art)
@@ -138,9 +141,9 @@ def main():
     add("wrong_relying_party", act(14, small, good_profile(768, 0.22), art, rp="acme-bank:card-ledger"), {"decision": "WRONG_RELYING_PARTY"},
         "An Act addressed to a different system cannot be committed here, even if everything else verifies.")
     add("replayed", a1, {"decision": "REPLAYED"}, "The first case's Act, presented again after it was committed.", seen=[a1["nonce"]])
-    stale = act(16, small, [testimony(BUREAU, "credit_score", 768, valid_until="2026-10-01T09:00:00.000Z"), testimony(BUREAU, "dti_ratio", 0.22), testimony(BUREAU, "bankruptcy_active", False)], art)
+    stale = act(16, small, [testimony(BUREAU, "credit_score", 768, valid_until="2026-10-01T09:00:00.000Z"), testimony(BUREAU, "dti_ratio", 0.22), testimony(BUREAU, "bankruptcy_active", False), testimony(BUREAU, "delinquency_severity", "none")], art)
     add("stale_testimony", stale, {"decision": "TESTIMONY_INVALID", "claim": "credit_score", "reason_code": "stale"}, "The credit score attestation expired before the Act was presented.")
-    other = act(17, small, [testimony(BUREAU, "credit_score", 768, about="APP-9999"), testimony(BUREAU, "dti_ratio", 0.22), testimony(BUREAU, "bankruptcy_active", False)], art)
+    other = act(17, small, [testimony(BUREAU, "credit_score", 768, about="APP-9999"), testimony(BUREAU, "dti_ratio", 0.22), testimony(BUREAU, "bankruptcy_active", False), testimony(BUREAU, "delinquency_severity", "none")], art)
     add("testimony_about_someone_else", other, {"decision": "TESTIMONY_INVALID", "claim": "credit_score", "reason_code": "wrong_subject"},
         "A genuine, signed credit score, but for a different applicant.")
     rogue_art = copy.deepcopy(art); body = {k: v for k, v in rogue_art.items() if k not in ("seal", "attestations")}
@@ -151,6 +154,17 @@ def main():
     add("tree_pool_presented_in_reverse", act(19, small, good_profile(768, 0.22), art, pool=list(reversed(POOL))),
         {"decision": "AUTHORIZED", "rule": "R0", "commit": True},
         "The same certificates in reverse order. The pool is a tree (one root, five children), so resolution must search from each statement's own key toward the root; the verdict cannot depend on presentation order.")
+
+    withheld = act(20, small, [testimony(BUREAU, "credit_score", 768), testimony(BUREAU, "dti_ratio", 0.22), testimony(BUREAU, "delinquency_severity", "none")], art)
+    add("omitted_fact_withholds_authorization", withheld,
+        {"decision": "INCOMPLETE", "reason_code": "undecided_rules", "open_rules": ["R1"], "open_facts": ["bankruptcy_active"], "commit": False},
+        "The first case without the bureau's bankruptcy statement. R0 would permit the loan, but R1 (an active bankruptcy blocks it) outranks R0 and cannot be decided. An agent that leaves out the statement that would deny it gets nothing committed, and is told exactly which fact is missing.")
+    big = {"amount": 250000, "loan_purpose": "home_improvement", "has_cosigner": False}
+    a21 = act(21, big, [testimony(BUREAU, "credit_score", 702), testimony(BUREAU, "bankruptcy_active", False), testimony(BUREAU, "delinquency_severity", "none")], art)
+    a21["consents"] = [consent(APPROVER_A, a21), consent(APPROVER_B, a21)]
+    add("omitted_fact_cannot_be_consented_away", a21,
+        {"decision": "INCOMPLETE", "reason_code": "undecided_rules", "open_rules": ["R3"], "open_facts": ["dti_ratio"], "commit": False},
+        "The denied case's loan with the bureau's DTI statement left out and two valid senior consents attached. R6 would escalate and the consents would satisfy it, but R3 (DTI above 50% denies the loan) outranks R6 and cannot be decided. Human approval cannot stand in for a missing fact.")
 
     out = {"_readme": "NOMOS-SPEC-008 Act test vectors. Verify each case's act with root_public_key_pem as the pinned root, relying_party_id and local_facts as the relying party's own configuration, `now` as the evaluation time and `seen_nonces` as the nonce ledger, and compare against expected (only the keys present in expected are normative). Keys are derived from published seeds: never use them as trust material.",
            "root_public_key_pem": ROOT["pem"], "relying_party_id": RP, "local_facts": {"is_first_loan": False},

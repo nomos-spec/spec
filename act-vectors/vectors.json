@@ -588,6 +588,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": []
@@ -1171,6 +1181,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": []
@@ -1744,6 +1764,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": [],
@@ -2329,6 +2359,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": []
@@ -2912,6 +2952,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           },
           {
             "claim": "employment_type",
@@ -3505,6 +3555,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": []
@@ -4091,17 +4151,27 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": [
           {
-            "binding_digest": "d4c1ac6deba862946ec035510950a8e1a2586aed53fa131508140774dbf69992",
+            "binding_digest": "3a855e3f967157dcfefa10555dfa71ce937ad3b574b807dba2d189fa0faf55e7",
             "role": "SENIOR_APPROVER",
             "decision": "approve",
             "signed_at": "2026-10-01T11:59:30.000Z",
             "kid": "OELl6pJdpzaisD_K",
             "algorithm": "Ed25519",
-            "signature": "Ijs4sXqtzjFEHYLC2oYkWZxnDzbS5y+9ydJ8Glh4wEarpRWmmvUcdYlXP8igeVH4fJDMhDEJwDijQh+I0cieBw=="
+            "signature": "eakOSpzudAf8ThMUb2I0dvnwEjEamLXyKVp55/H2RE/SpFcV9FINIvXOvee2d01S9HlPnTozIKRqXiLT7ZJiBQ=="
           }
         ]
       },
@@ -4685,26 +4755,36 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": [
           {
-            "binding_digest": "3d888bf4d68fd0d0e018f46ca30823a87e2451dcd98553109c88120f5954117a",
+            "binding_digest": "006ed9618fc9d6776ece903829e6effc74ff929b9e93132df76f5bceb74b4475",
             "role": "SENIOR_APPROVER",
             "decision": "approve",
             "signed_at": "2026-10-01T11:59:30.000Z",
             "kid": "OELl6pJdpzaisD_K",
             "algorithm": "Ed25519",
-            "signature": "HSoV2/FFvlna7cAtcKagVddCvbUPzqAoLK/1Czby1EAblg1nKV5KsCnkPqjMhxhCZvRdrqqjOlocnOkVFgt9Dg=="
+            "signature": "7WwdvUZ7erWiYEX7Swy2fG0IqxtFhtK7JOHiQix+X4gdCJAGveHlMMgLd1PdHODFcZGcaEASJCsUas9C4mu4DA=="
           },
           {
-            "binding_digest": "3d888bf4d68fd0d0e018f46ca30823a87e2451dcd98553109c88120f5954117a",
+            "binding_digest": "006ed9618fc9d6776ece903829e6effc74ff929b9e93132df76f5bceb74b4475",
             "role": "SENIOR_APPROVER",
             "decision": "approve",
             "signed_at": "2026-10-01T11:59:30.000Z",
             "kid": "OELl6pJdpzaisD_K",
             "algorithm": "Ed25519",
-            "signature": "HSoV2/FFvlna7cAtcKagVddCvbUPzqAoLK/1Czby1EAblg1nKV5KsCnkPqjMhxhCZvRdrqqjOlocnOkVFgt9Dg=="
+            "signature": "7WwdvUZ7erWiYEX7Swy2fG0IqxtFhtK7JOHiQix+X4gdCJAGveHlMMgLd1PdHODFcZGcaEASJCsUas9C4mu4DA=="
           }
         ]
       },
@@ -5288,26 +5368,36 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": [
           {
-            "binding_digest": "1cb01471b3f65041b4c2da8937ada0ed368ddba68c2e76b598a357198b8c488c",
+            "binding_digest": "7a5c95e6cac5e69bb9d6c714dcf2e0ea648e22dd8edece0311c71ba1e51549be",
             "role": "SENIOR_APPROVER",
             "decision": "approve",
             "signed_at": "2026-10-01T11:59:30.000Z",
             "kid": "OELl6pJdpzaisD_K",
             "algorithm": "Ed25519",
-            "signature": "oKlhK7Nb+bJjXLxhysB/XpMnwgm2CV/X69L7ncA7yqRv5vgTpT7dUQmErWt1u5yZEAk9gIxnFvatXqRAYa2UBg=="
+            "signature": "y91aUsSctrMRAd6Kng1zT60TeGYDiTd48xZ49KZR4zFLKmVz7YdFdi7f4JjjSShzL0lNTSkUE5yzUQ2ld9HwDw=="
           },
           {
-            "binding_digest": "1cb01471b3f65041b4c2da8937ada0ed368ddba68c2e76b598a357198b8c488c",
+            "binding_digest": "7a5c95e6cac5e69bb9d6c714dcf2e0ea648e22dd8edece0311c71ba1e51549be",
             "role": "SENIOR_APPROVER",
             "decision": "approve",
             "signed_at": "2026-10-01T11:59:30.000Z",
             "kid": "aSje8YVQYH2hH9bT",
             "algorithm": "Ed25519",
-            "signature": "Li/MHiMVNsgjp1HkexZ9p2xfhl49rEQjt6ekfzbchf4lHoTu232C9Zy53rUxxcApK3EazVstMhSMXp3UC0uWAw=="
+            "signature": "+E2kwXI+G1ykEsX9KtDfPnS2okC19hcsQPCxis7rO37LH05X4VThuxzY86zAD9wMaZO4d8vsyttYqZZ0g7vJDw=="
           }
         ]
       },
@@ -5892,26 +5982,36 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": [
           {
-            "binding_digest": "1cb01471b3f65041b4c2da8937ada0ed368ddba68c2e76b598a357198b8c488c",
+            "binding_digest": "7a5c95e6cac5e69bb9d6c714dcf2e0ea648e22dd8edece0311c71ba1e51549be",
             "role": "SENIOR_APPROVER",
             "decision": "approve",
             "signed_at": "2026-10-01T11:59:30.000Z",
             "kid": "OELl6pJdpzaisD_K",
             "algorithm": "Ed25519",
-            "signature": "oKlhK7Nb+bJjXLxhysB/XpMnwgm2CV/X69L7ncA7yqRv5vgTpT7dUQmErWt1u5yZEAk9gIxnFvatXqRAYa2UBg=="
+            "signature": "y91aUsSctrMRAd6Kng1zT60TeGYDiTd48xZ49KZR4zFLKmVz7YdFdi7f4JjjSShzL0lNTSkUE5yzUQ2ld9HwDw=="
           },
           {
-            "binding_digest": "1cb01471b3f65041b4c2da8937ada0ed368ddba68c2e76b598a357198b8c488c",
+            "binding_digest": "7a5c95e6cac5e69bb9d6c714dcf2e0ea648e22dd8edece0311c71ba1e51549be",
             "role": "SENIOR_APPROVER",
             "decision": "approve",
             "signed_at": "2026-10-01T11:59:30.000Z",
             "kid": "aSje8YVQYH2hH9bT",
             "algorithm": "Ed25519",
-            "signature": "Li/MHiMVNsgjp1HkexZ9p2xfhl49rEQjt6ekfzbchf4lHoTu232C9Zy53rUxxcApK3EazVstMhSMXp3UC0uWAw=="
+            "signature": "+E2kwXI+G1ykEsX9KtDfPnS2okC19hcsQPCxis7rO37LH05X4VThuxzY86zAD9wMaZO4d8vsyttYqZZ0g7vJDw=="
           }
         ]
       },
@@ -6493,26 +6593,36 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": [
           {
-            "binding_digest": "d42aa25982eac1d915ca96a83f3e2775481641a27ae7b914b0f522bc2fa90b1b",
+            "binding_digest": "3460095cf99c18ee6a54fa6d3c18fa855e333e4d610d1844da51c1b63b9dce42",
             "role": "SENIOR_APPROVER",
             "decision": "approve",
             "signed_at": "2026-10-01T11:59:30.000Z",
             "kid": "OELl6pJdpzaisD_K",
             "algorithm": "Ed25519",
-            "signature": "5SmBoj2z2lcpnL1RrQsz99ErUqGdqYNlMZ64ZOyY4gs5F71oAPuOMWJ9H6IqvgMDkNvfJj++vyC3DguV5zYeDg=="
+            "signature": "HMXoseYQVBbae9K6cb4k3Fe2EUcQf16iVBHxXvPL/ncUReaSVmG2R+NfPaRMdRHp1nk1l7x49TtAtPYTTxG/Cg=="
           },
           {
-            "binding_digest": "d42aa25982eac1d915ca96a83f3e2775481641a27ae7b914b0f522bc2fa90b1b",
+            "binding_digest": "3460095cf99c18ee6a54fa6d3c18fa855e333e4d610d1844da51c1b63b9dce42",
             "role": "SENIOR_APPROVER",
             "decision": "approve",
             "signed_at": "2026-10-01T11:59:30.000Z",
             "kid": "nUJ4F3bwrAFxSwp1",
             "algorithm": "Ed25519",
-            "signature": "YnUzLep8Oqvjnt4N7rsz+iZJ74dZORgLRLa1AFY1D2iIsK405txGS/8tiRSfIOiJIVMKy/Gr4M+YcbSCWIpFDA=="
+            "signature": "Cc+Tf+nBTyl0E5W28CzBEE3PxMFxmINVQJwJ+SF9mr2p+0Z8oMhefLi+mCrevmP3+VUI5kYhvCDJjnLEpgLOAA=="
           }
         ]
       },
@@ -7094,6 +7204,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": []
@@ -7678,6 +7798,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": []
@@ -8259,6 +8389,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": []
@@ -8842,6 +8982,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": []
@@ -9423,6 +9573,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": []
@@ -10006,6 +10166,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": []
@@ -10589,6 +10759,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": []
@@ -11170,6 +11350,16 @@
             "kid": "pazs0Iim5zEL-Ndu",
             "algorithm": "Ed25519",
             "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
           }
         ],
         "consents": []
@@ -11178,6 +11368,1203 @@
         "decision": "AUTHORIZED",
         "rule": "R0",
         "commit": true
+      }
+    },
+    {
+      "name": "omitted_fact_withholds_authorization",
+      "note": "The first case without the bureau's bankruptcy statement. R0 would permit the loan, but R1 (an active bankruptcy blocks it) outranks R0 and cannot be decided. An agent that leaves out the statement that would deny it gets nothing committed, and is told exactly which fact is missing.",
+      "now": "2026-10-01T12:00:00.000Z",
+      "seen_nonces": [],
+      "act": {
+        "act_version": "1",
+        "act_id": "act-020",
+        "nonce": "zNrQfaBygcWyGYx2lvFADA==",
+        "issued_at": "2026-10-01T11:59:00.000Z",
+        "expires_at": "2026-10-01T12:04:00.000Z",
+        "relying_party": "acme-bank:core-ledger",
+        "action": {
+          "type": "approve_loan",
+          "subject": "APP-1042",
+          "params": {
+            "amount": 4000,
+            "loan_purpose": "education",
+            "has_cosigner": false
+          }
+        },
+        "authority": {
+          "artifact": {
+            "nomos_version": "1.0.0",
+            "meta": {
+              "artifact_id": "vector-lending-acts",
+              "name": "Consumer Loan Approval",
+              "version": "1.0.0",
+              "created_at": "2026-09-27T00:00:00.000Z",
+              "owner": {
+                "org_name": "NOMOS Protocol",
+                "org_id": "nomos-protocol",
+                "contact": "hello@nomosprotocol.com"
+              },
+              "tags": [
+                "lending",
+                "credit",
+                "banking",
+                "fintech"
+              ],
+              "description": "SPEC-008 test vector authority: the public Consumer Loan Approval policy with declared fact sources, an explicit allow rule and default-deny.",
+              "industry": "lending",
+              "jurisdictions": [],
+              "verification_tier": "compiled"
+            },
+            "scope": {
+              "workflow": {
+                "domain": "lending",
+                "workflow_name": "Consumer Loan Approval",
+                "workflow_key": "pub_lending_v1",
+                "intent": "Synthetic baseline for automated consumer loan decisions."
+              },
+              "boundaries": {
+                "in_scope": [
+                  "Consumer Loan Approval"
+                ],
+                "out_of_scope": [
+                  "Decisions outside consumer loan approval"
+                ],
+                "assumptions": [
+                  "Synthetic baseline reflecting common industry practice, not a specific organisation’s policy (confidence band DECLARED, NOMOS-SPEC-001 §5.2).",
+                  "Evaluation model deny_list: when no decision matches, the action is permitted; when the request carries none of the evaluated fields, it is escalated."
+                ]
+              }
+            },
+            "data_contract": {
+              "inputs": {
+                "amount": {
+                  "type": "number",
+                  "required": false,
+                  "description": "Evaluated by 6 rule(s) in this policy",
+                  "source": "action"
+                },
+                "bankruptcy_active": {
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "source": "testimony"
+                },
+                "credit_score": {
+                  "type": "number",
+                  "required": false,
+                  "description": "Evaluated by 4 rule(s) in this policy",
+                  "source": "testimony"
+                },
+                "days_since_delinquency": {
+                  "type": "number",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "source": "testimony"
+                },
+                "delinquency_severity": {
+                  "type": "string",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "known_values": [
+                    "90_plus"
+                  ],
+                  "source": "testimony"
+                },
+                "dti_ratio": {
+                  "type": "number",
+                  "required": false,
+                  "description": "Evaluated by 2 rule(s) in this policy",
+                  "source": "testimony"
+                },
+                "employment_type": {
+                  "type": "string",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "known_values": [
+                    "self_employed"
+                  ],
+                  "source": "testimony"
+                },
+                "has_cosigner": {
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "source": "action"
+                },
+                "is_first_loan": {
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "source": "relying_party"
+                },
+                "loan_purpose": {
+                  "type": "string",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "known_values": [
+                    "crypto",
+                    "investment",
+                    "speculation"
+                  ],
+                  "source": "action"
+                }
+              },
+              "required_fields": [],
+              "confidence_policy": {
+                "min_confidence_for_autonomy": 0.9,
+                "min_confidence_per_field": {},
+                "on_low_confidence": "escalate"
+              }
+            },
+            "logic": {
+              "variables": {},
+              "decisions": [
+                {
+                  "id": "R1",
+                  "name": "active_bankruptcy_deny",
+                  "description": "Hard reject: applicant has an active or undischarged bankruptcy filing",
+                  "when": "bankruptcy_active == true",
+                  "then": [
+                    {
+                      "type": "block",
+                      "reason": "Hard reject: applicant has an active or undischarged bankruptcy filing"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 110,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R2",
+                  "name": "subprime_hard_floor",
+                  "description": "Hard reject: credit score below 580 — below minimum underwriting threshold",
+                  "when": "credit_score < 580",
+                  "then": [
+                    {
+                      "type": "block",
+                      "reason": "Hard reject: credit score below 580 — below minimum underwriting threshold"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 105,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R3",
+                  "name": "dti_ceiling",
+                  "description": "Hard reject: debt-to-income ratio exceeds 50% — insufficient repayment capacity",
+                  "when": "dti_ratio > 0.5",
+                  "then": [
+                    {
+                      "type": "block",
+                      "reason": "Hard reject: debt-to-income ratio exceeds 50% — insufficient repayment capacity"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 100,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R4",
+                  "name": "recent_major_delinquency",
+                  "description": "Deny if 90+ day delinquency occurred within the past 24 months",
+                  "when": "days_since_delinquency < 730 and delinquency_severity == \"90_plus\"",
+                  "then": [
+                    {
+                      "type": "block",
+                      "reason": "Deny if 90+ day delinquency occurred within the past 24 months"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 95,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R5",
+                  "name": "borderline_credit_high_dti",
+                  "description": "Deny near-prime applicants (580–649) who also carry high DTI above 40% — compounded risk",
+                  "when": "credit_score >= 580 and credit_score < 650 and dti_ratio > 0.4",
+                  "then": [
+                    {
+                      "type": "block",
+                      "reason": "Deny near-prime applicants (580–649) who also carry high DTI above 40% — compounded risk"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 90,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R6",
+                  "name": "jumbo_strict_dual_approval",
+                  "description": "Loans above $50k require dual senior approver sign-off regardless of credit profile",
+                  "when": "amount > 50000",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_DUAL"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 85,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R7",
+                  "name": "self_employed_high_value_risk",
+                  "description": "Self-employed applicants seeking over $15k with sub-720 credit require enhanced underwriting — income is harder to verify",
+                  "when": "employment_type == \"self_employed\" and amount > 15000 and credit_score < 720",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_DUAL"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 82,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R8",
+                  "name": "very_high_value_dual_approval",
+                  "description": "Loans above $25k require two approvers — standard dual-control policy",
+                  "when": "amount > 25000",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_DUAL"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 80,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R9",
+                  "name": "first_loan_uncosigned_review",
+                  "description": "First-time borrowers requesting over $5k without a co-signer require manager review — no repayment history to rely on",
+                  "when": "is_first_loan == true and amount > 5000 and has_cosigner == false",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_REVIEW"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 75,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R10",
+                  "name": "high_value_manager_review",
+                  "description": "Loans above $10k require manager approval — standard single-approver threshold",
+                  "when": "amount > 10000",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_REVIEW"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 70,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R11",
+                  "name": "speculative_purpose_review",
+                  "description": "Loans for investment, speculation, or crypto purposes carry elevated risk and require compliance review",
+                  "when": "loan_purpose in \"investment,speculation,crypto\"",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_REVIEW"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 65,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R12",
+                  "name": "near_prime_medium_value_review",
+                  "description": "Near-prime borrowers (620–679) requesting over $3k warrant closer review before auto-approval",
+                  "when": "credit_score >= 620 and credit_score < 680 and amount > 3000",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_REVIEW"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 60,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R0",
+                  "name": "standard_small_loan_allow",
+                  "description": "Loans up to $10,000 to applicants with credit score 680+ and DTI up to 40% are approved.",
+                  "when": "amount <= 10000 and credit_score >= 680 and dti_ratio <= 0.40",
+                  "then": [
+                    {
+                      "type": "allow"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 10
+                }
+              ],
+              "resolution": {
+                "conflict_policy": "highest_priority",
+                "tie_breaker": "deny_wins",
+                "default_outcome": "block"
+              }
+            },
+            "governance": {
+              "constraints": [],
+              "escalations": [
+                {
+                  "id": "ESC_REVIEW",
+                  "role_required": "REVIEWER",
+                  "trigger": "Single-approver human review",
+                  "sla_minutes": null,
+                  "required_consents": 1
+                },
+                {
+                  "id": "ESC_DUAL",
+                  "role_required": "SENIOR_APPROVER",
+                  "trigger": "Dual senior approval (two approvers)",
+                  "sla_minutes": null,
+                  "required_consents": 2
+                }
+              ],
+              "roles": [
+                {
+                  "role_id": "REVIEWER",
+                  "name": "Reviewer",
+                  "authority_scope": [
+                    "approve_escalation"
+                  ]
+                },
+                {
+                  "role_id": "SENIOR_APPROVER",
+                  "name": "Senior approver (two required)",
+                  "authority_scope": [
+                    "approve_escalation",
+                    "approve_dual_control"
+                  ]
+                }
+              ],
+              "compliance": {
+                "requirements": [],
+                "logging_level": "standard",
+                "retention_days": 365
+              }
+            },
+            "execution": {
+              "actions": {},
+              "connectors": []
+            },
+            "audit": {
+              "event_schema": {
+                "type": "nomos.audit.v1",
+                "fields": [
+                  "artifact_id",
+                  "decision_trace",
+                  "constraint_trace",
+                  "actions"
+                ]
+              },
+              "emit_on": [
+                "decision",
+                "constraint_violation",
+                "escalation",
+                "completion"
+              ],
+              "redaction": {
+                "pii_fields": [],
+                "strategy": "hash"
+              }
+            },
+            "seal": {
+              "status": "sealed",
+              "hash": "e3182e65d7b73f3db00dff3659e32d63a66eed898c3b6f559068bae6e4e2d017",
+              "canonicalization": "JCS",
+              "signature_algorithm": "Ed25519",
+              "kid": "9ukprVGEt0WK1BPa",
+              "signed_by": {
+                "name": "Acme Bank Credit Policy (test vector issuer)",
+                "org_id": "acme-bank",
+                "role": "policy_issuer",
+                "timestamp": "2026-01-01T00:00:00.000Z"
+              },
+              "signature": "7KRI1V3o+fGxbmt7u72D0Io+i36GiGhrQ+Rolpoeo0QyyPOfgt9QwZnK4WYhzIsQt9xvVLofAxyHGTGFVApwCg=="
+            }
+          },
+          "key_certs": [
+            {
+              "parent_kid": "ggnAOtBsCbmibS9-",
+              "child_kid": "9ukprVGEt0WK1BPa",
+              "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAZAj2VftloD4BQIIeMFSY3LlGRSXFep7lgf1TLh4gGGw=\n-----END PUBLIC KEY-----\n",
+              "scope": null,
+              "issued_at": "2026-01-01T00:00:00.000Z",
+              "expires_at": "2030-01-01T00:00:00.000Z",
+              "algorithm": "Ed25519",
+              "signature": "wS6z43ir8dhOy7MbdHvs9FFCmC29ks+QA6I+bvijEWXf3Iw7AfN3UB7kvEjXlUcZYypf0s1e67/0lOceGIBpDA=="
+            },
+            {
+              "parent_kid": "ggnAOtBsCbmibS9-",
+              "child_kid": "pazs0Iim5zEL-Ndu",
+              "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA7t4GnilUKp7sSICJzhOL1jwXJCdrmvc9iY5MQeFq8uo=\n-----END PUBLIC KEY-----\n",
+              "scope": "claim:credit_score,dti_ratio,bankruptcy_active,delinquency_severity,days_since_delinquency",
+              "issued_at": "2026-01-01T00:00:00.000Z",
+              "expires_at": "2030-01-01T00:00:00.000Z",
+              "algorithm": "Ed25519",
+              "signature": "DNUQ85ZTU+zHisk7xE6qcFk2NhlZNyJP6n7OR3lIjNw1jm+5BqJOh3RO8SF284AAw5JZj99URE+tgJTxS/kUAA=="
+            },
+            {
+              "parent_kid": "ggnAOtBsCbmibS9-",
+              "child_kid": "OELl6pJdpzaisD_K",
+              "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA9VV5liNhB7KOf9p9tjWo61UBhfz+l/jcM9iV/C1gRGM=\n-----END PUBLIC KEY-----\n",
+              "scope": "consent:SENIOR_APPROVER",
+              "issued_at": "2026-01-01T00:00:00.000Z",
+              "expires_at": "2030-01-01T00:00:00.000Z",
+              "algorithm": "Ed25519",
+              "signature": "Kgl3HTDttzYHD05+6wALw0OGo24l05zEc7jJk3xxbnsYVr6E+/gMQvvLq9XkKsBKmTWfcB2FB9cCZjoJR0JxCQ=="
+            },
+            {
+              "parent_kid": "ggnAOtBsCbmibS9-",
+              "child_kid": "aSje8YVQYH2hH9bT",
+              "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAN5ALYqaHDycdeLEY2fYdF/9TBHitQgeWCGMQ9Ffq9xI=\n-----END PUBLIC KEY-----\n",
+              "scope": "consent:SENIOR_APPROVER",
+              "issued_at": "2026-01-01T00:00:00.000Z",
+              "expires_at": "2030-01-01T00:00:00.000Z",
+              "algorithm": "Ed25519",
+              "signature": "pFp+VbJJ+O99u0tQLO5m5RxQ8JBeZh2ce2uQ+5RD6EWQEP4LrHcYyQtqL+T2UuQu39I68vk/BtvnebNIIAzGDg=="
+            },
+            {
+              "parent_kid": "ggnAOtBsCbmibS9-",
+              "child_kid": "nUJ4F3bwrAFxSwp1",
+              "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAW5ZL+aW7lw9MwBDWHKx3ZF4+t7r8xf3/OkXDhEqhnRM=\n-----END PUBLIC KEY-----\n",
+              "scope": "consent:REVIEWER",
+              "issued_at": "2026-01-01T00:00:00.000Z",
+              "expires_at": "2030-01-01T00:00:00.000Z",
+              "algorithm": "Ed25519",
+              "signature": "UZ5dJi/lJ7FnNa4UMheT0qc5J+p9FU21LNXxLW1sZRv3Ybca1MlL7j9By4U0MHenV0Ry+xVofnWAoChk60ViAw=="
+            }
+          ]
+        },
+        "testimony": [
+          {
+            "claim": "credit_score",
+            "value": 768,
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "lNZ9g6/BAuz64ezP+/U8pya5jNSULJ4EExPFSUtvltY2IdnTWKcNeWQ+BnXVwKJm0C966cSa3Kt48SvnJRkXCA=="
+          },
+          {
+            "claim": "dti_ratio",
+            "value": 0.22,
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "2jkda8/h0NfCpDXoOpPf/FUI7cIDw0VfW6FR+byi772Vn5bu29toiltCRjkmb9KrALXuUUlP66Wx4ThOvWQrCA=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
+          }
+        ],
+        "consents": []
+      },
+      "expected": {
+        "decision": "INCOMPLETE",
+        "reason_code": "undecided_rules",
+        "open_rules": [
+          "R1"
+        ],
+        "open_facts": [
+          "bankruptcy_active"
+        ],
+        "commit": false
+      }
+    },
+    {
+      "name": "omitted_fact_cannot_be_consented_away",
+      "note": "The denied case's loan with the bureau's DTI statement left out and two valid senior consents attached. R6 would escalate and the consents would satisfy it, but R3 (DTI above 50% denies the loan) outranks R6 and cannot be decided. Human approval cannot stand in for a missing fact.",
+      "now": "2026-10-01T12:00:00.000Z",
+      "seen_nonces": [],
+      "act": {
+        "act_version": "1",
+        "act_id": "act-021",
+        "nonce": "sfkfOrudYHngAL+jsNMiBA==",
+        "issued_at": "2026-10-01T11:59:00.000Z",
+        "expires_at": "2026-10-01T12:04:00.000Z",
+        "relying_party": "acme-bank:core-ledger",
+        "action": {
+          "type": "approve_loan",
+          "subject": "APP-1042",
+          "params": {
+            "amount": 250000,
+            "loan_purpose": "home_improvement",
+            "has_cosigner": false
+          }
+        },
+        "authority": {
+          "artifact": {
+            "nomos_version": "1.0.0",
+            "meta": {
+              "artifact_id": "vector-lending-acts",
+              "name": "Consumer Loan Approval",
+              "version": "1.0.0",
+              "created_at": "2026-09-27T00:00:00.000Z",
+              "owner": {
+                "org_name": "NOMOS Protocol",
+                "org_id": "nomos-protocol",
+                "contact": "hello@nomosprotocol.com"
+              },
+              "tags": [
+                "lending",
+                "credit",
+                "banking",
+                "fintech"
+              ],
+              "description": "SPEC-008 test vector authority: the public Consumer Loan Approval policy with declared fact sources, an explicit allow rule and default-deny.",
+              "industry": "lending",
+              "jurisdictions": [],
+              "verification_tier": "compiled"
+            },
+            "scope": {
+              "workflow": {
+                "domain": "lending",
+                "workflow_name": "Consumer Loan Approval",
+                "workflow_key": "pub_lending_v1",
+                "intent": "Synthetic baseline for automated consumer loan decisions."
+              },
+              "boundaries": {
+                "in_scope": [
+                  "Consumer Loan Approval"
+                ],
+                "out_of_scope": [
+                  "Decisions outside consumer loan approval"
+                ],
+                "assumptions": [
+                  "Synthetic baseline reflecting common industry practice, not a specific organisation’s policy (confidence band DECLARED, NOMOS-SPEC-001 §5.2).",
+                  "Evaluation model deny_list: when no decision matches, the action is permitted; when the request carries none of the evaluated fields, it is escalated."
+                ]
+              }
+            },
+            "data_contract": {
+              "inputs": {
+                "amount": {
+                  "type": "number",
+                  "required": false,
+                  "description": "Evaluated by 6 rule(s) in this policy",
+                  "source": "action"
+                },
+                "bankruptcy_active": {
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "source": "testimony"
+                },
+                "credit_score": {
+                  "type": "number",
+                  "required": false,
+                  "description": "Evaluated by 4 rule(s) in this policy",
+                  "source": "testimony"
+                },
+                "days_since_delinquency": {
+                  "type": "number",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "source": "testimony"
+                },
+                "delinquency_severity": {
+                  "type": "string",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "known_values": [
+                    "90_plus"
+                  ],
+                  "source": "testimony"
+                },
+                "dti_ratio": {
+                  "type": "number",
+                  "required": false,
+                  "description": "Evaluated by 2 rule(s) in this policy",
+                  "source": "testimony"
+                },
+                "employment_type": {
+                  "type": "string",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "known_values": [
+                    "self_employed"
+                  ],
+                  "source": "testimony"
+                },
+                "has_cosigner": {
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "source": "action"
+                },
+                "is_first_loan": {
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "source": "relying_party"
+                },
+                "loan_purpose": {
+                  "type": "string",
+                  "required": false,
+                  "description": "Evaluated by 1 rule(s) in this policy",
+                  "known_values": [
+                    "crypto",
+                    "investment",
+                    "speculation"
+                  ],
+                  "source": "action"
+                }
+              },
+              "required_fields": [],
+              "confidence_policy": {
+                "min_confidence_for_autonomy": 0.9,
+                "min_confidence_per_field": {},
+                "on_low_confidence": "escalate"
+              }
+            },
+            "logic": {
+              "variables": {},
+              "decisions": [
+                {
+                  "id": "R1",
+                  "name": "active_bankruptcy_deny",
+                  "description": "Hard reject: applicant has an active or undischarged bankruptcy filing",
+                  "when": "bankruptcy_active == true",
+                  "then": [
+                    {
+                      "type": "block",
+                      "reason": "Hard reject: applicant has an active or undischarged bankruptcy filing"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 110,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R2",
+                  "name": "subprime_hard_floor",
+                  "description": "Hard reject: credit score below 580 — below minimum underwriting threshold",
+                  "when": "credit_score < 580",
+                  "then": [
+                    {
+                      "type": "block",
+                      "reason": "Hard reject: credit score below 580 — below minimum underwriting threshold"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 105,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R3",
+                  "name": "dti_ceiling",
+                  "description": "Hard reject: debt-to-income ratio exceeds 50% — insufficient repayment capacity",
+                  "when": "dti_ratio > 0.5",
+                  "then": [
+                    {
+                      "type": "block",
+                      "reason": "Hard reject: debt-to-income ratio exceeds 50% — insufficient repayment capacity"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 100,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R4",
+                  "name": "recent_major_delinquency",
+                  "description": "Deny if 90+ day delinquency occurred within the past 24 months",
+                  "when": "days_since_delinquency < 730 and delinquency_severity == \"90_plus\"",
+                  "then": [
+                    {
+                      "type": "block",
+                      "reason": "Deny if 90+ day delinquency occurred within the past 24 months"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 95,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R5",
+                  "name": "borderline_credit_high_dti",
+                  "description": "Deny near-prime applicants (580–649) who also carry high DTI above 40% — compounded risk",
+                  "when": "credit_score >= 580 and credit_score < 650 and dti_ratio > 0.4",
+                  "then": [
+                    {
+                      "type": "block",
+                      "reason": "Deny near-prime applicants (580–649) who also carry high DTI above 40% — compounded risk"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 90,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R6",
+                  "name": "jumbo_strict_dual_approval",
+                  "description": "Loans above $50k require dual senior approver sign-off regardless of credit profile",
+                  "when": "amount > 50000",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_DUAL"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 85,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R7",
+                  "name": "self_employed_high_value_risk",
+                  "description": "Self-employed applicants seeking over $15k with sub-720 credit require enhanced underwriting — income is harder to verify",
+                  "when": "employment_type == \"self_employed\" and amount > 15000 and credit_score < 720",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_DUAL"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 82,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R8",
+                  "name": "very_high_value_dual_approval",
+                  "description": "Loans above $25k require two approvers — standard dual-control policy",
+                  "when": "amount > 25000",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_DUAL"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 80,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R9",
+                  "name": "first_loan_uncosigned_review",
+                  "description": "First-time borrowers requesting over $5k without a co-signer require manager review — no repayment history to rely on",
+                  "when": "is_first_loan == true and amount > 5000 and has_cosigner == false",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_REVIEW"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 75,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R10",
+                  "name": "high_value_manager_review",
+                  "description": "Loans above $10k require manager approval — standard single-approver threshold",
+                  "when": "amount > 10000",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_REVIEW"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 70,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R11",
+                  "name": "speculative_purpose_review",
+                  "description": "Loans for investment, speculation, or crypto purposes carry elevated risk and require compliance review",
+                  "when": "loan_purpose in \"investment,speculation,crypto\"",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_REVIEW"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 65,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R12",
+                  "name": "near_prime_medium_value_review",
+                  "description": "Near-prime borrowers (620–679) requesting over $3k warrant closer review before auto-approval",
+                  "when": "credit_score >= 620 and credit_score < 680 and amount > 3000",
+                  "then": [
+                    {
+                      "type": "escalate",
+                      "escalation_id": "ESC_REVIEW"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 60,
+                  "provenance": {
+                    "source_id": "pub_lending_v1",
+                    "source_name": "Consumer Loan Approval (NOMOS public demo catalog)",
+                    "extractor_version": "public-catalog-export-v1",
+                    "extraction_timestamp": "2026-09-27T00:00:00.000Z"
+                  }
+                },
+                {
+                  "id": "R0",
+                  "name": "standard_small_loan_allow",
+                  "description": "Loans up to $10,000 to applicants with credit score 680+ and DTI up to 40% are approved.",
+                  "when": "amount <= 10000 and credit_score >= 680 and dti_ratio <= 0.40",
+                  "then": [
+                    {
+                      "type": "allow"
+                    }
+                  ],
+                  "else": [],
+                  "priority": 10
+                }
+              ],
+              "resolution": {
+                "conflict_policy": "highest_priority",
+                "tie_breaker": "deny_wins",
+                "default_outcome": "block"
+              }
+            },
+            "governance": {
+              "constraints": [],
+              "escalations": [
+                {
+                  "id": "ESC_REVIEW",
+                  "role_required": "REVIEWER",
+                  "trigger": "Single-approver human review",
+                  "sla_minutes": null,
+                  "required_consents": 1
+                },
+                {
+                  "id": "ESC_DUAL",
+                  "role_required": "SENIOR_APPROVER",
+                  "trigger": "Dual senior approval (two approvers)",
+                  "sla_minutes": null,
+                  "required_consents": 2
+                }
+              ],
+              "roles": [
+                {
+                  "role_id": "REVIEWER",
+                  "name": "Reviewer",
+                  "authority_scope": [
+                    "approve_escalation"
+                  ]
+                },
+                {
+                  "role_id": "SENIOR_APPROVER",
+                  "name": "Senior approver (two required)",
+                  "authority_scope": [
+                    "approve_escalation",
+                    "approve_dual_control"
+                  ]
+                }
+              ],
+              "compliance": {
+                "requirements": [],
+                "logging_level": "standard",
+                "retention_days": 365
+              }
+            },
+            "execution": {
+              "actions": {},
+              "connectors": []
+            },
+            "audit": {
+              "event_schema": {
+                "type": "nomos.audit.v1",
+                "fields": [
+                  "artifact_id",
+                  "decision_trace",
+                  "constraint_trace",
+                  "actions"
+                ]
+              },
+              "emit_on": [
+                "decision",
+                "constraint_violation",
+                "escalation",
+                "completion"
+              ],
+              "redaction": {
+                "pii_fields": [],
+                "strategy": "hash"
+              }
+            },
+            "seal": {
+              "status": "sealed",
+              "hash": "e3182e65d7b73f3db00dff3659e32d63a66eed898c3b6f559068bae6e4e2d017",
+              "canonicalization": "JCS",
+              "signature_algorithm": "Ed25519",
+              "kid": "9ukprVGEt0WK1BPa",
+              "signed_by": {
+                "name": "Acme Bank Credit Policy (test vector issuer)",
+                "org_id": "acme-bank",
+                "role": "policy_issuer",
+                "timestamp": "2026-01-01T00:00:00.000Z"
+              },
+              "signature": "7KRI1V3o+fGxbmt7u72D0Io+i36GiGhrQ+Rolpoeo0QyyPOfgt9QwZnK4WYhzIsQt9xvVLofAxyHGTGFVApwCg=="
+            }
+          },
+          "key_certs": [
+            {
+              "parent_kid": "ggnAOtBsCbmibS9-",
+              "child_kid": "9ukprVGEt0WK1BPa",
+              "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAZAj2VftloD4BQIIeMFSY3LlGRSXFep7lgf1TLh4gGGw=\n-----END PUBLIC KEY-----\n",
+              "scope": null,
+              "issued_at": "2026-01-01T00:00:00.000Z",
+              "expires_at": "2030-01-01T00:00:00.000Z",
+              "algorithm": "Ed25519",
+              "signature": "wS6z43ir8dhOy7MbdHvs9FFCmC29ks+QA6I+bvijEWXf3Iw7AfN3UB7kvEjXlUcZYypf0s1e67/0lOceGIBpDA=="
+            },
+            {
+              "parent_kid": "ggnAOtBsCbmibS9-",
+              "child_kid": "pazs0Iim5zEL-Ndu",
+              "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA7t4GnilUKp7sSICJzhOL1jwXJCdrmvc9iY5MQeFq8uo=\n-----END PUBLIC KEY-----\n",
+              "scope": "claim:credit_score,dti_ratio,bankruptcy_active,delinquency_severity,days_since_delinquency",
+              "issued_at": "2026-01-01T00:00:00.000Z",
+              "expires_at": "2030-01-01T00:00:00.000Z",
+              "algorithm": "Ed25519",
+              "signature": "DNUQ85ZTU+zHisk7xE6qcFk2NhlZNyJP6n7OR3lIjNw1jm+5BqJOh3RO8SF284AAw5JZj99URE+tgJTxS/kUAA=="
+            },
+            {
+              "parent_kid": "ggnAOtBsCbmibS9-",
+              "child_kid": "OELl6pJdpzaisD_K",
+              "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA9VV5liNhB7KOf9p9tjWo61UBhfz+l/jcM9iV/C1gRGM=\n-----END PUBLIC KEY-----\n",
+              "scope": "consent:SENIOR_APPROVER",
+              "issued_at": "2026-01-01T00:00:00.000Z",
+              "expires_at": "2030-01-01T00:00:00.000Z",
+              "algorithm": "Ed25519",
+              "signature": "Kgl3HTDttzYHD05+6wALw0OGo24l05zEc7jJk3xxbnsYVr6E+/gMQvvLq9XkKsBKmTWfcB2FB9cCZjoJR0JxCQ=="
+            },
+            {
+              "parent_kid": "ggnAOtBsCbmibS9-",
+              "child_kid": "aSje8YVQYH2hH9bT",
+              "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAN5ALYqaHDycdeLEY2fYdF/9TBHitQgeWCGMQ9Ffq9xI=\n-----END PUBLIC KEY-----\n",
+              "scope": "consent:SENIOR_APPROVER",
+              "issued_at": "2026-01-01T00:00:00.000Z",
+              "expires_at": "2030-01-01T00:00:00.000Z",
+              "algorithm": "Ed25519",
+              "signature": "pFp+VbJJ+O99u0tQLO5m5RxQ8JBeZh2ce2uQ+5RD6EWQEP4LrHcYyQtqL+T2UuQu39I68vk/BtvnebNIIAzGDg=="
+            },
+            {
+              "parent_kid": "ggnAOtBsCbmibS9-",
+              "child_kid": "nUJ4F3bwrAFxSwp1",
+              "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAW5ZL+aW7lw9MwBDWHKx3ZF4+t7r8xf3/OkXDhEqhnRM=\n-----END PUBLIC KEY-----\n",
+              "scope": "consent:REVIEWER",
+              "issued_at": "2026-01-01T00:00:00.000Z",
+              "expires_at": "2030-01-01T00:00:00.000Z",
+              "algorithm": "Ed25519",
+              "signature": "UZ5dJi/lJ7FnNa4UMheT0qc5J+p9FU21LNXxLW1sZRv3Ybca1MlL7j9By4U0MHenV0Ry+xVofnWAoChk60ViAw=="
+            }
+          ]
+        },
+        "testimony": [
+          {
+            "claim": "credit_score",
+            "value": 702,
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GWHHynbX5UZUfX62OcS1jLTVLOxTxFLQkEGyk5LaQNEo6EHzN5ueFnZBf0B9iJ7OXyDsuJKw0tE8m5PsSpRgCA=="
+          },
+          {
+            "claim": "bankruptcy_active",
+            "value": false,
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "yV1iMhZSfX4oJYrGk7gzOrIAonSJraZDbc4ZsF0MIds1k1nNkL1wJa54VcP5JLcPvnQN9MAzNyUOdsSVN01IDQ=="
+          },
+          {
+            "claim": "delinquency_severity",
+            "value": "none",
+            "about": "APP-1042",
+            "as_of": "2026-10-01T11:30:00.000Z",
+            "valid_until": "2026-10-02T11:30:00.000Z",
+            "kid": "pazs0Iim5zEL-Ndu",
+            "algorithm": "Ed25519",
+            "signature": "GScXk23QYNj0k1p2vJ1k+/p1RoLZYV8VPsPEzUOqCaqBVaCJmy+NBuzgbylfVbxJFEOlfsrQXcjTKYicW0NMCg=="
+          }
+        ],
+        "consents": [
+          {
+            "binding_digest": "6b94543e6b3d520d0cfca6def381036bde6d620509d4bb79a964d47176f9fac9",
+            "role": "SENIOR_APPROVER",
+            "decision": "approve",
+            "signed_at": "2026-10-01T11:59:30.000Z",
+            "kid": "OELl6pJdpzaisD_K",
+            "algorithm": "Ed25519",
+            "signature": "2iHmrqjKolvD/HaU8K2BSHD8XZi+g4RUqb+GRDN1kelhtZyweqGjaXcIYF25nBlPdzQzUf8Mh8Gb6YM3whD7BQ=="
+          },
+          {
+            "binding_digest": "6b94543e6b3d520d0cfca6def381036bde6d620509d4bb79a964d47176f9fac9",
+            "role": "SENIOR_APPROVER",
+            "decision": "approve",
+            "signed_at": "2026-10-01T11:59:30.000Z",
+            "kid": "aSje8YVQYH2hH9bT",
+            "algorithm": "Ed25519",
+            "signature": "grGhG3RATP1A1S0AehOl1Ip4DmPtjmf0BzkpEwHHhzWAvDw0OPhZ5yYb2DIHclSC4aajlWs9jhc6OdscBq8uBg=="
+          }
+        ]
+      },
+      "expected": {
+        "decision": "INCOMPLETE",
+        "reason_code": "undecided_rules",
+        "open_rules": [
+          "R3"
+        ],
+        "open_facts": [
+          "dti_ratio"
+        ],
+        "commit": false
       }
     }
   ]

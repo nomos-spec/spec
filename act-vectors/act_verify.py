@@ -8,7 +8,9 @@ Verifies a self-verifying Act at the relying party (the system that commits the 
   3. every fact is testimony from a witness whose chain carries `claim:` scope for it
      (NOMOS-SPEC-007 rev. 1.8 §3.4.1), or comes from the channel its data_contract declares
   4. the sealed rules are evaluated over exactly those facts and exactly this action
-     (NOMOS-SPEC-001 §4, with the §4.6 default-outcome amendment)
+     (NOMOS-SPEC-001 §4, with the §4.6 default-outcome amendment), three-valued: a condition
+     that needs an absent fact is UNDECIDED, and an allow or escalate result stands only when
+     every block or escalate rule that outranks it is decided (SPEC-008 §6.2)
   5. an ESCALATED verdict becomes AUTHORIZED only with enough consents, each signed over this
      Act's binding digest by a key whose chain carries `consent:` scope for the required role
 
@@ -188,7 +190,11 @@ def scope_ok_for_statement(effective: dict, kind: str, name: str, meta: dict) ->
     return True, None
 
 
-# ── Nomos-Expr v1 evaluator (SPEC-001 §4.1) ─────────────────────────────────────────────
+# ── Nomos-Expr v1 evaluator (SPEC-001 §4.1), three-valued (SPEC-008 §6.2) ──────────────
+# A condition is TRUE, FALSE or UNDECIDED. A fact that is absent (or null) is not false: any
+# primitive that reads it is UNDECIDED, and and/or/not follow Kleene's strong three-valued logic.
+T, F, U = "TRUE", "FALSE", "UNDECIDED"
+_KEYWORDS = {"and", "or", "not", "in", "contains", "between", "exists", "matches", "true", "false", "always"}
 _TOK = re.compile(r'\s*(?:(?P<num>-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|(?P<str>"[^"]*")|(?P<op>==|!=|>=|<=|>|<|\(|\)|,)|(?P<id>[A-Za-z_][\w.]*))')
 
 def _tokens(s: str) -> list:
@@ -208,20 +214,28 @@ def _lookup(facts: dict, path: str):
         cur = cur[part]
     return cur
 
+def _tri(b) -> str: return T if b else F
+def _and(a, b): return F if F in (a, b) else (U if U in (a, b) else T)
+def _or(a, b): return T if T in (a, b) else (U if U in (a, b) else F)
+def _not(a): return {T: F, F: T, U: U}[a]
+
+class _Absent: pass
+ABSENT = _Absent()
+
 class _Parser:
     def __init__(self, toks, facts): self.t, self.i, self.f = toks, 0, facts
     def peek(self): return self.t[self.i] if self.i < len(self.t) else (None, None)
     def take(self): tok = self.peek(); self.i += 1; return tok
     def expr(self):
         v = self.andx()
-        while self.peek() == ("id", "or"): self.take(); r = self.andx(); v = v or r
+        while self.peek() == ("id", "or"): self.take(); v = _or(v, self.andx())
         return v
     def andx(self):
         v = self.unary()
-        while self.peek() == ("id", "and"): self.take(); r = self.unary(); v = v and r
+        while self.peek() == ("id", "and"): self.take(); v = _and(v, self.unary())
         return v
     def unary(self):
-        if self.peek() == ("id", "not"): self.take(); return not self.unary()
+        if self.peek() == ("id", "not"): self.take(); return _not(self.unary())
         return self.primary()
     def operand(self):
         k, v = self.take()
@@ -233,56 +247,86 @@ class _Parser:
             if v == "always": return True
             return ("FIELD", v)
         raise ValueError(f"unexpected {v!r}")
-    def val(self, x): return _lookup(self.f, x[1]) if isinstance(x, tuple) else x
-    def primary(self):
+    def val(self, x):
+        """A literal, the fact's value, or ABSENT when the fact is missing or null."""
+        if not isinstance(x, tuple): return x
+        got = _lookup(self.f, x[1])
+        return ABSENT if got is None else got
+    def primary(self) -> str:
         k, v = self.peek()
         if (k, v) == ("op", "("):
             self.take(); r = self.expr(); self.take(); return r
         if k == "id" and v in ("exists", "matches") and self.t[self.i + 1:self.i + 2] == [("op", "(")]:
             self.take(); self.take(); f = self.operand()
-            if v == "exists": self.take(); return self.val(f) is not None
+            if v == "exists": self.take(); return _tri(self.val(f) is not ABSENT)      # always decided
             self.take(); pat = self.operand(); self.take()
-            x = self.val(f); return isinstance(x, str) and re.search(pat, x) is not None
+            x = self.val(f)
+            if x is ABSENT: return U
+            return _tri(isinstance(x, str) and re.search(pat, x) is not None)
         left = self.operand()
         k2, op = self.peek()
         if k2 == "op" and op in ("==", "!=", ">", ">=", "<", "<="):
             self.take(); right = self.operand()
             a, b = self.val(left), self.val(right)
-            if a is None or b is None: return False
+            if a is ABSENT or b is ABSENT: return U
             try:
-                return {"==": a == b, "!=": a != b, ">": a > b, ">=": a >= b, "<": a < b, "<=": a <= b}[op]
+                return _tri({"==": a == b, "!=": a != b, ">": a > b, ">=": a >= b, "<": a < b, "<=": a <= b}[op])
             except TypeError:
-                return False
+                return F
         if (k2, op) in (("id", "in"), ("id", "contains"), ("id", "between")):
-            self.take(); rhs = self.operand(); a = self.val(left)
-            if a is None: return False
-            if op == "in": return str(a) in [p.strip() for p in str(rhs).split(",")]
-            if op == "contains": return str(rhs).lower() in str(a).lower()
+            self.take(); rhs = self.val(self.operand()); a = self.val(left)
+            if a is ABSENT or rhs is ABSENT: return U
+            if op == "in": return _tri(str(a) in [p.strip() for p in str(rhs).split(",")])
+            if op == "contains": return _tri(str(rhs).lower() in str(a).lower())
             lo, hi = (float(p) for p in str(rhs).split(","))
-            return isinstance(a, (int, float)) and lo <= a <= hi
-        return bool(self.val(left))
+            return _tri(isinstance(a, (int, float)) and lo <= a <= hi)
+        x = self.val(left)
+        return U if x is ABSENT else _tri(bool(x))
 
-def eval_when(expr: str, facts: dict) -> bool:
+def eval_when(expr: str, facts: dict) -> str:
     p = _Parser(_tokens(expr), facts)
     r = p.expr()
     if p.i != len(p.t): raise ValueError(f"trailing tokens in {expr!r}")
-    return bool(r)
+    return r
+
+def absent_fields(expr: str, facts: dict) -> List[str]:
+    """Every fact the condition names that is missing or null — what testimony would decide it."""
+    toks = _tokens(expr)
+    return sorted({v for i, (k, v) in enumerate(toks)
+                   if k == "id" and v not in _KEYWORDS and _lookup(facts, v) is None
+                   and toks[i + 1:i + 2] != [("op", "(")]})
 
 RANK = {"block": 3, "escalate": 2, "allow": 1}
+TIE_ORDERS = {"deny_wins": RANK, "allow_wins": {"allow": 3, "escalate": 2, "block": 1}, "escalate_wins": {"escalate": 3, "block": 2, "allow": 1}}
 
 def evaluate(artifact: dict, facts: dict) -> dict:
     logic = artifact["logic"]; res = logic.get("resolution", {})
-    matched = [d for d in logic["decisions"] if eval_when(d["when"], facts)]
+    order = TIE_ORDERS[res.get("tie_breaker", "deny_wins")]
+    results = [(d, eval_when(d["when"], facts)) for d in logic["decisions"]]
+    matched = [d for d, r in results if r == T]
     if not matched:
         default = res.get("default_outcome", "block")          # SPEC-001 §4.6 amendment; SPEC-008 §6.1
-        return {"outcome": default, "rule": None, "reason_code": "no_matching_rule", "escalation_id": res.get("default_escalation_id")}
-    top = max(d["priority"] for d in matched)
-    best = [d for d in matched if d["priority"] == top]
-    tb = res.get("tie_breaker", "deny_wins")
-    order = {"deny_wins": RANK, "allow_wins": {"allow": 3, "escalate": 2, "block": 1}, "escalate_wins": {"escalate": 3, "block": 2, "allow": 1}}[tb]
-    d = max(best, key=lambda x: order[x["then"][0]["type"]])
-    t = d["then"][0]
-    return {"outcome": t["type"], "rule": d["id"], "escalation_id": t.get("escalation_id")}
+        ev = {"outcome": default, "rule": None, "reason_code": "no_matching_rule", "escalation_id": res.get("default_escalation_id")}
+        decider = None
+    else:
+        top = max(d["priority"] for d in matched)
+        best = [d for d in matched if d["priority"] == top]
+        decider = max(best, key=lambda x: order[x["then"][0]["type"]])
+        t = decider["then"][0]
+        ev = {"outcome": t["type"], "rule": decider["id"], "escalation_id": t.get("escalation_id")}
+    # SPEC-008 §6.2: a result that could commit stands only if nothing that outranks it is undecided.
+    if ev["outcome"] in ("allow", "escalate"):
+        def outranks(d) -> bool:
+            if decider is None: return True
+            if d["priority"] != decider["priority"]: return d["priority"] > decider["priority"]
+            return order[d["then"][0]["type"]] > order[ev["outcome"]]
+        open_rules = [d for d, r in results if r == U and d["then"][0]["type"] in ("block", "escalate") and outranks(d)]
+        if open_rules:
+            open_rules.sort(key=lambda d: -d["priority"])
+            return {"outcome": "undecided", "rule": ev["rule"],
+                    "open_rules": [d["id"] for d in open_rules],
+                    "open_facts": sorted({f for d in open_rules for f in absent_fields(d["when"], facts)})}
+    return ev
 
 
 # ── the Act verifier (SPEC-008 §6) ──────────────────────────────────────────────────────
@@ -366,6 +410,9 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     ev = evaluate(art, facts)
     digest = binding_digest(act)
     base = {"rule": ev["rule"], "act_digest": digest}
+    if ev["outcome"] == "undecided":            # §6.2: no consent can stand in for a missing fact
+        return {"decision": "INCOMPLETE", "commit": False, "reason_code": "undecided_rules",
+                "open_rules": ev["open_rules"], "open_facts": ev["open_facts"], **base}
     if ev.get("reason_code"): base["reason_code"] = ev["reason_code"]
     if ev["outcome"] == "allow": return {"decision": "AUTHORIZED", "commit": True, **base}
     if ev["outcome"] == "block": return {"decision": "DENIED", "commit": False, **base}

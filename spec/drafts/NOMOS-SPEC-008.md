@@ -1,7 +1,7 @@
 # NOMOS-SPEC-008: Act Binding
 
 **Status:** Draft
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Extends:** NOMOS-SPEC-001 v2.2.0, NOMOS-SPEC-007 v1.8.0
 **Proposed:** 2026-09-27
 **Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
@@ -15,7 +15,7 @@ system that has never met the institution establish that those rules are genuine
 anything binding about the *action*: a verdict is computed over caller-supplied facts, and nothing
 ties it to the change that is later made.
 
-That leaves three gaps an autonomous agent can exploit without breaking any cryptography:
+That leaves four gaps an autonomous agent can exploit without breaking any cryptography:
 
 1. **It can skip the check.** A verdict is advice unless the system that makes the change
    refuses changes that lack one.
@@ -23,6 +23,8 @@ That leaves three gaps an autonomous agent can exploit without breaking any cryp
    story, not the world.
 3. **It can change the action after the check.** A verdict for $4,000 is not a verdict for
    $400,000 unless it is bound to the amount.
+4. **It can withhold a fact.** If a missing fact counts as false, an agent that cannot forge the
+   statement that would deny it can simply leave that statement out.
 
 This document defines the **Act**: a self-verifying package that carries an exact change together
 with everything needed to prove the change is legitimate — the sealed rules, the certificates,
@@ -31,11 +33,14 @@ alone. The **relying party** — the ledger, registry or API that would commit t
 the Act itself, locally and deterministically, and commits exactly the change it verified or
 nothing.
 
+A fact the Act does not establish is treated as unknown, never as false, and nothing is
+committed while an unknown fact could still change the outcome (§6.2).
+
 The consequence is a different security property from a gateway's. An agent is free to bypass
 every NOMOS component. Its act still cannot take effect, because the only system able to make the
 change is the one that demands the proof.
 
-**Status of this document.** Draft, published with a reference implementation and nineteen test
+**Status of this document.** Draft, published with a reference implementation and twenty-one test
 vectors (§10). One implementation exists; no interoperability claim is made.
 
 ---
@@ -257,7 +262,7 @@ A relying party MUST perform these steps in order and stop at the first failure:
 | 5 | The artifact's sealing key resolves (NOMOS-SPEC-007 rev. 1.8 §4.2a), the seal verifies, the scope admits the artifact, and the sealing key is not a statement key | Any NOMOS-SPEC-007 §4.4 outcome, e.g. `ISSUER_NOT_RECOGNIZED`, `SEAL_INVALID`, `OUT_OF_SCOPE` |
 | 6 | Every testimony statement is valid (§3.3) | `TESTIMONY_INVALID`, `TESTIMONY_OUT_OF_SCOPE` |
 | 7 | Every fact arrived through its declared channel (§7) | `FACT_SOURCE_VIOLATION` |
-| 8 | Evaluate the sealed rules over exactly those facts (NOMOS-SPEC-001 §4, including §4.6) | — |
+| 8 | Evaluate the sealed rules over exactly those facts (NOMOS-SPEC-001 §4, including §4.6), three-valued (§6.2) | `INCOMPLETE` |
 | 9 | If the result is `ESCALATED`, count consents (§4.4) | `CONSENT_INVALID`, `CONSENT_OUT_OF_SCOPE` |
 
 The verdict:
@@ -267,6 +272,7 @@ The verdict:
 | `AUTHORIZED` | The rules permit the action, or an escalation was satisfied by consent (`by_consent: true`) | Yes, exactly `action` |
 | `DENIED` | The rules forbid the action, or no rule matched under `default_outcome: block` | No |
 | `ESCALATED` | Consent is required and not yet sufficient; the response reports `consents_valid` and `consents_required` | No |
+| `INCOMPLETE` | A rule that could block or escalate, and outranks the result, cannot be decided on the facts presented (§6.2); the response reports `open_rules` and `open_facts` | No |
 | any failure above | The Act could not be established | No |
 
 The presenter can resubmit an escalated action with consents added, as a new Act with a new
@@ -279,6 +285,35 @@ When no decision matches, the outcome is the artifact's `logic.resolution.defaul
 `block`.** An Act that proves nothing commits nothing.
 
 ---
+
+### 6.2 Undecided rules (normative)
+
+A relying party MUST evaluate every decision's `when` condition to one of three values: **TRUE**,
+**FALSE** or **UNDECIDED**.
+
+1. A fact is *absent* when no channel (§7) supplied it, or it was supplied as `null`.
+2. A comparison, `in`, `contains`, `between`, `matches`, or bare field reference that reads an
+   absent fact is UNDECIDED. `exists(f)` is always decided: TRUE if `f` is present, else FALSE.
+   A present fact of the wrong type is FALSE, as in NOMOS-SPEC-001 §4.
+3. `and`, `or` and `not` follow Kleene's strong three-valued logic: `and` is FALSE if either side
+   is FALSE, otherwise UNDECIDED if either side is UNDECIDED, otherwise TRUE; `or` is TRUE if
+   either side is TRUE, otherwise UNDECIDED if either side is UNDECIDED, otherwise FALSE;
+   `not UNDECIDED` is UNDECIDED.
+
+Resolution (NOMOS-SPEC-001 §4) runs over the decisions whose condition is TRUE, unchanged. Let
+`D` be the deciding decision, or none when the outcome came from `default_outcome`. A decision
+`X` **outranks** `D` when `D` is none, when `X.priority > D.priority`, or when the priorities
+are equal and the artifact's `tie_breaker` ranks `X`'s outcome above `D`'s.
+
+If the outcome is `allow` or `escalate`, and any decision whose outcome is `block` or `escalate`
+both outranks `D` and is UNDECIDED, the relying party MUST return `INCOMPLETE` and MUST NOT
+commit. Consents are not counted: no approval stands in for a fact the Act does not establish.
+The response carries `open_rules` (those decisions' ids, highest priority first) and
+`open_facts` (the absent facts their conditions read, sorted). A `block` outcome is returned as
+`DENIED` regardless, since a denial commits nothing.
+
+The remedy is a new Act carrying testimony for the open facts. A witness that knows a fact is
+absent in the world says so: a credit bureau testifies `bankruptcy_active: false`, not nothing.
 
 ## 7. Facts and their sources (normative)
 
@@ -303,6 +338,10 @@ This is what closes the lying-presenter gap. A presenter can still *propose* any
 and the proposed amount is a trustworthy fact precisely because it is what will be committed. What
 a presenter can no longer do is supply the facts that decide whether that change is legitimate,
 unless the institution's own rules say it may.
+
+The channel rules decide who may *supply* a fact; §6.2 decides what happens when nobody does.
+Together they close both halves of the gap: a presenter can neither invent a fact the rules read
+nor gain anything by leaving one out.
 
 Relying-party facts take a particular role. At the point where a change lands, the system of
 record already knows much of what the rules need: the balance, the leave already taken, whether
@@ -353,13 +392,14 @@ follow §2–§4.
 §6 in full).
 
 **Test vectors.** `act-vectors/vectors.json`, generated deterministically by
-`act-vectors/generate.py` from published seeds; `act-vectors/check.py` runs them. Nineteen
-cases: authorization by rule; denial by rule; a presenter asserting a testimony fact; the rule
+`act-vectors/generate.py` from published seeds and `act-vectors/pub_lending_v1.nomos`;
+`act-vectors/check.py` runs them. Twenty-one cases: authorization by rule; denial by rule; a presenter asserting a testimony fact; the rule
 issuer attempting to testify; a witness outside its claim set; escalation with zero, one and a
 duplicated consent; dual consent; an action altered after consent; an approver claiming a role it
 lacks; no rule matching under default deny; expiry; wrong audience; replay; stale testimony;
-testimony about another subject; rules from an uncertified issuer; and a tree-shaped certificate
-set presented in reverse.
+testimony about another subject; rules from an uncertified issuer; a tree-shaped certificate
+set presented in reverse; a withheld fact that would have denied the action; and a withheld fact
+that would have denied an action two approvers then consented to.
 
 **Known gaps (disclosed).**
 
@@ -396,6 +436,13 @@ makes that choice explicit, signed and revocable.
 saying "we accept the agent's word for this". Rules SHOULD use it only for low-stakes inputs, and
 reviewers can find every such input by reading the artifact's data contract.
 
+**11.6 Silence is not evidence.** An Act can only carry statements its presenter chose to
+include, so a verifier that read a missing fact as false would let the presenter decide which
+rules apply by deciding what to omit. §6.2 removes that choice: a rule that could stop the
+action and that the Act cannot decide prevents the commit. The cost falls on witnesses, who must
+state negative facts explicitly, and on rule authors, whose permissive rules commit nothing until
+every rule above them is decided — the intended trade.
+
 ---
 
 ## 12. Example
@@ -410,3 +457,18 @@ design:
 - `action_altered_after_consent` — a $75,000 loan approved by two senior approvers; the agent then
   changes the amount to $750,000 and resubmits with the same consents. `CONSENT_INVALID`,
   `binding_mismatch`: the approvals were for a different change.
+- `omitted_fact_withholds_authorization` — a $4,000 loan R0 would permit, presented without the
+  bureau's bankruptcy statement. `INCOMPLETE`, `open_rules: ["R1"]`: the rule that denies
+  bankrupt applicants outranks R0 and cannot be decided, so nothing is committed.
+
+---
+
+## Changelog
+
+- **0.2.0** — Three-valued evaluation and the `INCOMPLETE` verdict (§6.2): an absent fact is
+  undecided rather than false, and an allow or escalate result commits only when every block or
+  escalate rule that outranks it is decided. Closes the withheld-fact gap, where omitting the
+  testimony that would deny an action left the allow rule standing — including through consent.
+  Two vectors added (21); test-vector witnesses now state the absence of a 90-day delinquency
+  explicitly. The generator's input, `pub_lending_v1.nomos`, is now committed.
+- **0.1.0** — Initial draft.
