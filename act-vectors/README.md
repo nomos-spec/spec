@@ -8,12 +8,13 @@ digest by distinct keys holding the required role.
 
 ```
 pip install cryptography
-python3 generate.py path/to/pub_lending_v1.nomos > vectors.json   # deterministic
+python3 generate.py pub_lending_v1.nomos > vectors.json   # deterministic, byte-identical
 python3 check.py vectors.json
 19 passed, 0 failed
 ```
 
-`generate.py` derives every key from a published seed. **These private keys are public on
+`pub_lending_v1.nomos` is the generator's input: the public Consumer Loan Approval policy, which `generate.py`
+re-seals with declared fact sources and an explicit allow rule. `generate.py` derives every key from a published seed. **These private keys are public on
 purpose. Never use them as trust material.**
 
 ## Cases
