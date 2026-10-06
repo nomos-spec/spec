@@ -37,6 +37,12 @@ Draft → Active → Deprecated → End of Life
 |--------------|--------|-----------|-----------------------|
 | NOMOS-SPEC-001 | Active | 2026-01-15 | **2029-01-15** |
 | NOMOS-SPEC-002 | Active | 2026-06-05 | **2029-06-05** |
+| NOMOS-SPEC-003 | Active | 2026-06-24 | **2029-06-24** |
+| NOMOS-SPEC-004 | Active | 2026-07-13 | **2029-07-13** |
+| NOMOS-SPEC-005 | Draft | 2026-07-22 | — (support window starts when Active) |
+| NOMOS-SPEC-006 | Active | 2026-08-25 | **2029-08-25** |
+| NOMOS-SPEC-007 | Draft | 2026-08-27 | — (support window starts when Active) |
+| NOMOS-SPEC-008 | Draft | 2026-09-27 (proposed) | — (support window starts when Active) |
 
 ### Exception: NOMOS-SPEC-001 v2.0.0 (2026-07-27)
 

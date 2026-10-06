@@ -1,13 +1,11 @@
 # Reference Implementation: NOMOS-SPEC-007 (Draft) — Chain-of-Trust Key Certificates
 
-**Status: this code is now the pure reference implementation for [NOMOS-SPEC-007](../../spec/NOMOS-SPEC-007.md),
-published as Draft.** It began as an unnumbered prototype to test whether the primitives below
-survived contact with real code — over a real socket, not just in-process — before anything was
-proposed for standardization. They did; the spec is now written. What has **not** changed:
-NOMOS-SPEC-007 has exactly one implementation (this one), and makes no interoperability claim
-until a second, independent implementation exists — see the spec's §8 for what Draft status does
-and does not establish. Do not depend on this as proven interoperable infrastructure yet; do
-treat it as a complete, tested starting point for anyone building a second implementation.
+**Status:** the pure reference implementation for [NOMOS-SPEC-007](../../spec/NOMOS-SPEC-007.md)
+(Draft 1.7.0). It passes all 14 vectors in [`../../chain-of-trust-vectors/`](../../chain-of-trust-vectors/)
+and is the starting point for a second-party implementation. Chain resolution here is the 1.7.0
+root-first walk; the target-first resolution of
+[revision 1.8.0](../../spec/drafts/NOMOS-SPEC-007-rev-1.8.0.md) is implemented in
+[`../../act-vectors/act_verify.py`](../../act-vectors/act_verify.py) and in the hosted platform.
 
 **§3.4 delegation scope is enforced here** (`scope.ts`): a certificate's `scope` limits what the
 certified key may sign, narrowing monotonically down the chain and failing closed on a dimension

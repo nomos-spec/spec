@@ -4,7 +4,10 @@
 
 | Version | Supported |
 |---------|-----------|
-| NOMOS-SPEC-001 (1.x) | Yes |
+| NOMOS-SPEC-001 (2.x) | Yes |
+| NOMOS-SPEC-002 – 006 | Yes |
+| NOMOS-SPEC-007 (Draft) | Yes — reports welcome; Draft text may change in response |
+| NOMOS-SPEC-008 (Draft) | Yes — reports welcome; Draft text may change in response |
 
 ## Reporting a Vulnerability
 
@@ -43,6 +46,12 @@ In scope:
 - Incorrect or bypassable conformance requirements (§9)
 - Bugs in `verify/verify.py` or `verify/verify.ts` that would cause a tampered
   artifact to pass verification
+- Revocation bypasses in NOMOS-SPEC-006 (a revoked artifact still relied upon)
+- Chain-of-trust bypasses in NOMOS-SPEC-007 or `prototype/chain-of-trust/`: an uncertified,
+  expired, revoked or out-of-scope key accepted, or a verdict that depends on certificate order
+- Act-binding bypasses in NOMOS-SPEC-008 or `act-vectors/act_verify.py`: an Act committed with a
+  forged, out-of-scope or withheld fact, a consent reused on a changed action, a replay, or a
+  wrong-audience Act accepted
 
 Out of scope:
 - Vulnerabilities in third-party NOMOS runtime implementations (report to their maintainers)
@@ -51,8 +60,8 @@ Out of scope:
 
 ## Key management
 
-The `SEAL_KEY` used to sign `.nomos` artifacts is held by the organisation that
-sealed them. The NOMOS Protocol Working Group does not hold or manage seal keys
+The signing key used to seal `.nomos` artifacts (Ed25519 by default; HMAC `SEAL_KEY` for legacy
+artifacts) is held by the organisation that sealed them. The NOMOS Protocol Working Group does not hold or manage seal keys
 for third-party artifacts. If you believe a seal key has been compromised, the
 affected organisation must re-issue and re-seal all artifacts under a new key.
 

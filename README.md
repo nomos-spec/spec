@@ -7,6 +7,7 @@
 [![Spec 005](https://img.shields.io/badge/spec-NOMOS--SPEC--005-yellow)](spec/NOMOS-SPEC-005.md)
 [![Spec 006](https://img.shields.io/badge/spec-NOMOS--SPEC--006-red)](spec/NOMOS-SPEC-006.md)
 [![Spec 007 Draft](https://img.shields.io/badge/spec-NOMOS--SPEC--007%20(Draft)-lightgrey)](spec/NOMOS-SPEC-007.md)
+[![Spec 008 Draft](https://img.shields.io/badge/spec-NOMOS--SPEC--008%20(Draft)-lightgrey)](spec/drafts/NOMOS-SPEC-008.md)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![Validate](https://github.com/nomos-spec/spec/actions/workflows/validate.yml/badge.svg)](https://github.com/nomos-spec/spec/actions/workflows/validate.yml)
 [![IANA Media Type](https://img.shields.io/badge/IANA-application%2Fvnd.nomos%2Bjson-brightgreen)](https://www.iana.org/assignments/media-types/application/vnd.nomos+json)
@@ -17,6 +18,8 @@ A `.nomos` file is a JSON document containing extracted policy rules, confidence
 
 NOMOS is one implementation of **[computable authority](https://computableauthority.com)** — the discipline of making institutional policy directly executable by AI systems, rather than interpreted after the fact.
 
+Agents increasingly act on behalf of organisations — a bank, a hospital, a ministry, a supplier. A service an agent calls needs more than "this is an agent": it needs to know who the agent acts for, what it is allowed to do, and whether it can check that without calling anyone. NOMOS-SPEC-001 through 008 specify that, end to end: the institution's rules as a sealed artifact (001–006), the chain of certificates that lets a stranger recognize the issuer (007), and the **Act** (008) — a self-verifying package that binds one exact action to those rules, to signed facts from authorized witnesses, and to human consents, so the system that would make the change verifies it locally and commits exactly that change or nothing.
+
 ---
 
 ## Why
@@ -25,13 +28,15 @@ Governance policies live in PDFs. AI agents making decisions live in code. NOMOS
 
 Think of a `.nomos` file the way you think of a `.pdf` file — except instead of capturing a document's visual layout for portable rendering, it captures an organisation's decision logic for portable execution. The meaning is collapsed into structure before runtime begins.
 
-A `.nomos` artifact now moves through three distinct moments, not two:
+A `.nomos` artifact now moves through four distinct moments:
 
 **Compile-time**: A policy document is uploaded to NOMOS Studio. Rules are extracted and verified — optionally composed from a shared base artifact (SPEC-004). The result is sealed.
 
 **Runtime**: Your system calls the NOMOS Runtime API (or runs the CLI locally). Rules are evaluated deterministically, respecting any temporal bounds (SPEC-003). Every verdict comes with an audit hash.
 
 **Attest** *(optional, post-seal)*: An independent party — a regulator, an auditor — co-signs the exact sealed version with their own key (SPEC-004), without altering the artifact or its seal.
+
+**Act** *(at the point of change)*: An agent presents an Act to the system that would make the change — a ledger, a registry, an API. That relying party verifies the issuer's chain (SPEC-007), the facts as signed testimony, any required consents, and the rules over exactly those facts (SPEC-008). A fact the Act does not establish is unknown, never false; nothing commits while an unknown fact could still change the outcome.
 
 ---
 
@@ -57,6 +62,10 @@ A `.nomos` artifact now moves through three distinct moments, not two:
 | `schema/chain-revocation-list.schema.json` | JSON Schema for a NOMOS-SPEC-007 chain-key revocation list |
 | `prototype/chain-of-trust/` | NOMOS-SPEC-007's pure reference implementation — key certificates, chain verification, a CLI verifier, a minimal HTTP receiver/presenter pair |
 | `chain-of-trust-vectors/` | NOMOS-SPEC-007 fixed interop test vectors — for a second implementer to check their verifier against |
+| `spec/drafts/NOMOS-SPEC-008.md` | **Draft.** Act Binding — an action bound to sealed rules, signed testimony and human consents, verified by the relying party that would commit it |
+| `spec/drafts/NOMOS-SPEC-007-rev-1.8.0.md` | **Draft revision.** SPEC-007 1.8.0 — statement keys (witness `claim`, approver `consent` scopes) and target-first chain resolution |
+| `spec/drafts/NOMOS-SPEC-001-amendment-2.2.0.md` | **Draft amendment.** SPEC-001 2.2.0 — unmatched outcome, declared fact sources, consent counts |
+| `act-vectors/` | NOMOS-SPEC-008 reference verifier (`act_verify.py`), deterministic generator, and 21 test vectors |
 | `examples/lending_policy_v1.nomos` | Example — public lending policy |
 | `examples/healthcare_triage_v1.nomos` | Example — clinical triage protocol |
 | `examples/minimal_v1.nomos` | Minimal valid artifact (structure check only) |
@@ -322,9 +331,36 @@ See `spec/NOMOS-SPEC-004.md` for the full specification.
 
 ---
 
+## Chain of Trust & Act Binding (SPEC-007, SPEC-008)
+
+Together these answer the question a service asks when an agent arrives acting for an organisation: *on whose authority, to do what, and can I check it myself?*
+
+**SPEC-007 — recognizing the issuer.** A key certificate lets one key certify another to sign, within a scope, until an expiry. A verifier pins its own root and resolves the chain offline — no prior relationship with the issuer, no call home. Revision 1.8.0 (draft) extends the same certificates to the keys that state facts (`claim` scope, for witnesses such as a credit bureau) and the keys that approve (`consent` scope, for human approvers), and resolves chains target-first so the verdict never depends on the order certificates are presented in.
+
+**SPEC-008 — binding the action.** A verdict computed over caller-supplied facts is advice; nothing ties it to the change made later. An Act closes four gaps an agent could otherwise exploit without breaking any cryptography:
+
+| Gap | How the Act closes it |
+|-----|-----------------------|
+| Skipping the check | The relying party — the system that would make the change — demands and verifies the Act itself |
+| Lying to the check | Each fact comes from the channel its input declares: the action, the relying party's own state, or signed testimony from a witness whose key is certified for that claim |
+| Changing the action after the check | Consents are signed over the Act's binding digest; a changed amount invalidates them |
+| Withholding a fact | Evaluation is three-valued: a missing fact is undecided, never false, and the verdict is `INCOMPLETE` while an outranking block or escalate rule is undecided |
+
+An agent is free to bypass every NOMOS component. Its act still cannot take effect, because the only system able to make the change is the one that demands the proof.
+
+```bash
+cd act-vectors
+pip install cryptography
+python3 check.py vectors.json        # 21 passed, 0 failed
+```
+
+See `spec/drafts/NOMOS-SPEC-008.md` for the full specification and `act-vectors/README.md` for every case.
+
+---
+
 ## Versioning
 
-This repository tracks the NOMOS artifact format specification. Backward-incompatible changes increment the spec version (NOMOS-SPEC-002, etc.). Every artifact carries a fixed `nomos_version` (currently `"1.0.0"`) identifying the base container format (NOMOS-SPEC-001 §3.2); extensions like NOMOS-SPEC-002's `agents` manifest are detected structurally, by the presence of their own field, not by a separate per-extension version marker.
+This repository tracks the NOMOS artifact format specification. Backward-incompatible changes to a published spec require a new spec number ([DEPRECATION.md](DEPRECATION.md)); new capabilities are published as new numbered extensions. Every artifact carries a fixed `nomos_version` (currently `"1.0.0"`) identifying the base container format (NOMOS-SPEC-001 §3.2); extensions like NOMOS-SPEC-002's `agents` manifest are detected structurally, by the presence of their own field, not by a separate per-extension version marker.
 
 | Spec | Status | Summary |
 |------|--------|---------|
@@ -335,15 +371,27 @@ This repository tracks the NOMOS artifact format specification. Backward-incompa
 | NOMOS-SPEC-005 | Draft | Public query extension — keyless authority queries, permanent transcripts |
 | NOMOS-SPEC-006 | Active | Artifact revocation — detached issuer-signed statements, signed revocation list |
 | NOMOS-SPEC-007 | Draft | Chain-of-trust key certificates — an independent system recognizing an artifact's issuer with no prior relationship and no call home, with enforced delegation scope |
+| NOMOS-SPEC-008 | Draft | Act Binding — an exact action bound to sealed rules, signed testimony and human consents; verified by the relying party; three-valued evaluation with an `INCOMPLETE` verdict |
 
-NOMOS-SPEC-007 is published as a Draft specifically to invite what a Draft is for: independent
-implementation and scrutiny. It has exactly one implementation today — see
-[`spec/NOMOS-SPEC-007.md §8`](spec/NOMOS-SPEC-007.md#8-conformance-and-implementation-status) for
-what that does and does not establish, and the
-[`prototype/chain-of-trust/`](https://github.com/nomos-spec/spec/tree/main/prototype/chain-of-trust)
-directory for the pure reference implementation, and
-[`chain-of-trust-vectors/`](https://github.com/nomos-spec/spec/tree/main/chain-of-trust-vectors)
-for fixed test cases to check a second implementation against.
+Proposed revisions awaiting promotion live in [`spec/drafts/`](spec/drafts/): NOMOS-SPEC-001 amendment 2.2.0 and NOMOS-SPEC-007 revision 1.8.0, both required by NOMOS-SPEC-008.
+
+NOMOS-SPEC-007 and NOMOS-SPEC-008 are built and running.
+
+- **SPEC-007:** the pure reference implementation in
+  [`prototype/chain-of-trust/`](prototype/chain-of-trust/) and the hosted platform's verifier
+  (`POST /api/v1/chain-of-trust/verify`) both pass all 14 vectors in
+  [`chain-of-trust-vectors/`](chain-of-trust-vectors/).
+- **SPEC-008:** the Python reference verifier in [`act-vectors/`](act-vectors/) and the
+  platform's TypeScript verifier both pass all 21 vectors. The platform's budget ledger accepts a
+  verified Act as the authority for a reservation.
+
+Both are published as Drafts because a standard is promoted on independent implementation —
+[§8 of SPEC-007](spec/NOMOS-SPEC-007.md#8-conformance-and-implementation-status) and §10 of
+SPEC-008 set out the conformance requirements.
+
+**Second-party implementations are invited.** If you build agents or the services they call,
+implement SPEC-007 or SPEC-008 against the vectors and open an issue, or email
+allan@nomosprotocol.com.
 
 ---
 

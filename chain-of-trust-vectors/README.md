@@ -1,17 +1,12 @@
 # NOMOS-SPEC-007 interop test vectors
 
-**Status: unverified by any second implementation.** These vectors exist so a real, independent
-implementer has something concrete to check their own verifier against — they are not a claim
-that interoperability has been demonstrated. As of publishing, exactly one implementation
-(`../prototype/chain-of-trust/`, this repo's own reference implementation) has ever produced or
-checked these vectors — confirmed self-consistent by `check.ts` (below), which is a different
-and much weaker claim than two independent implementations agreeing on the wire format. This
-file says so rather than implying otherwise with a green checkmark that wouldn't mean anything
-yet.
+**Status:** both NOMOS implementations — the pure reference in `../prototype/chain-of-trust/`
+and the hosted platform's verifier — pass every case. These vectors are the test a second-party
+implementation runs to show it agrees.
 
 ## What's here
 
-`vectors.json` — eleven cases, each an `{ artifact, key_certs, expected }` triple, plus a shared
+`vectors.json` — fourteen cases, each an `{ artifact, key_certs, expected }` triple, plus a shared
 `root_public_key_pem` and a `check_at` timestamp (the `now` a checker should evaluate against —
 the fixtures are pinned to fixed 2026–2030 dates, not wall-clock time, so results stay
 reproducible indefinitely rather than silently expiring):
@@ -29,6 +24,9 @@ reproducible indefinitely rather than silently expiring):
 | `scope_out_of_scope` | the same valid chain refuses an artifact outside the delegated industry — reported as `OUT_OF_SCOPE`, never `ISSUER_NOT_RECOGNIZED`, because the issuer IS recognized |
 | `scope_undeclared_dimension_fails_closed` | an artifact declaring no `meta.industry` under an industry-scoped delegation is refused, not waved through |
 | `scope_widening_rejected` | an intermediate holding `industry:financial` cannot issue `industry:healthcare` — a delegation never grants more than the delegator holds |
+| `key_revoked_intermediate` | a revoked intermediate key kills the chain with `KEY_REVOKED`, even though every signature is valid (§5.2) |
+| `freshness_staple_full_coverage` | staples from each key's certifying parent raise `revocation_checked` from `unchecked` to `staple` (§5.5) |
+| `freshness_staple_partial_coverage_stays_unchecked` | if any hop lacks a staple, `revocation_checked` stays `unchecked` — the weakest hop sets the result |
 
 The private keys used to generate these fixtures (`generate.ts`) are published in the clear on
 purpose — they exist only to make the vectors regenerable and auditable, and must never be
@@ -40,8 +38,7 @@ If you're implementing NOMOS-SPEC-007 independently: run each case's `artifact` 
 against your implementation, using `root_public_key_pem` as the pinned root and `check_at` as
 the evaluation time, and confirm your verdict matches `expected`. If it does, that's real
 evidence — open an issue or a PR at this repo noting which implementation you ran and what
-matched. Until that happens, treat this as validated against its own reference implementation
-only.
+matched.
 
 ## Verifying self-consistency
 
@@ -50,7 +47,7 @@ npx tsx chain-of-trust-vectors/check.ts
 ```
 
 Runs every case through this repo's own reference implementation and confirms the result
-matches `expected` — proof the vectors aren't simply wrong, not proof of interoperability.
+matches `expected`.
 
 ## Regenerating
 

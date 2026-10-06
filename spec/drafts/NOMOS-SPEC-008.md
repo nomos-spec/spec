@@ -41,7 +41,8 @@ every NOMOS component. Its act still cannot take effect, because the only system
 change is the one that demands the proof.
 
 **Status of this document.** Draft, published with a reference implementation and twenty-one test
-vectors (§10). One implementation exists; no interoperability claim is made.
+vectors (§10). Two implementations by the authors pass every vector; promotion from Draft awaits a
+second-party implementation.
 
 ---
 
@@ -403,7 +404,8 @@ that would have denied an action two approvers then consented to.
 
 **Known gaps (disclosed).**
 
-- One implementation, by the authors of this document. No interoperability claim.
+- Both implementations (the Python reference and the hosted platform's TypeScript verifier) are by
+  the authors of this document; a second-party implementation is the condition for promotion.
 - Revocation freshness for witness and approver keys follows NOMOS-SPEC-007 §5 unchanged; freshness
   staples for statement keys are not yet specified.
 - Effects that are not state changes — sending a message, publishing a statement — need a relying
