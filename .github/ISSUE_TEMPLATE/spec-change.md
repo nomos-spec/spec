@@ -1,6 +1,6 @@
 ---
 name: Spec Change Request
-about: Propose a change or addition to NOMOS-SPEC-001
+about: Propose a change or addition to a NOMOS specification (001–008)
 title: "[SPEC] "
 labels: spec-change
 assignees: ''
@@ -19,7 +19,7 @@ assignees: ''
 <!-- Describe the change to the spec text, schema, or examples. Quote the current text if applicable. -->
 
 **Current text / behaviour:**
-> (paste the relevant section from spec/NOMOS-SPEC-001.md)
+> (paste the relevant section, naming the spec and § — e.g. NOMOS-SPEC-008 §6.2)
 
 **Proposed text / behaviour:**
 > (your proposed replacement)
@@ -27,7 +27,7 @@ assignees: ''
 ## Backward compatibility
 
 - [ ] This change is backward compatible (no new required fields, no semantic changes to existing behaviour)
-- [ ] This change is backward incompatible and requires NOMOS-SPEC-002
+- [ ] This change is backward incompatible and requires a new spec number (see DEPRECATION.md)
 
 ## Impact on conformant runtimes
 

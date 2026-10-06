@@ -7,6 +7,28 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Repository] — 2026-10-06 (Documentation brought up to SPEC-008)
+
+Documentation only. No normative text, schema or vector changes.
+
+- README: SPEC-008 badge; the agent-acting-for-an-organisation framing; the Act as the fourth
+  moment; a SPEC-007/008 section with the four gaps the Act closes; drafts listed in the contents
+  and status tables; implementation status for SPEC-007 and SPEC-008 (reference and hosted
+  verifiers pass all 14 and 21 vectors); second-party implementations invited.
+- SECURITY.md: every spec listed as supported; revocation, chain-of-trust and act-binding
+  bypasses in scope; Ed25519 named as the default seal key.
+- DEPRECATION.md: status table covers SPEC-001 through 008.
+- CONTRIBUTING.md and issue templates: a breaking change requires a new spec number (they still
+  named SPEC-002, which has been the multi-agent extension since 2026-06-05); templates cover
+  every spec, the drafts and both vector sets.
+- chain-of-trust-vectors/README: fourteen cases, not eleven; the three undocumented cases
+  (`key_revoked_intermediate`, both freshness-staple cases) added to the table.
+- prototype/chain-of-trust/README: states that it implements the 1.7.0 root-first walk and where
+  rev 1.8.0 target-first resolution is implemented.
+- NOMOS-SPEC-008 §abstract, §10: implementation status updated to two author implementations.
+
+---
+
 ## [NOMOS-SPEC-008 0.2.0, Draft] — 2026-10-05 (Withheld facts: three-valued evaluation)
 
 ### Why

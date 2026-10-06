@@ -37,10 +37,10 @@ implementation work begins.
 |-------------|---------------------------|
 | Clarifying ambiguous language | No |
 | Adding a new optional field to the schema | No (backward compatible) |
-| Adding a new required field | Yes — NOMOS-SPEC-002 |
-| Changing the sealing algorithm | Yes — NOMOS-SPEC-002 |
-| Removing or renaming a field | Yes — NOMOS-SPEC-002 |
-| Changing operator semantics | Yes — NOMOS-SPEC-002 |
+| Adding a new required field | Yes — a new spec number ([DEPRECATION.md](DEPRECATION.md)) |
+| Changing the sealing algorithm | Yes — a new spec number ([DEPRECATION.md](DEPRECATION.md)) |
+| Removing or renaming a field | Yes — a new spec number ([DEPRECATION.md](DEPRECATION.md)) |
+| Changing operator semantics | Yes — a new spec number ([DEPRECATION.md](DEPRECATION.md)) |
 
 ## Style guide
 

@@ -44,4 +44,6 @@ purpose. Never use them as trust material.**
 | omitted_fact_withholds_authorization | INCOMPLETE | Leaving out the bankruptcy statement leaves R1 undecided; nothing commits |
 | omitted_fact_cannot_be_consented_away | INCOMPLETE | Two valid consents cannot stand in for a withheld DTI statement |
 
-One implementation, by the spec's authors: no interoperability claim.
+Two implementations pass all 21 cases: `act_verify.py` here, and the TypeScript verifier in the
+hosted NOMOS platform. Second-party implementations are invited — run `check.py`'s cases against
+yours and open an issue with the result.
