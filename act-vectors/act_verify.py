@@ -215,7 +215,6 @@ def scope_ok_for_statement(effective: dict, kind: str, name: str, meta: dict) ->
 # A condition is TRUE, FALSE or UNDECIDED. A fact that is absent (or null) is not false: any
 # primitive that reads it is UNDECIDED, and and/or/not follow Kleene's strong three-valued logic.
 T, F, U = "TRUE", "FALSE", "UNDECIDED"
-_KEYWORDS = {"and", "or", "not", "in", "contains", "between", "exists", "matches", "true", "false", "always"}
 _TOK = re.compile(r'\s*(?:(?P<num>-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|(?P<str>"[^"]*")|(?P<op>==|!=|>=|<=|>|<|\(|\)|,)|(?P<id>[A-Za-z_][\w.]*))')
 
 def _tokens(s: str) -> list:
@@ -243,8 +242,26 @@ def _not(a): return {T: F, F: T, U: U}[a]
 class _Absent: pass
 ABSENT = _Absent()
 
+def _kind(x) -> str:
+    """The JSON type of a present value. Booleans are not numbers."""
+    if isinstance(x, bool): return "boolean"
+    if isinstance(x, (int, float)): return "number"
+    if isinstance(x, str): return "string"
+    if isinstance(x, dict): return "object"
+    if isinstance(x, list): return "array"
+    return "other"
+# SPEC-008 §6.2 rule 3: a primitive whose present operands are outside its domain is UNDECIDED,
+# like an absent one. A value of the wrong kind says nothing decisive about the condition, and
+# reading it as FALSE would let a presenter silence a deny rule by choosing the kind.
+
 class _Parser:
-    def __init__(self, toks, facts, decided_absent=()): self.t, self.i, self.f, self.da = toks, 0, facts, decided_absent
+    def __init__(self, toks, facts, decided_absent=()):
+        self.t, self.i, self.f, self.da = toks, 0, facts, decided_absent
+        self.undecided_by: Set[str] = set()     # fields that left some primitive UNDECIDED
+    def _u(self, *ops) -> str:
+        """UNDECIDED, recording which fields made it so: they are what would decide the rule."""
+        self.undecided_by.update(o[1] for o in ops if isinstance(o, tuple))
+        return U
     def peek(self): return self.t[self.i] if self.i < len(self.t) else (None, None)
     def take(self): tok = self.peek(); self.i += 1; return tok
     def expr(self):
@@ -285,43 +302,44 @@ class _Parser:
                 # Absence decides exists() only where absence is authoritative (§6.2 rule 2):
                 # a missing witness statement is unknown, not a statement that nothing exists.
                 name = f[1] if isinstance(f, tuple) else None
-                return F if name is not None and (name in self.da or name.split(".")[0] in self.da) else U
+                return F if name is not None and (name in self.da or name.split(".")[0] in self.da) else self._u(f)
             self.take(); pat = self.operand(); self.take()
             x = self.val(f)
-            if x is ABSENT: return U
-            return _tri(isinstance(x, str) and re.search(pat, x) is not None)
+            if x is ABSENT or _kind(x) != "string": return self._u(f)
+            return _tri(re.search(pat, x) is not None)
         left = self.operand()
         k2, op = self.peek()
         if k2 == "op" and op in ("==", "!=", ">", ">=", "<", "<="):
             self.take(); right = self.operand()
             a, b = self.val(left), self.val(right)
-            if a is ABSENT or b is ABSENT: return U
-            try:
-                return _tri({"==": a == b, "!=": a != b, ">": a > b, ">=": a >= b, "<": a < b, "<=": a <= b}[op])
-            except TypeError:
-                return F
+            if a is ABSENT or b is ABSENT: return self._u(left, right)
+            ka, kb = _kind(a), _kind(b)
+            if ka != kb or ka == "other" or (op not in ("==", "!=") and ka not in ("number", "string")): return self._u(left, right)
+            if ka in ("object", "array"):
+                eq = jcs(a) == jcs(b)
+                return _tri(eq if op == "==" else not eq)
+            return _tri({"==": a == b, "!=": a != b, ">": a > b, ">=": a >= b, "<": a < b, "<=": a <= b}[op])
         if (k2, op) in (("id", "in"), ("id", "contains"), ("id", "between")):
-            self.take(); rhs = self.val(self.operand()); a = self.val(left)
-            if a is ABSENT or rhs is ABSENT: return U
+            self.take(); right = self.operand(); rhs = self.val(right); a = self.val(left)
+            if a is ABSENT or rhs is ABSENT: return self._u(left, right)
+            if op == "between":
+                if _kind(a) != "number": return self._u(left)
+                lo, hi = (float(p) for p in str(rhs).split(","))
+                return _tri(lo <= a <= hi)
+            if _kind(a) not in ("string", "number", "boolean"): return self._u(left)
             if op == "in": return _tri(str(a) in [p.strip() for p in str(rhs).split(",")])
-            if op == "contains": return _tri(str(rhs).lower() in str(a).lower())
-            lo, hi = (float(p) for p in str(rhs).split(","))
-            return _tri(isinstance(a, (int, float)) and lo <= a <= hi)
+            return _tri(str(rhs).lower() in str(a).lower())
         x = self.val(left)
-        return U if x is ABSENT else _tri(bool(x))
+        return self._u(left) if x is ABSENT or _kind(x) != "boolean" else _tri(x)
 
-def eval_when(expr: str, facts: dict, decided_absent=()) -> str:
+def eval_when_detail(expr: str, facts: dict, decided_absent=()) -> Tuple[str, Set[str]]:
     p = _Parser(_tokens(expr), facts, decided_absent)
     r = p.expr()
     if p.i != len(p.t): raise ValueError(f"trailing tokens in {expr!r}")
-    return r
+    return r, p.undecided_by
 
-def absent_fields(expr: str, facts: dict) -> List[str]:
-    """Every fact the condition names that is missing or null — what testimony would decide it."""
-    toks = _tokens(expr)
-    return sorted({v for i, (k, v) in enumerate(toks)
-                   if k == "id" and v not in _KEYWORDS and _lookup(facts, v) is None
-                   and toks[i + 1:i + 2] != [("op", "(")]})
+def eval_when(expr: str, facts: dict, decided_absent=()) -> str:
+    return eval_when_detail(expr, facts, decided_absent)[0]
 
 RANK = {"block": 3, "escalate": 2, "allow": 1}
 TIE_ORDERS = {"deny_wins": RANK, "allow_wins": {"allow": 3, "escalate": 2, "block": 1}, "escalate_wins": {"escalate": 3, "block": 2, "allow": 1}}
@@ -331,7 +349,9 @@ def evaluate(artifact: dict, facts: dict) -> dict:
     order = TIE_ORDERS[res.get("tie_breaker", "deny_wins")]
     inputs = artifact.get("data_contract", {}).get("inputs", {})
     decided_absent = {"action_type"} | {n for n, i in inputs.items() if (i or {}).get("source") in ABSENCE_AUTHORITATIVE}
-    results = [(d, eval_when(d["when"], facts, decided_absent)) for d in logic["decisions"]]
+    detail = [(d, *eval_when_detail(d["when"], facts, decided_absent)) for d in logic["decisions"]]
+    results = [(d, r) for d, r, _ in detail]
+    undecided_by = {d["id"]: u for d, _, u in detail}
     matched = [d for d, r in results if r == T]
     if not matched:
         default = res.get("default_outcome", "block")          # SPEC-001 §4.6 amendment; SPEC-008 §6.1
@@ -354,7 +374,7 @@ def evaluate(artifact: dict, facts: dict) -> dict:
             open_rules.sort(key=lambda d: -d["priority"])
             return {"outcome": "undecided", "rule": ev["rule"],
                     "open_rules": [d["id"] for d in open_rules],
-                    "open_facts": sorted({f for d in open_rules for f in absent_fields(d["when"], facts)})}
+                    "open_facts": sorted({f for d in open_rules for f in undecided_by[d["id"]]})}
     return ev
 
 

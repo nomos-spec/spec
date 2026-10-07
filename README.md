@@ -65,7 +65,7 @@ A `.nomos` artifact now moves through four distinct moments:
 | `spec/drafts/NOMOS-SPEC-008.md` | **Draft.** Act Binding — an action bound to sealed rules, signed testimony and human consents, verified by the relying party that would commit it |
 | `spec/drafts/NOMOS-SPEC-007-rev-1.8.0.md` | **Draft revision.** SPEC-007 1.8.0 — statement keys (witness `claim`, approver `consent` scopes) and target-first chain resolution |
 | `spec/drafts/NOMOS-SPEC-001-amendment-2.2.0.md` | **Draft amendment.** SPEC-001 2.2.0 — unmatched outcome, declared fact sources, consent counts |
-| `act-vectors/` | NOMOS-SPEC-008 reference verifier (`act_verify.py`), deterministic generator, and 23 test vectors |
+| `act-vectors/` | NOMOS-SPEC-008 reference verifier (`act_verify.py`), deterministic generator, and 24 test vectors |
 | `examples/lending_policy_v1.nomos` | Example — public lending policy |
 | `examples/healthcare_triage_v1.nomos` | Example — clinical triage protocol |
 | `examples/minimal_v1.nomos` | Minimal valid artifact (structure check only) |
@@ -351,7 +351,7 @@ An agent is free to bypass every NOMOS component. Its act still cannot take effe
 ```bash
 cd act-vectors
 pip install cryptography
-python3 check.py vectors.json        # 25 passed: 23 vectors + 2 non-finite cases
+python3 check.py vectors.json        # 26 passed: 24 vectors + 2 non-finite cases
 ```
 
 See `spec/drafts/NOMOS-SPEC-008.md` for the full specification and `act-vectors/README.md` for every case.
@@ -382,7 +382,7 @@ NOMOS-SPEC-007 and NOMOS-SPEC-008 are built and running.
   (`POST /api/v1/chain-of-trust/verify`) both pass all 14 vectors in
   [`chain-of-trust-vectors/`](chain-of-trust-vectors/).
 - **SPEC-008:** the Python reference verifier in [`act-vectors/`](act-vectors/) and the
-  platform's TypeScript verifier both pass all 23 vectors. The platform's budget ledger accepts a
+  platform's TypeScript verifier both pass all 24 vectors. The platform's budget ledger accepts a
   verified Act as the authority for a reservation.
 
 Both are published as Drafts because a standard is promoted on independent implementation —

@@ -12,7 +12,7 @@ undecided, never false, and nothing commits while a rule that could stop the act
 pip install cryptography
 python3 generate.py pub_lending_v1.nomos > vectors.json   # deterministic, byte-identical
 python3 check.py vectors.json
-25 passed, 0 failed     # 23 vectors, plus NaN and Infinity built in memory
+26 passed, 0 failed     # 24 vectors, plus NaN and Infinity built in memory
 ```
 
 `pub_lending_v1.nomos` is the generator's input: the public Consumer Loan Approval policy, which `generate.py`
@@ -46,7 +46,8 @@ purpose. Never use them as trust material.**
 | omitted_fact_cannot_be_consented_away | INCOMPLETE | Two valid consents cannot stand in for a withheld DTI statement |
 | action_param_wrong_type | FACT_TYPE_VIOLATION | An amount sent as a string is refused before any rule reads it |
 | omitted_fact_exists_undecided | INCOMPLETE | `exists(fraud_alert)` on a withheld witness statement is undecided, not false |
+| nested_param_wrong_type_undecided | INCOMPLETE | `terms.months > 360` on the string "480" inside an object parameter is undecided, not false |
 
-Two implementations pass all 23 cases: `act_verify.py` here, and the TypeScript verifier in the
+Two implementations pass all 24 cases: `act_verify.py` here, and the TypeScript verifier in the
 hosted NOMOS platform. Second-party implementations are invited — run `check.py`'s cases against
 yours and open an issue with the result.

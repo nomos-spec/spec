@@ -183,6 +183,14 @@ def main():
         {"decision": "INCOMPLETE", "reason_code": "undecided_rules", "open_rules": ["R13"], "open_facts": ["fraud_alert"], "commit": False},
         "The first case under a policy that blocks any open fraud alert, written as exists(fraud_alert) on a testimony input. The Act carries no fraud-alert statement. A missing witness statement is unknown, not a statement that no alert exists, so R13 is undecided and nothing commits.")
 
+    termed = build_artifact(json.load(open(sys.argv[1])), extra_rule={
+        "id": "R14", "name": "long_term_block", "description": "Loans with a term over 360 months are refused.",
+        "when": "terms.months > 360", "then": [{"type": "block"}], "else": [], "priority": 120},
+        extra_inputs={"terms": {"type": "object", "required": False, "description": "Repayment terms proposed with the loan", "source": "action"}})
+    add("nested_param_wrong_type_undecided", act(24, dict(small, terms={"months": "480"}), good_profile(768, 0.22), termed),
+        {"decision": "INCOMPLETE", "reason_code": "undecided_rules", "open_rules": ["R14"], "open_facts": ["terms.months"], "commit": False},
+        "The first case under a policy that refuses terms over 360 months, with the term sent as the string \"480\" inside an object-typed parameter. The object passes the §7.1 type check; the comparison inside it cannot be evaluated on a string, so R14 is undecided rather than false, and nothing commits.")
+
     out = {"_readme": "NOMOS-SPEC-008 Act test vectors. Verify each case's act with root_public_key_pem as the pinned root, relying_party_id and local_facts as the relying party's own configuration, `now` as the evaluation time and `seen_nonces` as the nonce ledger, and compare against expected (only the keys present in expected are normative). Keys are derived from published seeds: never use them as trust material.",
            "root_public_key_pem": ROOT["pem"], "relying_party_id": RP, "local_facts": {"is_first_loan": False},
            "keys": {k["label"]: k["kid"] for k in (ROOT, ISSUER, BUREAU, APPROVER_A, APPROVER_B, REVIEWER, ROGUE)},

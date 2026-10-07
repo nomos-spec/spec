@@ -40,7 +40,7 @@ The consequence is a different security property from a gateway's. An agent is f
 every NOMOS component. Its act still cannot take effect, because the only system able to make the
 change is the one that demands the proof.
 
-**Status of this document.** Draft, published with a reference implementation and twenty-three test
+**Status of this document.** Draft, published with a reference implementation and twenty-four test
 vectors (§10). Two implementations by the authors pass every vector; promotion from Draft awaits a
 second-party implementation.
 
@@ -298,10 +298,17 @@ A relying party MUST evaluate every decision's `when` condition to one of three 
    is FALSE when `f`'s input declares source `action` or `relying_party`, and UNDECIDED for any
    other source. Absence decides only where it is authoritative: the action is exactly what will
    be committed, and the relying party reads its own state, but a missing witness statement says
-   nothing about the world. A present fact cannot have the wrong type for its input (§7.1); a
-   comparison whose operands still differ in type (a fact against a literal of another type) is
-   FALSE, as in NOMOS-SPEC-001 §4.
-3. `and`, `or` and `not` follow Kleene's strong three-valued logic: `and` is FALSE if either side
+   nothing about the world.
+3. A primitive whose operands are present but outside its domain is UNDECIDED. Ordering
+   comparisons (`>`, `>=`, `<`, `<=`) need two numbers or two strings; `==` and `!=` need two
+   values of the same JSON type; `between` needs a number; `matches` needs a string; `in` and
+   `contains` need a string, number or boolean on the left; a bare field reference needs a
+   boolean. Booleans are not numbers. A value of the wrong kind says nothing decisive about the
+   condition, and reading it as FALSE would let a presenter silence a deny rule by choosing the
+   kind, for example a string inside an object-typed parameter, which §7.1 does not inspect.
+   This replaces NOMOS-SPEC-001 §4's reading of such a comparison as false, for SPEC-008 relying
+   parties.
+4. `and`, `or` and `not` follow Kleene's strong three-valued logic: `and` is FALSE if either side
    is FALSE, otherwise UNDECIDED if either side is UNDECIDED, otherwise TRUE; `or` is TRUE if
    either side is TRUE, otherwise UNDECIDED if either side is UNDECIDED, otherwise FALSE;
    `not UNDECIDED` is UNDECIDED.
@@ -315,7 +322,8 @@ If the outcome is `allow` or `escalate`, and any decision whose outcome is `bloc
 both outranks `D` and is UNDECIDED, the relying party MUST return `INCOMPLETE` and MUST NOT
 commit. Consents are not counted: no approval stands in for a fact the Act does not establish.
 The response carries `open_rules` (those decisions' ids, highest priority first) and
-`open_facts` (the absent facts their conditions read, sorted). A `block` outcome is returned as
+`open_facts` (the fields that left those decisions undecided, absent or outside a primitive's
+domain, sorted). A `block` outcome is returned as
 `DENIED` regardless, since a denial commits nothing.
 
 The remedy is a new Act carrying testimony for the open facts. A witness that knows a fact is
@@ -366,7 +374,9 @@ The check applies to every channel. Its purpose is the action channel: the prese
 action's parameters, and a parameter of the wrong type makes every comparison that reads it FALSE.
 Without this check, an agent could send `"amount": "300000"` so that `amount > 50000` never holds
 while a relying party that coerces the string commits $300,000. A type error is refused before any
-rule is read, so the rules only ever see values they were written for.
+rule is read. §7.1 inspects an input's own value; a field inside an object- or array-typed
+input is covered by §6.2 rule 3, which makes a comparison on a value of the wrong kind
+undecided rather than false.
 
 This is what closes the lying-presenter gap. A presenter can still *propose* any change it likes,
 and the proposed amount is a trustworthy fact precisely because it is what will be committed. What
@@ -432,14 +442,16 @@ follow §2–§4.
 
 **Test vectors.** `act-vectors/vectors.json`, generated deterministically by
 `act-vectors/generate.py` from published seeds and `act-vectors/pub_lending_v1.nomos`;
-`act-vectors/check.py` runs them. Twenty-three cases: authorization by rule; denial by rule; a presenter asserting a testimony fact; the rule
+`act-vectors/check.py` runs them. Twenty-four cases: authorization by rule; denial by rule; a presenter asserting a testimony fact; the rule
 issuer attempting to testify; a witness outside its claim set; escalation with zero, one and a
 duplicated consent; dual consent; an action altered after consent; an approver claiming a role it
 lacks; no rule matching under default deny; expiry; wrong audience; replay; stale testimony;
 testimony about another subject; rules from an uncertified issuer; a tree-shaped certificate
 set presented in reverse; a withheld fact that would have denied the action; and a withheld fact
 that would have denied an action two approvers then consented to; an action parameter of the wrong
-type; and a withheld witness statement read by `exists()`.
+type; a withheld witness statement read by `exists()`; and a wrong-typed field inside an
+object-typed parameter. `check.py` also builds two cases JSON cannot carry, a NaN and an
+infinite amount.
 
 **Known gaps (disclosed).**
 
@@ -487,9 +499,11 @@ every rule above them is decided — the intended trade. The same reasoning gove
 the two channels where absence is a fact rather than an omission.
 
 **11.7 A value of the wrong type is a way to be silent.** A comparison that cannot be evaluated
-is FALSE, and a FALSE deny rule is as good to an attacker as an absent one. §7.1 refuses such
-values outright, before evaluation, rather than letting each comparison decide what to do with
-them.
+was FALSE in 0.2.0, and a FALSE deny rule is as good to an attacker as an absent one. 0.3.0
+closes this in two layers: §7.1 refuses an input whose own value has the wrong type before any
+rule is read, and §6.2 rule 3 makes any primitive whose operands are outside its domain
+UNDECIDED, which covers fields nested inside an input and keeps the omission guarantee
+independent of the type check.
 
 ---
 
@@ -525,6 +539,11 @@ design:
   vectors are byte-identical. §9: a receipt now MUST record `verified_at` and
   `relying_party_facts`, the two verdict inputs an Act does not carry; without them the
   re-verification §9 promises was not possible whenever the rules read relying-party state.
+  §6.2 rule 3: a primitive whose present operands are outside its domain is UNDECIDED, not
+  FALSE. §7.1 checks only an input's own value, so `"terms": {"months": "480"}` under an
+  object-typed input still made `terms.months > 360` FALSE; the comparison is now undecided and
+  the Act INCOMPLETE. Vector `nested_param_wrong_type_undecided` added (24). `open_facts` now
+  names fields left undecided for either reason.
   §6 step 1 and §7.1: an Act containing a non-finite number is `MALFORMED`. JSON cannot carry
   NaN or Infinity, but common parsers accept them, and a NaN amount made `amount > 50000` FALSE
   in the reference verifier. Such an Act also has no RFC 8785 form and so no binding digest.
