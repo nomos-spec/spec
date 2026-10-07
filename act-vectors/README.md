@@ -2,16 +2,17 @@
 
 `act_verify.py` verifies an Act at the relying party: audience, window and replay; the rule
 issuer's chain (NOMOS-SPEC-007 rev. 1.8 target-first resolution); every testimony statement
-against its witness's `claim` scope; every fact against the channel its input declares; the sealed
+against its witness's `claim` scope; every fact against the channel and type its input declares; the sealed
 rules over exactly those facts; and, for escalations, consents signed over this Act's binding
 digest by distinct keys holding the required role. Rules are evaluated three-valued: a missing fact is
-undecided, never false, and nothing commits while a rule that could stop the action is undecided (§6.2).
+undecided, never false, and nothing commits while a rule that could stop the action is undecided (§6.2);
+`exists()` reads absence as FALSE only for action and relying-party inputs.
 
 ```
 pip install cryptography
 python3 generate.py pub_lending_v1.nomos > vectors.json   # deterministic, byte-identical
 python3 check.py vectors.json
-21 passed, 0 failed
+26 passed, 0 failed     # 24 vectors, plus NaN and Infinity built in memory
 ```
 
 `pub_lending_v1.nomos` is the generator's input: the public Consumer Loan Approval policy, which `generate.py`
@@ -43,7 +44,10 @@ purpose. Never use them as trust material.**
 | tree_pool_presented_in_reverse | AUTHORIZED | Order independence for tree-shaped certificate sets |
 | omitted_fact_withholds_authorization | INCOMPLETE | Leaving out the bankruptcy statement leaves R1 undecided; nothing commits |
 | omitted_fact_cannot_be_consented_away | INCOMPLETE | Two valid consents cannot stand in for a withheld DTI statement |
+| action_param_wrong_type | FACT_TYPE_VIOLATION | An amount sent as a string is refused before any rule reads it |
+| omitted_fact_exists_undecided | INCOMPLETE | `exists(fraud_alert)` on a withheld witness statement is undecided, not false |
+| nested_param_wrong_type_undecided | INCOMPLETE | `terms.months > 360` on the string "480" inside an object parameter is undecided, not false |
 
-Two implementations pass all 21 cases: `act_verify.py` here, and the TypeScript verifier in the
+Two implementations pass all 24 cases: `act_verify.py` here, and the TypeScript verifier in the
 hosted NOMOS platform. Second-party implementations are invited — run `check.py`'s cases against
 yours and open an issue with the result.
