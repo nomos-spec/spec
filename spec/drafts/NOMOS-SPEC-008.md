@@ -407,11 +407,16 @@ A relying party SHOULD append a receipt for every verification to its audit trai
 
 ```jsonc
 { "act_id": "act-7f3c…", "act_digest": "<binding digest>", "decision": "AUTHORIZED",
-  "rule": "R6", "by_consent": true, "committed_at": "2026-10-01T11:59:41.000Z" }
+  "rule": "R6", "by_consent": true,
+  "verified_at": "2026-10-01T11:59:40.000Z", "committed_at": "2026-10-01T11:59:41.000Z",
+  "relying_party_facts": { "is_first_loan": false } }
 ```
 
-Because the Act is self-contained, the receipt plus a retained copy of the Act lets any third
-party re-run §6 later and reach the same verdict — an auditor needs no access to the agent, the
+A receipt MUST record `verified_at` and `relying_party_facts` — the exact relying-party values
+§6 evaluated — because those are the two inputs to the verdict the Act does not carry. With them,
+the receipt plus a retained copy of the Act lets any third party re-run §6 later and reach the
+same verdict, given the relying party's pinned root and the revocation statements dated before
+`verified_at` (NOMOS-SPEC-006, NOMOS-SPEC-007 §5). An auditor needs no access to the agent, the
 presenter or any NOMOS service.
 
 ---
@@ -517,7 +522,9 @@ design:
   `exists` of an absent fact is now FALSE only for `action` and `relying_party` inputs and
   UNDECIDED otherwise (§6.2 rule 2). Two vectors added (23): `action_param_wrong_type`,
   `omitted_fact_exists_undecided`. The 0.2.0 reference verifier fails both; the 21 earlier
-  vectors are byte-identical.
+  vectors are byte-identical. §9: a receipt now MUST record `verified_at` and
+  `relying_party_facts`, the two verdict inputs an Act does not carry; without them the
+  re-verification §9 promises was not possible whenever the rules read relying-party state.
 
 - **0.2.0** — Three-valued evaluation and the `INCOMPLETE` verdict (§6.2): an absent fact is
   undecided rather than false, and an allow or escalate result commits only when every block or

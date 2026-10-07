@@ -29,6 +29,9 @@ reference verifier found two inputs that defeat a deny rule without omitting any
 - §6.2 rule 2: `exists(f)` of an absent fact is FALSE only when `f`'s source is `action` or
   `relying_party` — the channels where absence is authoritative — and UNDECIDED otherwise.
 - §6 step 7, §10, §11.6 and new §11.7 updated to match.
+- §9: a receipt MUST record `verified_at` and `relying_party_facts`. They are the two inputs to
+  the verdict an Act does not carry, so without them §9's promise — any third party can re-run
+  verification and reach the same verdict — failed whenever the rules read relying-party state.
 
 ### Vectors
 
