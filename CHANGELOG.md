@@ -32,6 +32,10 @@ reference verifier found two inputs that defeat a deny rule without omitting any
 - §9: a receipt MUST record `verified_at` and `relying_party_facts`. They are the two inputs to
   the verdict an Act does not carry, so without them §9's promise — any third party can re-run
   verification and reach the same verdict — failed whenever the rules read relying-party state.
+- §6 step 1, §7.1: an Act with a non-finite number (NaN, Infinity) is `MALFORMED`
+  (`not_canonicalizable`), and `number`/`integer` mean finite. Not valid JSON, but Python's `json`
+  parses it, and a NaN amount silenced `amount > 50000` in the 0.2.0 reference verifier. Not
+  representable in `vectors.json`, so `check.py` builds these two cases in memory.
 
 ### Vectors
 
@@ -39,7 +43,8 @@ reference verifier found two inputs that defeat a deny rule without omitting any
 cases are byte-identical; the 0.2.0 reference verifier fails both new ones (it authorizes the
 second). The reference verifier and the hosted platform's TypeScript verifier return identical
 results on all 23 vectors and on 446 mutants derived from them (101 single-statement omissions,
-345 retyped action parameters and relying-party facts).
+345 retyped action parameters and relying-party facts; 297 reach the fact checks or later, 131
+reach rule evaluation).
 
 ---
 

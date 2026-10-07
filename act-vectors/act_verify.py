@@ -23,6 +23,7 @@ Requires: Python 3.9+, `pip install cryptography`.
 import base64
 import hashlib
 import json
+import math
 import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -46,8 +47,8 @@ def type_ok(value: Any, spec: dict) -> bool:
     """SPEC-008 §7.1: a present fact has exactly the JSON type its input declares."""
     t = spec.get("type")
     if t == "string":   return isinstance(value, str)
-    if t == "number":   return isinstance(value, (int, float)) and not isinstance(value, bool)
-    if t == "integer":  return isinstance(value, int) and not isinstance(value, bool) or (isinstance(value, float) and value.is_integer())
+    if t == "number":   return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+    if t == "integer":  return (isinstance(value, int) and not isinstance(value, bool)) or (isinstance(value, float) and math.isfinite(value) and value.is_integer())
     if t == "boolean":  return isinstance(value, bool)
     if t == "date":     return isinstance(value, str) and bool(_DATE.match(value))
     if t == "datetime": return isinstance(value, str) and bool(_DATETIME.match(value))
@@ -366,6 +367,10 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     need = ("act_version", "act_id", "nonce", "issued_at", "expires_at", "relying_party", "action", "authority")
     if not isinstance(act, dict) or any(k not in act for k in need) or act.get("act_version") != "1":
         return {"decision": "MALFORMED", "reason_code": "bad_envelope"}
+    try:
+        jcs(act)        # an Act RFC 8785 cannot canonicalize (e.g. NaN, Infinity) has no binding digest
+    except (ValueError, TypeError):
+        return {"decision": "MALFORMED", "reason_code": "not_canonicalizable"}
     action, auth = act["action"], act["authority"]
     if not isinstance(action, dict) or not isinstance(action.get("type"), str) or not isinstance(action.get("params", {}), dict):
         return {"decision": "MALFORMED", "reason_code": "bad_action"}

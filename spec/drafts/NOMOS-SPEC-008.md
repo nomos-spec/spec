@@ -256,7 +256,7 @@ A relying party MUST perform these steps in order and stop at the first failure:
 
 | Step | Check | Failure |
 |---|---|---|
-| 1 | Envelope well-formed; `act_version` known; artifact sealed; certificate set ≤ 20 | `MALFORMED` |
+| 1 | Envelope well-formed and canonicalizable under RFC 8785 (no non-finite numbers); `act_version` known; artifact sealed; certificate set ≤ 20 | `MALFORMED` |
 | 2 | `relying_party` is this system | `WRONG_RELYING_PARTY` |
 | 3 | Now is inside the window | `NOT_YET_VALID`, `EXPIRED` |
 | 4 | Nonce not already used | `REPLAYED` |
@@ -350,8 +350,8 @@ error.
 | Declared type | Accepted JSON value |
 |---|---|
 | `string` | string |
-| `number` | number (never a boolean) |
-| `integer` | number with an integral value (never a boolean) |
+| `number` | finite number (never a boolean, NaN or an infinity) |
+| `integer` | finite number with an integral value (never a boolean) |
 | `boolean` | `true` or `false` |
 | `date` | string in RFC 3339 `full-date` form |
 | `datetime` | string in RFC 3339 `date-time` form |
@@ -525,6 +525,9 @@ design:
   vectors are byte-identical. §9: a receipt now MUST record `verified_at` and
   `relying_party_facts`, the two verdict inputs an Act does not carry; without them the
   re-verification §9 promises was not possible whenever the rules read relying-party state.
+  §6 step 1 and §7.1: an Act containing a non-finite number is `MALFORMED`. JSON cannot carry
+  NaN or Infinity, but common parsers accept them, and a NaN amount made `amount > 50000` FALSE
+  in the reference verifier. Such an Act also has no RFC 8785 form and so no binding digest.
 
 - **0.2.0** — Three-valued evaluation and the `INCOMPLETE` verdict (§6.2): an absent fact is
   undecided rather than false, and an allow or escalate result commits only when every block or

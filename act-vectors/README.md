@@ -12,7 +12,7 @@ undecided, never false, and nothing commits while a rule that could stop the act
 pip install cryptography
 python3 generate.py pub_lending_v1.nomos > vectors.json   # deterministic, byte-identical
 python3 check.py vectors.json
-23 passed, 0 failed
+25 passed, 0 failed     # 23 vectors, plus NaN and Infinity built in memory
 ```
 
 `pub_lending_v1.nomos` is the generator's input: the public Consumer Loan Approval policy, which `generate.py`

@@ -351,7 +351,7 @@ An agent is free to bypass every NOMOS component. Its act still cannot take effe
 ```bash
 cd act-vectors
 pip install cryptography
-python3 check.py vectors.json        # 23 passed, 0 failed
+python3 check.py vectors.json        # 25 passed: 23 vectors + 2 non-finite cases
 ```
 
 See `spec/drafts/NOMOS-SPEC-008.md` for the full specification and `act-vectors/README.md` for every case.
