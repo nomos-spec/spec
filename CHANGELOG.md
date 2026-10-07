@@ -7,6 +7,39 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-008 0.3.0, Draft] — 2026-10-07 (Two more ways to silence a deny rule)
+
+### Why
+
+Checking §6.2's guarantee — an agent cannot gain authorization by what it leaves out — against the
+reference verifier found two inputs that defeat a deny rule without omitting anything §6.2 covered:
+
+1. **Type confusion.** A present fact of the wrong type made every comparison reading it FALSE.
+   An agent controls the action's parameters, so `"amount": "300000"` made `amount > 50000` false
+   while a relying party that coerces the string would commit $300,000.
+2. **`exists()` on a withheld statement.** `exists(f)` was always decided, so a block rule written
+   `exists(fraud_alert)` on a testimony input was defeated by leaving the statement out — the
+   withheld-fact gap 0.2.0 closed, reopened through one operator.
+
+### Changed (normative)
+
+- §7.1 (new): every input with a `source` MUST declare a `type`; a present fact whose value does
+  not have that type rejects the Act as `FACT_TYPE_VIOLATION` (step 7). `null` is absence, not a
+  type error. Unknown or missing type fails closed.
+- §6.2 rule 2: `exists(f)` of an absent fact is FALSE only when `f`'s source is `action` or
+  `relying_party` — the channels where absence is authoritative — and UNDECIDED otherwise.
+- §6 step 7, §10, §11.6 and new §11.7 updated to match.
+
+### Vectors
+
+23 cases (was 21): `action_param_wrong_type`, `omitted_fact_exists_undecided`. The 21 earlier
+cases are byte-identical; the 0.2.0 reference verifier fails both new ones (it authorizes the
+second). The reference verifier and the hosted platform's TypeScript verifier return identical
+results on all 23 vectors and on 446 mutants derived from them (101 single-statement omissions,
+345 retyped action parameters and relying-party facts).
+
+---
+
 ## [Repository] — 2026-10-06 (Documentation brought up to SPEC-008)
 
 Documentation only. No normative text, schema or vector changes.

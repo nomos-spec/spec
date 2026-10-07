@@ -45,8 +45,9 @@ SOURCES = {"amount": "action", "loan_purpose": "action", "has_cosigner": "action
            "delinquency_severity": "testimony", "days_since_delinquency": "testimony",
            "employment_type": "testimony", "is_first_loan": "relying_party"}
 
-def build_artifact(src):
+def build_artifact(src, extra_rule=None, extra_inputs=None):
     a = copy.deepcopy(src)
+    if extra_inputs: a["data_contract"]["inputs"].update(extra_inputs)
     a.pop("seal", None)
     a["meta"]["artifact_id"] = "vector-lending-acts"
     a["meta"]["description"] = "SPEC-008 test vector authority: the public Consumer Loan Approval policy with declared fact sources, an explicit allow rule and default-deny."
@@ -60,6 +61,9 @@ def build_artifact(src):
         "description": "Loans up to $10,000 to applicants with credit score 680+ and DTI up to 40% are approved.",
         "when": "amount <= 10000 and credit_score >= 680 and dti_ratio <= 0.40",
         "then": [{"type": "allow"}], "else": [], "priority": 10})
+    if extra_rule:
+        a["meta"]["artifact_id"] = "vector-lending-acts-" + extra_rule["id"].lower()
+        a["logic"]["decisions"].append(extra_rule)
     a["logic"]["resolution"] = {"conflict_policy": "highest_priority", "tie_breaker": "deny_wins", "default_outcome": "block"}
     for e in a["governance"]["escalations"]:
         e["required_consents"] = 2 if e["id"] == "ESC_DUAL" else 1
@@ -165,6 +169,19 @@ def main():
     add("omitted_fact_cannot_be_consented_away", a21,
         {"decision": "INCOMPLETE", "reason_code": "undecided_rules", "open_rules": ["R3"], "open_facts": ["dti_ratio"], "commit": False},
         "The denied case's loan with the bureau's DTI statement left out and two valid senior consents attached. R6 would escalate and the consents would satisfy it, but R3 (DTI above 50% denies the loan) outranks R6 and cannot be decided. Human approval cannot stand in for a missing fact.")
+
+    wrong_type = act(22, {"amount": "4000", "loan_purpose": "education", "has_cosigner": False}, good_profile(768, 0.22), art)
+    add("action_param_wrong_type", wrong_type,
+        {"decision": "FACT_TYPE_VIOLATION", "field": "amount", "declared": "number", "supplied_via": "action"},
+        "The first case with the amount sent as the string \"4000\". A comparison against a value of the wrong type cannot be TRUE, so a rule like `amount > 50000` would fall silent while a relying party that coerces the string still commits the amount. The Act is refused before any rule is read.")
+
+    flagged = build_artifact(json.load(open(sys.argv[1])), extra_rule={
+        "id": "R13", "name": "fraud_alert_block", "description": "Any open fraud alert on the applicant blocks the loan.",
+        "when": "exists(fraud_alert)", "then": [{"type": "block"}], "else": [], "priority": 120},
+        extra_inputs={"fraud_alert": {"type": "string", "required": False, "description": "Open fraud alert reference, if any", "source": "testimony"}})
+    add("omitted_fact_exists_undecided", act(23, small, good_profile(768, 0.22), flagged),
+        {"decision": "INCOMPLETE", "reason_code": "undecided_rules", "open_rules": ["R13"], "open_facts": ["fraud_alert"], "commit": False},
+        "The first case under a policy that blocks any open fraud alert, written as exists(fraud_alert) on a testimony input. The Act carries no fraud-alert statement. A missing witness statement is unknown, not a statement that no alert exists, so R13 is undecided and nothing commits.")
 
     out = {"_readme": "NOMOS-SPEC-008 Act test vectors. Verify each case's act with root_public_key_pem as the pinned root, relying_party_id and local_facts as the relying party's own configuration, `now` as the evaluation time and `seen_nonces` as the nonce ledger, and compare against expected (only the keys present in expected are normative). Keys are derived from published seeds: never use them as trust material.",
            "root_public_key_pem": ROOT["pem"], "relying_party_id": RP, "local_facts": {"is_first_loan": False},

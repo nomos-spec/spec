@@ -6,7 +6,8 @@ Verifies a self-verifying Act at the relying party (the system that commits the 
   1. the Act is addressed to this relying party, inside its validity window, not replayed
   2. the authority artifact's issuer resolves to the pinned root   (NOMOS-SPEC-007 §4)
   3. every fact is testimony from a witness whose chain carries `claim:` scope for it
-     (NOMOS-SPEC-007 rev. 1.8 §3.4.1), or comes from the channel its data_contract declares
+     (NOMOS-SPEC-007 rev. 1.8 §3.4.1), or comes from the channel its data_contract declares,
+     and has the type that input declares (SPEC-008 §7.1)
   4. the sealed rules are evaluated over exactly those facts and exactly this action
      (NOMOS-SPEC-001 §4, with the §4.6 default-outcome amendment), three-valued: a condition
      that needs an absent fact is UNDECIDED, and an allow or escalate result stands only when
@@ -35,6 +36,25 @@ ARTIFACT_DIMS = ("artifact", "industry", "jurisdiction")
 STATEMENT_DIMS = ("claim", "consent")
 ISO_3166 = re.compile(r"^[A-Z]{2}(-[A-Z0-9]{1,3})?$")
 FACT_SOURCES = ("action", "testimony", "relying_party", "presenter")
+# Channels whose absence is itself a fact: the action is exactly what will be committed, and the
+# relying party reads its own state. For these, exists(f) is decided (SPEC-008 §6.2 rule 2).
+ABSENCE_AUTHORITATIVE = ("action", "relying_party")
+_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_DATETIME = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$")
+
+def type_ok(value: Any, spec: dict) -> bool:
+    """SPEC-008 §7.1: a present fact has exactly the JSON type its input declares."""
+    t = spec.get("type")
+    if t == "string":   return isinstance(value, str)
+    if t == "number":   return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if t == "integer":  return isinstance(value, int) and not isinstance(value, bool) or (isinstance(value, float) and value.is_integer())
+    if t == "boolean":  return isinstance(value, bool)
+    if t == "date":     return isinstance(value, str) and bool(_DATE.match(value))
+    if t == "datetime": return isinstance(value, str) and bool(_DATETIME.match(value))
+    if t == "enum":     return isinstance(value, str) and value in (spec.get("enum") or [])
+    if t == "object":   return isinstance(value, dict)
+    if t == "array":    return isinstance(value, list)
+    return False        # no type, or one this verifier does not know: fail closed
 
 
 # ── canonical JSON (RFC 8785, sufficient for NOMOS objects) ─────────────────────────────
@@ -223,7 +243,7 @@ class _Absent: pass
 ABSENT = _Absent()
 
 class _Parser:
-    def __init__(self, toks, facts): self.t, self.i, self.f = toks, 0, facts
+    def __init__(self, toks, facts, decided_absent=()): self.t, self.i, self.f, self.da = toks, 0, facts, decided_absent
     def peek(self): return self.t[self.i] if self.i < len(self.t) else (None, None)
     def take(self): tok = self.peek(); self.i += 1; return tok
     def expr(self):
@@ -258,7 +278,13 @@ class _Parser:
             self.take(); r = self.expr(); self.take(); return r
         if k == "id" and v in ("exists", "matches") and self.t[self.i + 1:self.i + 2] == [("op", "(")]:
             self.take(); self.take(); f = self.operand()
-            if v == "exists": self.take(); return _tri(self.val(f) is not ABSENT)      # always decided
+            if v == "exists":
+                self.take()
+                if self.val(f) is not ABSENT: return T
+                # Absence decides exists() only where absence is authoritative (§6.2 rule 2):
+                # a missing witness statement is unknown, not a statement that nothing exists.
+                name = f[1] if isinstance(f, tuple) else None
+                return F if name is not None and (name in self.da or name.split(".")[0] in self.da) else U
             self.take(); pat = self.operand(); self.take()
             x = self.val(f)
             if x is ABSENT: return U
@@ -283,8 +309,8 @@ class _Parser:
         x = self.val(left)
         return U if x is ABSENT else _tri(bool(x))
 
-def eval_when(expr: str, facts: dict) -> str:
-    p = _Parser(_tokens(expr), facts)
+def eval_when(expr: str, facts: dict, decided_absent=()) -> str:
+    p = _Parser(_tokens(expr), facts, decided_absent)
     r = p.expr()
     if p.i != len(p.t): raise ValueError(f"trailing tokens in {expr!r}")
     return r
@@ -302,7 +328,9 @@ TIE_ORDERS = {"deny_wins": RANK, "allow_wins": {"allow": 3, "escalate": 2, "bloc
 def evaluate(artifact: dict, facts: dict) -> dict:
     logic = artifact["logic"]; res = logic.get("resolution", {})
     order = TIE_ORDERS[res.get("tie_breaker", "deny_wins")]
-    results = [(d, eval_when(d["when"], facts)) for d in logic["decisions"]]
+    inputs = artifact.get("data_contract", {}).get("inputs", {})
+    decided_absent = {"action_type"} | {n for n, i in inputs.items() if (i or {}).get("source") in ABSENCE_AUTHORITATIVE}
+    results = [(d, eval_when(d["when"], facts, decided_absent)) for d in logic["decisions"]]
     matched = [d for d, r in results if r == T]
     if not matched:
         default = res.get("default_outcome", "block")          # SPEC-001 §4.6 amendment; SPEC-008 §6.1
@@ -406,6 +434,11 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
             return {"decision": "FACT_SOURCE_VIOLATION", "field": name, "reason_code": "undeclared_input"}
         if declared != src:
             return {"decision": "FACT_SOURCE_VIOLATION", "field": name, "declared": declared, "supplied_via": src}
+    # 7b. every present fact has the type its input declares (§7.1); null is absence, not a type
+    for name, value in facts.items():
+        if name == "action_type" or value is None: continue
+        if not type_ok(value, inputs[name]):
+            return {"decision": "FACT_TYPE_VIOLATION", "field": name, "declared": inputs[name].get("type"), "supplied_via": channel[name]}
     # 8. evaluate the sealed rules over exactly these facts
     ev = evaluate(art, facts)
     digest = binding_digest(act)

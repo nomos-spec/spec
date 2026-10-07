@@ -1,7 +1,7 @@
 # NOMOS-SPEC-008: Act Binding
 
 **Status:** Draft
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Extends:** NOMOS-SPEC-001 v2.2.0, NOMOS-SPEC-007 v1.8.0
 **Proposed:** 2026-09-27
 **Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
@@ -40,7 +40,7 @@ The consequence is a different security property from a gateway's. An agent is f
 every NOMOS component. Its act still cannot take effect, because the only system able to make the
 change is the one that demands the proof.
 
-**Status of this document.** Draft, published with a reference implementation and twenty-one test
+**Status of this document.** Draft, published with a reference implementation and twenty-three test
 vectors (§10). Two implementations by the authors pass every vector; promotion from Draft awaits a
 second-party implementation.
 
@@ -262,7 +262,7 @@ A relying party MUST perform these steps in order and stop at the first failure:
 | 4 | Nonce not already used | `REPLAYED` |
 | 5 | The artifact's sealing key resolves (NOMOS-SPEC-007 rev. 1.8 §4.2a), the seal verifies, the scope admits the artifact, and the sealing key is not a statement key | Any NOMOS-SPEC-007 §4.4 outcome, e.g. `ISSUER_NOT_RECOGNIZED`, `SEAL_INVALID`, `OUT_OF_SCOPE` |
 | 6 | Every testimony statement is valid (§3.3) | `TESTIMONY_INVALID`, `TESTIMONY_OUT_OF_SCOPE` |
-| 7 | Every fact arrived through its declared channel (§7) | `FACT_SOURCE_VIOLATION` |
+| 7 | Every fact arrived through its declared channel and has its declared type (§7, §7.1) | `FACT_SOURCE_VIOLATION`, `FACT_TYPE_VIOLATION` |
 | 8 | Evaluate the sealed rules over exactly those facts (NOMOS-SPEC-001 §4, including §4.6), three-valued (§6.2) | `INCOMPLETE` |
 | 9 | If the result is `ESCALATED`, count consents (§4.4) | `CONSENT_INVALID`, `CONSENT_OUT_OF_SCOPE` |
 
@@ -294,8 +294,13 @@ A relying party MUST evaluate every decision's `when` condition to one of three 
 
 1. A fact is *absent* when no channel (§7) supplied it, or it was supplied as `null`.
 2. A comparison, `in`, `contains`, `between`, `matches`, or bare field reference that reads an
-   absent fact is UNDECIDED. `exists(f)` is always decided: TRUE if `f` is present, else FALSE.
-   A present fact of the wrong type is FALSE, as in NOMOS-SPEC-001 §4.
+   absent fact is UNDECIDED. `exists(f)` is TRUE if `f` is present. If `f` is absent, `exists(f)`
+   is FALSE when `f`'s input declares source `action` or `relying_party`, and UNDECIDED for any
+   other source. Absence decides only where it is authoritative: the action is exactly what will
+   be committed, and the relying party reads its own state, but a missing witness statement says
+   nothing about the world. A present fact cannot have the wrong type for its input (§7.1); a
+   comparison whose operands still differ in type (a fact against a literal of another type) is
+   FALSE, as in NOMOS-SPEC-001 §4.
 3. `and`, `or` and `not` follow Kleene's strong three-valued logic: `and` is FALSE if either side
    is FALSE, otherwise UNDECIDED if either side is UNDECIDED, otherwise TRUE; `or` is TRUE if
    either side is TRUE, otherwise UNDECIDED if either side is UNDECIDED, otherwise FALSE;
@@ -334,6 +339,34 @@ Act with `FACT_SOURCE_VIOLATION` if:
 - a fact arrives through a channel other than the one its input declares;
 - a fact name arrives through more than one channel;
 - a fact is supplied for an input that declares no `source`.
+
+### 7.1 Types (normative)
+
+Every input that declares a `source` MUST also declare a `type` (NOMOS-SPEC-001 §3.5). A
+relying party MUST reject the Act with `FACT_TYPE_VIOLATION`, naming the field, if a present
+fact's value does not have its input's declared type. A `null` value is absence (§6.2), not a type
+error.
+
+| Declared type | Accepted JSON value |
+|---|---|
+| `string` | string |
+| `number` | number (never a boolean) |
+| `integer` | number with an integral value (never a boolean) |
+| `boolean` | `true` or `false` |
+| `date` | string in RFC 3339 `full-date` form |
+| `datetime` | string in RFC 3339 `date-time` form |
+| `enum` | string that is a member of the input's `enum` array |
+| `object` | object |
+| `array` | array |
+
+An input with no `type`, or with a type the relying party does not recognize, fails closed:
+every value supplied for it is a type violation.
+
+The check applies to every channel. Its purpose is the action channel: the presenter chooses the
+action's parameters, and a parameter of the wrong type makes every comparison that reads it FALSE.
+Without this check, an agent could send `"amount": "300000"` so that `amount > 50000` never holds
+while a relying party that coerces the string commits $300,000. A type error is refused before any
+rule is read, so the rules only ever see values they were written for.
 
 This is what closes the lying-presenter gap. A presenter can still *propose* any change it likes,
 and the proposed amount is a trustworthy fact precisely because it is what will be committed. What
@@ -394,13 +427,14 @@ follow §2–§4.
 
 **Test vectors.** `act-vectors/vectors.json`, generated deterministically by
 `act-vectors/generate.py` from published seeds and `act-vectors/pub_lending_v1.nomos`;
-`act-vectors/check.py` runs them. Twenty-one cases: authorization by rule; denial by rule; a presenter asserting a testimony fact; the rule
+`act-vectors/check.py` runs them. Twenty-three cases: authorization by rule; denial by rule; a presenter asserting a testimony fact; the rule
 issuer attempting to testify; a witness outside its claim set; escalation with zero, one and a
 duplicated consent; dual consent; an action altered after consent; an approver claiming a role it
 lacks; no rule matching under default deny; expiry; wrong audience; replay; stale testimony;
 testimony about another subject; rules from an uncertified issuer; a tree-shaped certificate
 set presented in reverse; a withheld fact that would have denied the action; and a withheld fact
-that would have denied an action two approvers then consented to.
+that would have denied an action two approvers then consented to; an action parameter of the wrong
+type; and a withheld witness statement read by `exists()`.
 
 **Known gaps (disclosed).**
 
@@ -443,7 +477,14 @@ include, so a verifier that read a missing fact as false would let the presenter
 rules apply by deciding what to omit. §6.2 removes that choice: a rule that could stop the
 action and that the Act cannot decide prevents the commit. The cost falls on witnesses, who must
 state negative facts explicitly, and on rule authors, whose permissive rules commit nothing until
-every rule above them is decided — the intended trade.
+every rule above them is decided — the intended trade. The same reasoning governs `exists()`
+(§6.2 rule 2): it is decided by absence only for the action and the relying party's own state,
+the two channels where absence is a fact rather than an omission.
+
+**11.7 A value of the wrong type is a way to be silent.** A comparison that cannot be evaluated
+is FALSE, and a FALSE deny rule is as good to an attacker as an absent one. §7.1 refuses such
+values outright, before evaluation, rather than letting each comparison decide what to do with
+them.
 
 ---
 
@@ -466,6 +507,17 @@ design:
 ---
 
 ## Changelog
+
+- **0.3.0** — Two further ways to silence a deny rule, both found while checking §6.2's
+  guarantee against the reference verifier. (1) A present fact of the wrong type made every
+  comparison reading it FALSE, so an agent could send an action parameter as a string and evade
+  `amount > 50000`; §7.1 now requires a declared `type` for every sourced input and rejects a
+  mismatched value as `FACT_TYPE_VIOLATION`. (2) `exists(f)` was always decided, so a block rule
+  written `exists(fraud_alert)` on a testimony input was defeated by omitting the statement;
+  `exists` of an absent fact is now FALSE only for `action` and `relying_party` inputs and
+  UNDECIDED otherwise (§6.2 rule 2). Two vectors added (23): `action_param_wrong_type`,
+  `omitted_fact_exists_undecided`. The 0.2.0 reference verifier fails both; the 21 earlier
+  vectors are byte-identical.
 
 - **0.2.0** — Three-valued evaluation and the `INCOMPLETE` verdict (§6.2): an absent fact is
   undecided rather than false, and an allow or escalate result commits only when every block or
