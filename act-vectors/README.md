@@ -6,13 +6,15 @@ against its witness's `claim` scope; every fact against the channel and type its
 rules over exactly those facts; and, for escalations, consents signed over this Act's binding
 digest by distinct keys holding the required role. Rules are evaluated three-valued: a missing fact is
 undecided, never false, and nothing commits while a rule that could stop the action is undecided (§6.2);
-`exists()` reads absence as FALSE only for action and relying-party inputs.
+`exists()` reads absence as FALSE only for action and relying-party inputs. The artifact must be the
+version in force at verification time (§5.4), from the relying party's own record or an issuer-signed
+in-force statement, and not revoked.
 
 ```
 pip install cryptography
 python3 generate.py pub_lending_v1.nomos > vectors.json   # deterministic, byte-identical
 python3 check.py vectors.json
-26 passed, 0 failed     # 24 vectors, plus NaN and Infinity built in memory
+31 passed, 0 failed     # 29 vectors, plus NaN and Infinity built in memory
 ```
 
 `pub_lending_v1.nomos` is the generator's input: the public Consumer Loan Approval policy, which `generate.py`
@@ -47,7 +49,12 @@ purpose. Never use them as trust material.**
 | action_param_wrong_type | FACT_TYPE_VIOLATION | An amount sent as a string is refused before any rule reads it |
 | omitted_fact_exists_undecided | INCOMPLETE | `exists(fraud_alert)` on a withheld witness statement is undecided, not false |
 | nested_param_wrong_type_undecided | INCOMPLETE | `terms.months > 360` on the string "480" inside an object parameter is undecided, not false |
+| superseded_version_presented | SUPERSEDED | Genuine, unrevoked, but not the version in force: valid for audit, not for a new action |
+| revoked_authority | ARTIFACT_REVOKED | Every key still valid; the rules themselves withdrawn |
+| in_force_statement_accepted | AUTHORIZED | No relying-party record; the issuer's signed in-force statement establishes currency |
+| in_force_statement_stale | VERSION_UNVERIFIED | Monday's statement says nothing about Wednesday |
+| no_in_force_evidence | VERSION_UNVERIFIED | Genuine rules of unknown currency cannot authorize |
 
-Two implementations pass all 24 cases: `act_verify.py` here, and the TypeScript verifier in the
+Two implementations pass all 29 cases: `act_verify.py` here, and the TypeScript verifier in the
 hosted NOMOS platform. Second-party implementations are invited — run `check.py`'s cases against
 yours and open an issue with the result.

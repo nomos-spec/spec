@@ -33,6 +33,7 @@ from cryptography.hazmat.primitives import serialization
 
 MAX_CHAIN = 20
 MAX_WINDOW_SECONDS = 300          # SPEC-008 §5.3 RECOMMENDED upper bound on an Act's validity
+MAX_IN_FORCE_SECONDS = 86400      # SPEC-008 §5.4: an in-force statement lives at most one day
 ARTIFACT_DIMS = ("artifact", "industry", "jurisdiction")
 STATEMENT_DIMS = ("claim", "consent")
 ISO_3166 = re.compile(r"^[A-Z]{2}(-[A-Z0-9]{1,3})?$")
@@ -99,6 +100,7 @@ def ts(s: str) -> datetime:
 def cert_payload(c): return {k: c.get(k) for k in ("parent_kid", "child_kid", "child_public_key_pem", "issued_at", "expires_at")} | {"scope": c.get("scope")}
 def testimony_payload(t): return {k: t.get(k) for k in ("claim", "value", "about", "as_of", "valid_until", "kid")}
 def consent_payload(c): return {k: c.get(k) for k in ("binding_digest", "role", "decision", "signed_at", "kid")}
+def in_force_payload(s): return {k: s.get(k) for k in ("artifact_id", "version", "seal_hash", "as_of", "valid_until", "kid")}
 
 def binding_core(act: dict) -> dict:
     """SPEC-008 §4: what every consent signs, and what the relying party commits."""
@@ -381,8 +383,12 @@ def evaluate(artifact: dict, facts: dict) -> dict:
 # ── the Act verifier (SPEC-008 §6) ──────────────────────────────────────────────────────
 def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
                seen_nonces: Set[str], local_facts: Optional[dict] = None,
-               revoked_kids: Optional[Set[str]] = None, revoked_certs: Optional[Set[str]] = None) -> dict:
+               revoked_kids: Optional[Set[str]] = None, revoked_certs: Optional[Set[str]] = None,
+               in_force: Optional[Dict[str, str]] = None, revoked_artifacts: Optional[Set[str]] = None) -> dict:
+    """`in_force` is the relying party's own record of the version in force, artifact_id -> seal hash
+    (§5.4); `revoked_artifacts` the seal hashes its revocation source lists (NOMOS-SPEC-006)."""
     revoked_kids = revoked_kids or set(); revoked_certs = revoked_certs or set(); local_facts = local_facts or {}
+    in_force = in_force or {}; revoked_artifacts = revoked_artifacts or set()
     # 1. structure
     need = ("act_version", "act_id", "nonce", "issued_at", "expires_at", "relying_party", "action", "authority")
     if not isinstance(act, dict) or any(k not in act for k in need) or act.get("act_version") != "1":
@@ -421,6 +427,32 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     for d, v in r["effective"].items():
         if d not in ARTIFACT_DIMS or not meta_matches(d, v, meta):
             return {"decision": "OUT_OF_SCOPE", "dimension": d}      # incl. a claim/consent key sealing rules
+    # 5a. the authority in force at `now` (§5.4): genuine is not enough, it must also be current.
+    #     A superseded version stays valid for verifying past decisions; it cannot authorize new ones.
+    art_id = meta.get("artifact_id")
+    if seal["hash"] in revoked_artifacts:
+        return {"decision": "ARTIFACT_REVOKED", "artifact_id": art_id}
+    if art_id in in_force:
+        if in_force[art_id] != seal["hash"]:
+            return {"decision": "SUPERSEDED", "artifact_id": art_id, "in_force_seal_hash": in_force[art_id]}
+        in_force_source = "record"
+    else:
+        st = auth.get("in_force")
+        def unverified(reason): return {"decision": "VERSION_UNVERIFIED", "artifact_id": art_id, "reason_code": reason}
+        if st is None: return unverified("no_in_force_evidence")
+        if not isinstance(st, dict) or not all(isinstance(st.get(k), str) for k in ("artifact_id", "version", "seal_hash", "as_of", "valid_until", "kid", "signature")):
+            return unverified("bad_statement")
+        if st["artifact_id"] != art_id or st["seal_hash"] != seal["hash"] or st["version"] != meta.get("version"):
+            return unverified("statement_mismatch")
+        if st["kid"] != seal["kid"] or not sig_ok(r["key"], jcs(in_force_payload(st)), st["signature"]):
+            return unverified("bad_signature")
+        try:
+            sa, su = ts(st["as_of"]), ts(st["valid_until"])
+        except (ValueError, TypeError):
+            return unverified("bad_statement")
+        if (su - sa).total_seconds() > MAX_IN_FORCE_SECONDS or su <= sa: return unverified("statement_window")
+        if now < sa or now > su: return unverified("stale")
+        in_force_source = "statement"
     # 6. testimony
     facts: Dict[str, Any] = {}; channel: Dict[str, str] = {}
     def put(name, value, src):
@@ -467,7 +499,7 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     # 8. evaluate the sealed rules over exactly these facts
     ev = evaluate(art, facts)
     digest = binding_digest(act)
-    base = {"rule": ev["rule"], "act_digest": digest}
+    base = {"rule": ev["rule"], "act_digest": digest, "in_force_source": in_force_source}
     if ev["outcome"] == "undecided":            # §6.2: no consent can stand in for a missing fact
         return {"decision": "INCOMPLETE", "commit": False, "reason_code": "undecided_rules",
                 "open_rules": ev["open_rules"], "open_facts": ev["open_facts"], **base}

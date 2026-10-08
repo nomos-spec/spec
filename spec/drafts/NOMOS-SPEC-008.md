@@ -1,7 +1,7 @@
 # NOMOS-SPEC-008: Act Binding
 
 **Status:** Draft
-**Version:** 0.3.0
+**Version:** 0.4.0
 **Extends:** NOMOS-SPEC-001 v2.2.0, NOMOS-SPEC-007 v1.8.0
 **Proposed:** 2026-09-27
 **Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
@@ -15,7 +15,7 @@ system that has never met the institution establish that those rules are genuine
 anything binding about the *action*: a verdict is computed over caller-supplied facts, and nothing
 ties it to the change that is later made.
 
-That leaves four gaps an autonomous agent can exploit without breaking any cryptography:
+That leaves five gaps an autonomous agent can exploit without breaking any cryptography:
 
 1. **It can skip the check.** A verdict is advice unless the system that makes the change
    refuses changes that lack one.
@@ -25,6 +25,8 @@ That leaves four gaps an autonomous agent can exploit without breaking any crypt
    $400,000 unless it is bound to the amount.
 4. **It can withhold a fact.** If a missing fact counts as false, an agent that cannot forge the
    statement that would deny it can simply leave that statement out.
+5. **It can present yesterday's rules.** A genuine, unrevoked version of an authority that has
+   since been replaced still verifies, unless currency is a condition of its own.
 
 This document defines the **Act**: a self-verifying package that carries an exact change together
 with everything needed to prove the change is legitimate — the sealed rules, the certificates,
@@ -40,7 +42,7 @@ The consequence is a different security property from a gateway's. An agent is f
 every NOMOS component. Its act still cannot take effect, because the only system able to make the
 change is the one that demands the proof.
 
-**Status of this document.** Draft, published with a reference implementation and twenty-four test
+**Status of this document.** Draft, published with a reference implementation and twenty-nine test
 vectors (§10). Two implementations by the authors pass every vector; promotion from Draft awaits a
 second-party implementation.
 
@@ -248,6 +250,64 @@ Recording the nonce and committing the action MUST be one atomic operation (§8)
 A relying party MUST reject an Act whose `relying_party` is not its own identifier
 (`WRONG_RELYING_PARTY`). An Act approved for one ledger cannot be replayed against another.
 
+### 5.4 The authority in force (normative)
+
+A genuine authority is not necessarily a current one. An issuer that replaces version 1.2 of its
+rules with version 1.3 has not said version 1.2 was wrong, and a seal on version 1.2 remains
+genuine. Two different questions follow, and a relying party MUST keep them apart:
+
+| Question | Answered by |
+|---|---|
+| Was this version valid for a decision made at time t? (historical verification) | The seal, the issuer's chain, and revocation statements dated before t (§9) |
+| May this version authorize a new action at time t? (new authorization) | The version the issuer designates as in force at t, established by this section |
+
+A **superseded** version remains valid for historical verification and cannot authorize a new
+action. A **revoked** version (NOMOS-SPEC-006) is withdrawn for both.
+
+After step 5 resolves the issuer, a relying party MUST establish that the Act's artifact is the
+version in force at verification time, from exactly one of two sources:
+
+1. **Its own record.** A relying party that keeps a record of the version in force for an
+   `artifact_id` (a seal hash, maintained from statements published by the issuer) MUST use it,
+   and MUST NOT consult an in-force statement for that `artifact_id`. If the Act's
+   `seal.hash` differs from the recorded one, the result is `SUPERSEDED`, naming the in-force
+   seal hash.
+2. **An in-force statement.** Otherwise, the Act MAY carry `authority.in_force`:
+
+```jsonc
+{
+  "artifact_id": "vector-lending-acts",
+  "version":     "1.3.0",
+  "seal_hash":   "<the artifact's seal.hash>",
+  "as_of":       "2026-10-01T06:00:00.000Z",
+  "valid_until": "2026-10-02T06:00:00.000Z",
+  "kid":         "<the artifact's seal.kid>",
+  "algorithm":   "Ed25519",
+  "signature":   "<base64>"
+}
+```
+
+   The signed payload is `JCS({ artifact_id, version, seal_hash, as_of, valid_until, kid })`. It
+   is valid only if its `artifact_id`, `version` and `seal_hash` equal the artifact's own, its
+   `kid` is the artifact's sealing `kid` and the signature verifies under the key step 5
+   resolved, `valid_until` is later than `as_of` by at most 86,400 seconds, and verification time
+   falls inside `[as_of, valid_until]`. An issuer that supersedes a version stops issuing
+   statements for it; the old version stops authorizing within a day at most, without any call
+   to the issuer.
+
+If neither source establishes the version, the result is `VERSION_UNVERIFIED`, with
+`reason_code` `no_in_force_evidence`, `bad_statement`, `statement_mismatch`, `bad_signature`,
+`statement_window` or `stale`. A relying party MUST also reject an artifact whose seal hash its
+revocation source lists (NOMOS-SPEC-006) as `ARTIFACT_REVOKED`, whatever the in-force source says.
+
+The in-force statement is not part of the binding digest (§4.3): it establishes the currency of
+the rules, which the digest already fixes by `artifact_hash`. An authorized result reports
+`in_force_source`: `record` or `statement`.
+
+A reservation or hold already authorized under the version in force at its own verification time
+is not undone by a later supersession; a relying party that rechecks before final settlement
+MUST recheck revocation and MUST NOT reject for supersession alone.
+
 ---
 
 ## 6. Verification at the relying party (normative)
@@ -261,6 +321,7 @@ A relying party MUST perform these steps in order and stop at the first failure:
 | 3 | Now is inside the window | `NOT_YET_VALID`, `EXPIRED` |
 | 4 | Nonce not already used | `REPLAYED` |
 | 5 | The artifact's sealing key resolves (NOMOS-SPEC-007 rev. 1.8 §4.2a), the seal verifies, the scope admits the artifact, and the sealing key is not a statement key | Any NOMOS-SPEC-007 §4.4 outcome, e.g. `ISSUER_NOT_RECOGNIZED`, `SEAL_INVALID`, `OUT_OF_SCOPE` |
+| 5a | The artifact is not revoked and is the version in force (§5.4) | `ARTIFACT_REVOKED`, `SUPERSEDED`, `VERSION_UNVERIFIED` |
 | 6 | Every testimony statement is valid (§3.3) | `TESTIMONY_INVALID`, `TESTIMONY_OUT_OF_SCOPE` |
 | 7 | Every fact arrived through its declared channel and has its declared type (§7, §7.1) | `FACT_SOURCE_VIOLATION`, `FACT_TYPE_VIOLATION` |
 | 8 | Evaluate the sealed rules over exactly those facts (NOMOS-SPEC-001 §4, including §4.6), three-valued (§6.2) | `INCOMPLETE` |
@@ -419,11 +480,12 @@ A relying party SHOULD append a receipt for every verification to its audit trai
 { "act_id": "act-7f3c…", "act_digest": "<binding digest>", "decision": "AUTHORIZED",
   "rule": "R6", "by_consent": true,
   "verified_at": "2026-10-01T11:59:40.000Z", "committed_at": "2026-10-01T11:59:41.000Z",
-  "relying_party_facts": { "is_first_loan": false } }
+  "relying_party_facts": { "is_first_loan": false }, "in_force_source": "record" }
 ```
 
-A receipt MUST record `verified_at` and `relying_party_facts` — the exact relying-party values
-§6 evaluated — because those are the two inputs to the verdict the Act does not carry. With them,
+A receipt MUST record `verified_at`, `relying_party_facts` — the exact relying-party values §6
+evaluated — and `in_force_source` (§5.4), because those are the inputs to the verdict the Act
+does not carry. With them,
 the receipt plus a retained copy of the Act lets any third party re-run §6 later and reach the
 same verdict, given the relying party's pinned root and the revocation statements dated before
 `verified_at` (NOMOS-SPEC-006, NOMOS-SPEC-007 §5). An auditor needs no access to the agent, the
@@ -442,7 +504,7 @@ follow §2–§4.
 
 **Test vectors.** `act-vectors/vectors.json`, generated deterministically by
 `act-vectors/generate.py` from published seeds and `act-vectors/pub_lending_v1.nomos`;
-`act-vectors/check.py` runs them. Twenty-four cases: authorization by rule; denial by rule; a presenter asserting a testimony fact; the rule
+`act-vectors/check.py` runs them. Twenty-nine cases: authorization by rule; denial by rule; a presenter asserting a testimony fact; the rule
 issuer attempting to testify; a witness outside its claim set; escalation with zero, one and a
 duplicated consent; dual consent; an action altered after consent; an approver claiming a role it
 lacks; no rule matching under default deny; expiry; wrong audience; replay; stale testimony;
@@ -450,7 +512,8 @@ testimony about another subject; rules from an uncertified issuer; a tree-shaped
 set presented in reverse; a withheld fact that would have denied the action; and a withheld fact
 that would have denied an action two approvers then consented to; an action parameter of the wrong
 type; a withheld witness statement read by `exists()`; and a wrong-typed field inside an
-object-typed parameter. `check.py` also builds two cases JSON cannot carry, a NaN and an
+object-typed parameter; a superseded version presented after supersession; a revoked
+authority; an in-force statement accepted, presented stale, and absent. `check.py` also builds two cases JSON cannot carry, a NaN and an
 infinite amount.
 
 **Known gaps (disclosed).**
@@ -505,6 +568,12 @@ rule is read, and §6.2 rule 3 makes any primitive whose operands are outside it
 UNDECIDED, which covers fields nested inside an input and keeps the omission guarantee
 independent of the type check.
 
+**11.8 Revocation is not supersession.** A verifier that asks only "is this authority genuine and
+unrevoked?" accepts an obsolete rule set for a new action: the issuer replaced it without ever
+saying it was wrong. §5.4 makes currency a separate condition. The two failures call for different
+remedies: a superseded Act is re-presented under the version in force; a revoked authority has
+nothing to re-present.
+
 ---
 
 ## 12. Example
@@ -526,6 +595,21 @@ design:
 ---
 
 ## Changelog
+
+- **0.4.0** — The authority in force (§5.4, step 5a). **Reader-triggered review:** a response to
+  Computable Authority Lecture 4.4 ("Somewhere for a No to Go",
+  seldondance.substack.com) argued that a
+  negative verdict needs operational force at the verifier. That prompted a re-test of the
+  lecture's own runtime-authority scenario against this specification, which identified a
+  separate gap in version currency: a superseded but unrevoked authority could still be presented
+  for a new action, and the Act path did not check NOMOS-SPEC-006 artifact revocation at all. A
+  relying party now establishes the version in force at verification time, from its own record or
+  from an issuer-signed in-force statement valid for at most a day, and rejects revoked
+  artifacts. Superseded versions remain verifiable for historical decisions and cannot authorize
+  new actions; holds already authorized are not undone by supersession. New verdicts
+  `SUPERSEDED`, `ARTIFACT_REVOKED`, `VERSION_UNVERIFIED`; receipts record `in_force_source`.
+  Five vectors added (29); the 24 earlier vectors are byte-identical, and the 0.3.0 reference
+  verifier authorizes both the superseded and the revoked case.
 
 - **0.3.0** — Two further ways to silence a deny rule, both found while checking §6.2's
   guarantee against the reference verifier. (1) A present fact of the wrong type made every
