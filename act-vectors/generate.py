@@ -11,7 +11,7 @@ Usage:  python3 generate.py <path/to/pub_lending_v1.nomos>  >  vectors.json
 import base64, copy, hashlib, json, sys
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives import serialization
-from act_verify import jcs, sha256_hex, compute_kid, cert_payload, testimony_payload, consent_payload, binding_digest
+from act_verify import jcs, sha256_hex, compute_kid, cert_payload, testimony_payload, consent_payload, in_force_payload, binding_digest
 
 def key(label):
     sk = Ed25519PrivateKey.from_private_bytes(hashlib.sha256(b"nomos-spec-008-vector:" + label.encode()).digest())
@@ -45,7 +45,7 @@ SOURCES = {"amount": "action", "loan_purpose": "action", "has_cosigner": "action
            "delinquency_severity": "testimony", "days_since_delinquency": "testimony",
            "employment_type": "testimony", "is_first_loan": "relying_party"}
 
-def build_artifact(src, extra_rule=None, extra_inputs=None):
+def build_artifact(src, extra_rule=None, extra_inputs=None, artifact_id=None, version=None):
     a = copy.deepcopy(src)
     if extra_inputs: a["data_contract"]["inputs"].update(extra_inputs)
     a.pop("seal", None)
@@ -64,6 +64,8 @@ def build_artifact(src, extra_rule=None, extra_inputs=None):
     if extra_rule:
         a["meta"]["artifact_id"] = "vector-lending-acts-" + extra_rule["id"].lower()
         a["logic"]["decisions"].append(extra_rule)
+    if artifact_id: a["meta"]["artifact_id"] = artifact_id
+    if version: a["meta"]["version"] = version
     a["logic"]["resolution"] = {"conflict_policy": "highest_priority", "tie_breaker": "deny_wins", "default_outcome": "block"}
     for e in a["governance"]["escalations"]:
         e["required_consents"] = 2 if e["id"] == "ESC_DUAL" else 1
@@ -101,8 +103,10 @@ def good_profile(credit, dti):
 def main():
     art = build_artifact(json.load(open(sys.argv[1])))
     cases = []
-    def add(name, a, expected, note, now=NOW, seen=None):
-        cases.append({"name": name, "note": note, "now": now, "seen_nonces": seen or [], "act": a, "expected": expected})
+    def add(name, a, expected, note, now=NOW, seen=None, revoked_artifacts=None):
+        c = {"name": name, "note": note, "now": now, "seen_nonces": seen or [], "act": a, "expected": expected}
+        if revoked_artifacts: c["revoked_artifacts"] = revoked_artifacts
+        cases.append(c)
 
     small = {"amount": 4000, "loan_purpose": "education", "has_cosigner": False}
     a1 = act(1, small, good_profile(768, 0.22), art)
@@ -191,8 +195,33 @@ def main():
         {"decision": "INCOMPLETE", "reason_code": "undecided_rules", "open_rules": ["R14"], "open_facts": ["terms.months"], "commit": False},
         "The first case under a policy that refuses terms over 360 months, with the term sent as the string \"480\" inside an object-typed parameter. The object passes the §7.1 type check; the comparison inside it cannot be evaluated on a string, so R14 is undecided rather than false, and nothing commits.")
 
+    # ── §5.4 the authority in force ─────────────────────────────────────────────────────
+    older = build_artifact(json.load(open(sys.argv[1])), version="0.9.0")
+    add("superseded_version_presented", act(25, small, good_profile(768, 0.22), older),
+        {"decision": "SUPERSEDED", "artifact_id": "vector-lending-acts", "in_force_seal_hash": art["seal"]["hash"]},
+        "The first case's Act carrying version 0.9.0 of the same authority: genuinely sealed by the certified issuer and never revoked, but the relying party's record shows a newer version in force. A superseded version stays valid for verifying decisions made under it; it cannot authorize a new action.")
+    add("revoked_authority", act(26, small, good_profile(768, 0.22), art),
+        {"decision": "ARTIFACT_REVOKED", "artifact_id": "vector-lending-acts"},
+        "The first case after the issuer revoked the authority itself (NOMOS-SPEC-006). Every key on the chain is still valid; the rules are not.",
+        revoked_artifacts=[art["seal"]["hash"]])
+    unpinned = build_artifact(json.load(open(sys.argv[1])), artifact_id="vector-lending-acts-partner")
+    def in_force_statement(artifact, as_of="2026-10-01T06:00:00.000Z", valid_until="2026-10-02T06:00:00.000Z"):
+        st = {"artifact_id": artifact["meta"]["artifact_id"], "version": artifact["meta"]["version"], "seal_hash": artifact["seal"]["hash"],
+              "as_of": as_of, "valid_until": valid_until, "kid": ISSUER["kid"], "algorithm": "Ed25519"}
+        st["signature"] = sign(ISSUER, in_force_payload(st)); return st
+    a27 = act(27, small, good_profile(768, 0.22), unpinned); a27["authority"]["in_force"] = in_force_statement(unpinned)
+    add("in_force_statement_accepted", a27, {"decision": "AUTHORIZED", "rule": "R0", "commit": True, "in_force_source": "statement"},
+        "An authority this relying party keeps no record for. The Act carries the issuer's signed statement that this exact version is in force, valid for a day, so the relying party can establish currency without a call out.")
+    a28 = act(28, small, good_profile(768, 0.22), unpinned)
+    a28["authority"]["in_force"] = in_force_statement(unpinned, as_of="2026-09-29T06:00:00.000Z", valid_until="2026-09-30T06:00:00.000Z")
+    add("in_force_statement_stale", a28, {"decision": "VERSION_UNVERIFIED", "reason_code": "stale"},
+        "The same, with Monday's statement presented on Wednesday. A statement that this version was in force then says nothing about now.")
+    add("no_in_force_evidence", act(29, small, good_profile(768, 0.22), unpinned), {"decision": "VERSION_UNVERIFIED", "reason_code": "no_in_force_evidence"},
+        "The same authority with neither a relying-party record nor an in-force statement. Genuine rules of unknown currency cannot authorize.")
+
     out = {"_readme": "NOMOS-SPEC-008 Act test vectors. Verify each case's act with root_public_key_pem as the pinned root, relying_party_id and local_facts as the relying party's own configuration, `now` as the evaluation time and `seen_nonces` as the nonce ledger, and compare against expected (only the keys present in expected are normative). Keys are derived from published seeds: never use them as trust material.",
            "root_public_key_pem": ROOT["pem"], "relying_party_id": RP, "local_facts": {"is_first_loan": False},
+           "in_force": {a["meta"]["artifact_id"]: a["seal"]["hash"] for a in (art, flagged, termed)},
            "keys": {k["label"]: k["kid"] for k in (ROOT, ISSUER, BUREAU, APPROVER_A, APPROVER_B, REVIEWER, ROGUE)},
            "cases": cases}
     print(json.dumps(out, indent=2, ensure_ascii=False))

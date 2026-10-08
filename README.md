@@ -65,7 +65,7 @@ A `.nomos` artifact now moves through four distinct moments:
 | `spec/drafts/NOMOS-SPEC-008.md` | **Draft.** Act Binding — an action bound to sealed rules, signed testimony and human consents, verified by the relying party that would commit it |
 | `spec/drafts/NOMOS-SPEC-007-rev-1.8.0.md` | **Draft revision.** SPEC-007 1.8.0 — statement keys (witness `claim`, approver `consent` scopes) and target-first chain resolution |
 | `spec/drafts/NOMOS-SPEC-001-amendment-2.2.0.md` | **Draft amendment.** SPEC-001 2.2.0 — unmatched outcome, declared fact sources, consent counts |
-| `act-vectors/` | NOMOS-SPEC-008 reference verifier (`act_verify.py`), deterministic generator, and 24 test vectors |
+| `act-vectors/` | NOMOS-SPEC-008 reference verifier (`act_verify.py`), deterministic generator, and 29 test vectors |
 | `examples/lending_policy_v1.nomos` | Example — public lending policy |
 | `examples/healthcare_triage_v1.nomos` | Example — clinical triage protocol |
 | `examples/minimal_v1.nomos` | Minimal valid artifact (structure check only) |
@@ -337,13 +337,14 @@ Together these answer the question a service asks when an agent arrives acting f
 
 **SPEC-007 — recognizing the issuer.** A key certificate lets one key certify another to sign, within a scope, until an expiry. A verifier pins its own root and resolves the chain offline — no prior relationship with the issuer, no call home. Revision 1.8.0 (draft) extends the same certificates to the keys that state facts (`claim` scope, for witnesses such as a credit bureau) and the keys that approve (`consent` scope, for human approvers), and resolves chains target-first so the verdict never depends on the order certificates are presented in.
 
-**SPEC-008 — binding the action.** A verdict computed over caller-supplied facts is advice; nothing ties it to the change made later. An Act closes four gaps an agent could otherwise exploit without breaking any cryptography:
+**SPEC-008 — binding the action.** A verdict computed over caller-supplied facts is advice; nothing ties it to the change made later. An Act closes five gaps an agent could otherwise exploit without breaking any cryptography:
 
 | Gap | How the Act closes it |
 |-----|-----------------------|
 | Skipping the check | The relying party — the system that would make the change — demands and verifies the Act itself |
 | Lying to the check | Each fact comes from the channel its input declares: the action, the relying party's own state, or signed testimony from a witness whose key is certified for that claim — and has the type its input declares, so a wrong-typed value cannot make a deny rule fall silent |
 | Changing the action after the check | Consents are signed over the Act's binding digest; a changed amount invalidates them |
+| Presenting yesterday's rules | The relying party establishes the version in force at verification time; a superseded or revoked authority cannot authorize a new action |
 | Withholding a fact | Evaluation is three-valued: a missing fact is undecided, never false, and the verdict is `INCOMPLETE` while an outranking block or escalate rule is undecided; `exists()` treats absence as decided only for the action and the relying party's own state |
 
 An agent is free to bypass every NOMOS component. Its act still cannot take effect, because the only system able to make the change is the one that demands the proof.
@@ -351,7 +352,7 @@ An agent is free to bypass every NOMOS component. Its act still cannot take effe
 ```bash
 cd act-vectors
 pip install cryptography
-python3 check.py vectors.json        # 26 passed: 24 vectors + 2 non-finite cases
+python3 check.py vectors.json        # 31 passed: 29 vectors + 2 non-finite cases
 ```
 
 See `spec/drafts/NOMOS-SPEC-008.md` for the full specification and `act-vectors/README.md` for every case.
@@ -382,7 +383,7 @@ NOMOS-SPEC-007 and NOMOS-SPEC-008 are built and running.
   (`POST /api/v1/chain-of-trust/verify`) both pass all 14 vectors in
   [`chain-of-trust-vectors/`](chain-of-trust-vectors/).
 - **SPEC-008:** the Python reference verifier in [`act-vectors/`](act-vectors/) and the
-  platform's TypeScript verifier both pass all 24 vectors. The platform's budget ledger accepts a
+  platform's TypeScript verifier both pass all 29 vectors. The platform's budget ledger accepts a
   verified Act as the authority for a reservation.
 
 Both are published as Drafts because a standard is promoted on independent implementation —

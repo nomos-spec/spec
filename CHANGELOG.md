@@ -7,6 +7,39 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-008 0.4.0, Draft] — 2026-10-08 (The authority in force)
+
+### Why — reader-triggered review
+
+A response to Computable Authority Lecture 4.4, "Somewhere for a No to Go"
+(seldondance.substack.com), argued that a negative verdict needs operational force at the
+verifier. That prompted a re-test of the lecture's own runtime-authority scenario ("the policy
+version changed on Wednesday") against this specification. The re-test identified a separate gap:
+a superseded but unrevoked authority could still be presented for a new action, and the Act path
+did not check NOMOS-SPEC-006 artifact revocation at all.
+
+### Changed (normative)
+
+- §5.4 (new), step 5a: the relying party establishes that the artifact is the version in force at
+  verification time — from its own record, or, without one, from an issuer-signed in-force
+  statement valid for at most 86,400 seconds — and rejects an artifact its revocation source
+  lists. New verdicts `SUPERSEDED`, `ARTIFACT_REVOKED`, `VERSION_UNVERIFIED`.
+- §5.4 separates historical verification (was this version valid for a decision at t?) from new
+  authorization (may this version authorize an action at t?). Superseded versions stay valid for
+  the first and are refused for the second; revoked versions are refused for both. A hold already
+  authorized is not undone by supersession.
+- §9: receipts record `in_force_source`. §11.8 (new): revocation is not supersession.
+
+### Vectors
+
+29 cases (was 24): `superseded_version_presented`, `revoked_authority`,
+`in_force_statement_accepted`, `in_force_statement_stale`, `no_in_force_evidence`. The 24 earlier
+cases are byte-identical; the 0.3.0 reference verifier authorizes both the superseded and the
+revoked case. Vector files gain a top-level `in_force` record; a case MAY carry
+`revoked_artifacts`.
+
+---
+
 ## [NOMOS-SPEC-008 0.3.0, Draft] — 2026-10-07 (Two more ways to silence a deny rule)
 
 ### Why
