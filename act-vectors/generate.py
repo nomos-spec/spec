@@ -219,9 +219,21 @@ def main():
     add("no_in_force_evidence", act(29, small, good_profile(768, 0.22), unpinned), {"decision": "VERSION_UNVERIFIED", "reason_code": "no_in_force_evidence"},
         "The same authority with neither a relying-party record nor an in-force statement. Genuine rules of unknown currency cannot authorize.")
 
+    # ── 0.5.0: equal-priority escalations ─────────────────────────────────────────────
+    tie_src = json.load(open(sys.argv[1]))
+    tie_src["logic"]["decisions"].insert(0, {"id": "R16", "name": "recent_delinquency_dual",
+        "description": "Any delinquency in the last year needs dual senior approval.",
+        "when": "days_since_delinquency < 365", "then": [{"type": "escalate", "escalation_id": "ESC_DUAL"}], "else": [], "priority": 70})
+    tied = build_artifact(tie_src, artifact_id="vector-lending-acts-r16")
+    a30 = act(30, {"amount": 20000, "loan_purpose": "education", "has_cosigner": False}, good_profile(768, 0.22), tied)
+    a30["consents"] = [consent(REVIEWER, a30, role="REVIEWER")]
+    add("equal_priority_escalation_withheld", a30,
+        {"decision": "INCOMPLETE", "reason_code": "undecided_rules", "open_rules": ["R16"], "open_facts": ["days_since_delinquency"], "commit": False},
+        "A $20,000 loan under a policy where R16 (a delinquency in the last year needs two senior approvers) and R10 (loans over $10,000 need one reviewer) share priority 70, R16 listed first. The Act omits days_since_delinquency and carries one reviewer consent. Under 0.4.0 neither escalation outranks the other, so the reviewer's consent authorized the loan; on the true facts R16 decides and two senior approvers are needed. The carrier would have chosen who approves by staying silent.")
+
     out = {"_readme": "NOMOS-SPEC-008 Act test vectors. Verify each case's act with root_public_key_pem as the pinned root, relying_party_id and local_facts as the relying party's own configuration, `now` as the evaluation time and `seen_nonces` as the nonce ledger, and compare against expected (only the keys present in expected are normative). Keys are derived from published seeds: never use them as trust material.",
            "root_public_key_pem": ROOT["pem"], "relying_party_id": RP, "local_facts": {"is_first_loan": False},
-           "in_force": {a["meta"]["artifact_id"]: a["seal"]["hash"] for a in (art, flagged, termed)},
+           "in_force": {a["meta"]["artifact_id"]: a["seal"]["hash"] for a in (art, flagged, termed, tied)},
            "keys": {k["label"]: k["kid"] for k in (ROOT, ISSUER, BUREAU, APPROVER_A, APPROVER_B, REVIEWER, ROGUE)},
            "cases": cases}
     print(json.dumps(out, indent=2, ensure_ascii=False))

@@ -14,7 +14,7 @@ in-force statement, and not revoked.
 pip install cryptography
 python3 generate.py pub_lending_v1.nomos > vectors.json   # deterministic, byte-identical
 python3 check.py vectors.json
-31 passed, 0 failed     # 29 vectors, plus NaN and Infinity built in memory
+32 passed, 0 failed     # 30 vectors, plus NaN and Infinity built in memory
 ```
 
 `pub_lending_v1.nomos` is the generator's input: the public Consumer Loan Approval policy, which `generate.py`
@@ -45,6 +45,7 @@ purpose. Never use them as trust material.**
 | rules_from_uncertified_issuer | ISSUER_NOT_RECOGNIZED | Unchanged SPEC-007 behavior |
 | tree_pool_presented_in_reverse | AUTHORIZED | Order independence for tree-shaped certificate sets |
 | omitted_fact_withholds_authorization | INCOMPLETE | Leaving out the bankruptcy statement leaves R1 undecided; nothing commits |
+| equal_priority_escalation_withheld | INCOMPLETE | Leaving out the delinquency fact leaves the dual-approval escalation R16 undecided at R10's priority; one reviewer's consent cannot stand in |
 | omitted_fact_cannot_be_consented_away | INCOMPLETE | Two valid consents cannot stand in for a withheld DTI statement |
 | action_param_wrong_type | FACT_TYPE_VIOLATION | An amount sent as a string is refused before any rule reads it |
 | omitted_fact_exists_undecided | INCOMPLETE | `exists(fraud_alert)` on a withheld witness statement is undecided, not false |
@@ -55,6 +56,6 @@ purpose. Never use them as trust material.**
 | in_force_statement_stale | VERSION_UNVERIFIED | Monday's statement says nothing about Wednesday |
 | no_in_force_evidence | VERSION_UNVERIFIED | Genuine rules of unknown currency cannot authorize |
 
-Two implementations pass all 29 cases: `act_verify.py` here, and the TypeScript verifier in the
+Two implementations pass all 30 cases: `act_verify.py` here, and the TypeScript verifier in the
 hosted NOMOS platform. Second-party implementations are invited — run `check.py`'s cases against
 yours and open an issue with the result.

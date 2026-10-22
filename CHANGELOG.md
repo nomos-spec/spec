@@ -7,6 +7,32 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-008 0.5.0, Draft] — 2026-10-22 (Equal-priority escalations)
+
+### Why — found by proof
+
+Proving the specification's omission-safety property (nothing commits that the true facts would
+refuse, or would route to different approvers) against the reference verifier exposed a gap that
+the 29 vectors, the 729 derived mutants and agreement between the two implementations all missed:
+both implementations shared it.
+
+### Fixed (normative, security)
+
+- §6.2 clause (ii): an UNDECIDED `escalate` decision at the deciding decision's priority, naming a
+  different `escalation_id`, now returns `INCOMPLETE`. Previously neither of two equal-priority
+  escalations outranked the other, so a presenter could withhold the fact behind the stricter one
+  (e.g. two senior approvers) and have the weaker one's approvers (one reviewer) authorize the act.
+- §6.2: the first-listed tie-break between equal-priority decisions of equally ranked outcomes,
+  which both implementations already followed, is stated.
+
+### Added
+
+- Vector 30, `equal_priority_escalation_withheld`. The 0.4.0 verifier returns `AUTHORIZED`; 0.5.0
+  returns `INCOMPLETE` naming `R16` and `days_since_delinquency`. The 29 earlier vectors are
+  byte-identical; `check.py` passes 32/32.
+
+---
+
 ## [NOMOS-SPEC-008 0.4.0, Draft] — 2026-10-08 (The authority in force)
 
 ### Why — reader-triggered review

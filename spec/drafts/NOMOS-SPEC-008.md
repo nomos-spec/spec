@@ -1,7 +1,7 @@
 # NOMOS-SPEC-008: Act Binding
 
 **Status:** Draft
-**Version:** 0.4.0
+**Version:** 0.5.0
 **Extends:** NOMOS-SPEC-001 v2.2.0, NOMOS-SPEC-007 v1.8.0
 **Proposed:** 2026-09-27
 **Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
@@ -42,7 +42,7 @@ The consequence is a different security property from a gateway's. An agent is f
 every NOMOS component. Its act still cannot take effect, because the only system able to make the
 change is the one that demands the proof.
 
-**Status of this document.** Draft, published with a reference implementation and twenty-nine test
+**Status of this document.** Draft, published with a reference implementation and thirty test
 vectors (§10). Two implementations by the authors pass every vector; promotion from Draft awaits a
 second-party implementation.
 
@@ -374,14 +374,24 @@ A relying party MUST evaluate every decision's `when` condition to one of three 
    either side is TRUE, otherwise UNDECIDED if either side is UNDECIDED, otherwise FALSE;
    `not UNDECIDED` is UNDECIDED.
 
-Resolution (NOMOS-SPEC-001 §4) runs over the decisions whose condition is TRUE, unchanged. Let
+Resolution (NOMOS-SPEC-001 §4) runs over the decisions whose condition is TRUE, unchanged, with
+one tie made explicit: when two TRUE decisions share the highest priority and the tie order ranks
+their outcomes equally, the one listed first in `logic.decisions` decides. Let
 `D` be the deciding decision, or none when the outcome came from `default_outcome`. A decision
 `X` **outranks** `D` when `D` is none, when `X.priority > D.priority`, or when the priorities
 are equal and the artifact's `tie_breaker` ranks `X`'s outcome above `D`'s.
 
 If the outcome is `allow` or `escalate`, and any decision whose outcome is `block` or `escalate`
-both outranks `D` and is UNDECIDED, the relying party MUST return `INCOMPLETE` and MUST NOT
-commit. Consents are not counted: no approval stands in for a fact the Act does not establish.
+is UNDECIDED and either
+
+- (i) outranks `D`, or
+- (ii) has `D`'s priority, has outcome `escalate` while `D`'s outcome is `escalate`, and names a
+  different `escalation_id` than `D`,
+
+the relying party MUST return `INCOMPLETE` and MUST NOT commit. Clause (ii) exists because
+neither of two equal-priority escalations outranks the other: without it, a presenter could
+withhold the fact that triggers the stricter escalation and have the weaker one's approvers
+authorize the act. Consents are not counted: no approval stands in for a fact the Act does not establish.
 The response carries `open_rules` (those decisions' ids, highest priority first) and
 `open_facts` (the fields that left those decisions undecided, absent or outside a primitive's
 domain, sorted). A `block` outcome is returned as
@@ -596,6 +606,15 @@ design:
 
 ## Changelog
 
+- **0.5.0** — Equal-priority escalations (§6.2, clause (ii)). Found while proving the
+  specification's omission-safety property, not by the vectors, the mutants or agreement between
+  the two implementations, which shared the gap. Two `escalate` decisions of equal priority that
+  name different escalations never outranked each other, so an undecided one did not hold the
+  result open: a presenter could withhold the fact behind a dual-approval escalation and have a
+  single reviewer's consent authorize the act. An undecided equal-priority escalation naming a
+  different escalation now returns `INCOMPLETE`. The first-listed tie-break, which both
+  implementations already followed, is now stated. One vector added (30); the 29 earlier
+  vectors are byte-identical.
 - **0.4.0** — The authority in force (§5.4, step 5a). **Reader-triggered review:** a response to
   Computable Authority Lecture 4.4 ("Somewhere for a No to Go",
   seldondance.substack.com) argued that a
