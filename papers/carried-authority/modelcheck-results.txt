@@ -1,0 +1,10 @@
+rule sets: 20000  (vocabulary: 3 witnessed facts, 1 relying-party fact; domains with absence and a wrong-kind value)
+  SPEC-008 reference evaluator (three-valued, INCOMPLETE gate)
+    committing partial states checked: 722815
+    soundness violations: 0  (rule sets affected: 0)
+    completeness violations: 0
+  ablated evaluator (absent read as false)
+    committing partial states checked: 1003077
+    soundness violations: 122616  (rule sets affected: 8160)
+    completeness violations: 0
+python3 modelcheck.py 20000 2026  642.67s user 8.60s system 87% cpu 12:27.25 total

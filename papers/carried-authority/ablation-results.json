@@ -1,0 +1,142 @@
+[
+  {
+    "theorem": "T4",
+    "property_removed": "three-valued evaluation",
+    "attack": "withhold bankruptcy_active (true in the world)",
+    "full": "INCOMPLETE",
+    "ablated": "AUTHORIZED",
+    "truth": "DENIED",
+    "witnessed": true,
+    "note": "R1 outranks R0; read as false, the bankruptcy rule falls silent"
+  },
+  {
+    "theorem": "T4",
+    "property_removed": "three-valued evaluation",
+    "attack": "withhold dti_ratio (0.58 in the world), attach two genuine consents",
+    "full": "INCOMPLETE",
+    "ablated": "AUTHORIZED",
+    "truth": "DENIED",
+    "witnessed": true,
+    "note": "approvers cannot stand in for a missing fact"
+  },
+  {
+    "theorem": "T4",
+    "property_removed": "three-valued evaluation",
+    "attack": "withhold the fraud alert read by exists(fraud_alert)",
+    "full": "INCOMPLETE",
+    "ablated": "AUTHORIZED",
+    "truth": "DENIED",
+    "witnessed": true,
+    "note": "exists() decided by absence for a witnessed fact"
+  },
+  {
+    "theorem": "T4",
+    "property_removed": "three-valued evaluation",
+    "attack": "send terms.months as the string \"480\" inside an object parameter",
+    "full": "INCOMPLETE",
+    "ablated": "AUTHORIZED",
+    "truth": "DENIED",
+    "witnessed": true,
+    "note": "a value of the wrong kind is a way to be silent"
+  },
+  {
+    "theorem": "T1",
+    "property_removed": "relying-party-pinned root",
+    "attack": "an allow-everything authority sealed under a root the presenter supplies",
+    "full": "ISSUER_NOT_RECOGNIZED",
+    "ablated": "AUTHORIZED",
+    "truth": "DENIED",
+    "witnessed": true,
+    "note": "the institution never issued this authority"
+  },
+  {
+    "theorem": "T2",
+    "property_removed": "rule-declared fact channels",
+    "attack": "agent asserts credit_score 768 (bureau holds 600)",
+    "full": "FACT_SOURCE_VIOLATION",
+    "ablated": "AUTHORIZED",
+    "truth": "DENIED",
+    "witnessed": true,
+    "note": "the rules evaluate the agent's story, not the world"
+  },
+  {
+    "theorem": "T3",
+    "property_removed": "binding over action",
+    "attack": "consents for $75,000 reused for $750,000",
+    "full": "CONSENT_INVALID",
+    "ablated": "AUTHORIZED",
+    "truth": "approved: $75,000",
+    "witnessed": true,
+    "note": "approval transfers to a different change"
+  },
+  {
+    "theorem": "T3",
+    "property_removed": "binding over testimony_digest",
+    "attack": "approvers shown DTI 31%; a second genuine, in-window statement (48%) swapped in",
+    "full": "CONSENT_INVALID",
+    "ablated": "AUTHORIZED",
+    "truth": "approved: DTI 31%",
+    "witnessed": true,
+    "note": "approval transfers to a different evidentiary basis"
+  },
+  {
+    "theorem": "T3",
+    "property_removed": "binding over relying_party",
+    "attack": "consents for the core ledger re-addressed to the card ledger",
+    "full": "CONSENT_INVALID",
+    "ablated": "AUTHORIZED",
+    "truth": "approved: commit at core-ledger",
+    "witnessed": true,
+    "note": "one approval, two systems of record"
+  },
+  {
+    "theorem": "T3",
+    "property_removed": "binding over nonce",
+    "attack": "the committed Act resubmitted with a fresh nonce and the same consents",
+    "full": "CONSENT_INVALID",
+    "ablated": "AUTHORIZED",
+    "truth": "approved: one disbursement",
+    "witnessed": true,
+    "note": "approved once, committed twice"
+  },
+  {
+    "theorem": "T3",
+    "property_removed": "binding over artifact_hash",
+    "attack": "consents given under one policy satisfy a different escalation (R15, cosigner waiver) under another in-force policy",
+    "full": "CONSENT_INVALID",
+    "ablated": "AUTHORIZED",
+    "truth": "approved: R6 under the base policy",
+    "witnessed": true,
+    "note": "approval transfers to a different rule"
+  },
+  {
+    "theorem": "T5",
+    "property_removed": "currency separate from authenticity",
+    "attack": "present v0.9.0 (no review threshold), superseded but never revoked",
+    "full": "SUPERSEDED",
+    "ablated": "AUTHORIZED",
+    "truth": "ESCALATED",
+    "witnessed": true,
+    "note": "the current version sends a $20,000 loan to a reviewer"
+  },
+  {
+    "theorem": "P6",
+    "property_removed": "order-independent resolution",
+    "attack": "same certificates, expired path first",
+    "full": "AUTHORIZED",
+    "ablated": "TESTIMONY_INVALID",
+    "truth": "AUTHORIZED",
+    "witnessed": null,
+    "note": "verdict selected by presentation order"
+  },
+  {
+    "theorem": "P6",
+    "property_removed": "order-independent resolution",
+    "attack": "same certificates, valid path first",
+    "full": "AUTHORIZED",
+    "ablated": "AUTHORIZED",
+    "truth": "AUTHORIZED",
+    "witnessed": null,
+    "note": "verdict selected by presentation order"
+  }
+]

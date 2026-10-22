@@ -1,0 +1,14 @@
+rule sets: 20000  (vocabulary: 3 witnessed facts, 1 relying-party fact; domains with absence and a wrong-kind value)
+  SPEC-008 0.4.0 reference evaluator
+    committing partial states checked: 719750
+    soundness violations: 2320  (rule sets affected: 265)
+    completeness violations: 0
+  reference with the equal-priority escalation gate
+    committing partial states checked: 710978
+    soundness violations: 0  (rule sets affected: 0)
+    completeness violations: 0
+  ablated evaluator (undecided read as not holding)
+    committing partial states checked: 1007312
+    soundness violations: 144001  (rule sets affected: 9271)
+    completeness violations: 0
+python3 modelcheck2.py 20000 2026  900.11s user 11.40s system 89% cpu 17:01.41 total
