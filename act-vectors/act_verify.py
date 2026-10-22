@@ -371,7 +371,10 @@ def evaluate(artifact: dict, facts: dict) -> dict:
             if decider is None: return True
             if d["priority"] != decider["priority"]: return d["priority"] > decider["priority"]
             return order[d["then"][0]["type"]] > order[ev["outcome"]]
-        open_rules = [d for d, r in results if r == U and d["then"][0]["type"] in ("block", "escalate") and outranks(d)]
+        def same_rank_other_escalation(d) -> bool:   # §6.2 (0.5.0): equal priority, both escalate, different escalation
+            return (decider is not None and ev["outcome"] == "escalate" and d["then"][0]["type"] == "escalate"
+                    and d["priority"] == decider["priority"] and d["then"][0].get("escalation_id") != ev.get("escalation_id"))
+        open_rules = [d for d, r in results if r == U and d["then"][0]["type"] in ("block", "escalate") and (outranks(d) or same_rank_other_escalation(d))]
         if open_rules:
             open_rules.sort(key=lambda d: -d["priority"])
             return {"outcome": "undecided", "rule": ev["rule"],
