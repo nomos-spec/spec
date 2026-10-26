@@ -1,0 +1,124 @@
+{
+  "_readme": "NOMOS-SPEC-009 conformance profile. Configure the relying party under test with exactly this: its relying_party_id, the pinned root, one authority (record currency, the in-force seal hash below, action type \"purchase\"), max_window_seconds of at least 600, and its own fact vendor_blocked = (action.params.vendor === \"blocked-vendor\"). Its commit may do anything. Then run: node run.mjs <relying party origin>. Keys are test keys: never trust material.",
+  "spec": "NOMOS-SPEC-009 0.1.0",
+  "relying_party_id": "nomos-conformance:rp",
+  "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAclDdACHjjJcfKADCyo0oYVa1QzS8F1BYyOnuzrf/h7w=\n-----END PUBLIC KEY-----\n",
+  "authority": {
+    "artifact_id": "nomos-conformance-purchasing",
+    "actions": [
+      "purchase"
+    ],
+    "currency_policy": "record",
+    "in_force_seal_hash": "67d00fb4211c34f9265903a1e59a5e9a2d54d0073c7ab276d47f3215f7ab53eb"
+  },
+  "local_facts": {
+    "vendor_blocked": "action.params.vendor === \"blocked-vendor\""
+  },
+  "min_max_window_seconds": 600,
+  "artifact": {
+    "nomos_version": "2.2.0",
+    "meta": {
+      "artifact_id": "nomos-conformance-purchasing",
+      "version": "1.0.0",
+      "name": "NOMOS-SPEC-009 conformance policy"
+    },
+    "data_contract": {
+      "inputs": {
+        "amount": {
+          "type": "number",
+          "source": "action"
+        },
+        "vendor": {
+          "type": "string",
+          "source": "action"
+        },
+        "budget_remaining": {
+          "type": "number",
+          "source": "testimony"
+        },
+        "vendor_blocked": {
+          "type": "boolean",
+          "source": "relying_party"
+        }
+      }
+    },
+    "logic": {
+      "decisions": [
+        {
+          "id": "P1",
+          "when": "vendor_blocked == true",
+          "then": [
+            {
+              "type": "block"
+            }
+          ],
+          "priority": 100
+        },
+        {
+          "id": "P2",
+          "when": "amount > budget_remaining",
+          "then": [
+            {
+              "type": "block"
+            }
+          ],
+          "priority": 90
+        },
+        {
+          "id": "P3",
+          "when": "amount > 1000",
+          "then": [
+            {
+              "type": "escalate",
+              "escalation_id": "ESC_MANAGER"
+            }
+          ],
+          "priority": 50
+        },
+        {
+          "id": "P4",
+          "when": "amount <= 1000",
+          "then": [
+            {
+              "type": "allow"
+            }
+          ],
+          "priority": 10
+        }
+      ],
+      "resolution": {
+        "conflict_policy": "highest_priority",
+        "tie_breaker": "deny_wins",
+        "default_outcome": "block"
+      }
+    },
+    "governance": {
+      "roles": [
+        {
+          "role_id": "MANAGER"
+        }
+      ],
+      "escalations": [
+        {
+          "id": "ESC_MANAGER",
+          "role_required": "MANAGER",
+          "required_consents": 1
+        }
+      ]
+    },
+    "seal": {
+      "status": "sealed",
+      "hash": "67d00fb4211c34f9265903a1e59a5e9a2d54d0073c7ab276d47f3215f7ab53eb",
+      "canonicalization": "JCS",
+      "signature_algorithm": "Ed25519",
+      "kid": "RW_9M5_pciNIM20j",
+      "signed_by": {
+        "name": "NOMOS-SPEC-009 conformance issuer (test)",
+        "org_id": "nomos-conformance",
+        "role": "policy_issuer",
+        "timestamp": "2026-01-01T00:00:00.000Z"
+      },
+      "signature": "a9akdIL6ib1l030NJ8JkeGEzlQP680XNVQoffgRc1pEyndVO5ko++P56cqpkz2+lIPae4kZrNSvr/4dLqlxjCg=="
+    }
+  }
+}
