@@ -7,6 +7,28 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-010 0.1.0, Draft] — 2026-10-26 (Signature Suites)
+
+### Added
+
+- **NOMOS-SPEC-010, Signature Suites** (new, Draft): a closed registry of three suites, `Ed25519`,
+  `ES256` and `WebAuthn-ES256`, defined once for every NOMOS specification that verifies a
+  signature. Adopted by RFC-0001 so that keys conferring authority can stay in their holders'
+  custody: KMS and HSM products universally support P-256, and approvers sign with passkeys.
+- Canonical keys are fixed byte for byte (§3.1); ES256 signatures are P1363 and low-S (§4);
+  WebAuthn assertions must bind the exact payload through the challenge and must be
+  user-verified (§5).
+- `suite-vectors/`: 27 deterministic vectors, the Python reference, and an independent Node
+  verifier. Both pass all 27.
+
+### Found while implementing
+
+- The first draft defined canonical keys as "decode, re-encode and compare". Node and Python
+  re-encode a compressed P-256 point differently, so two conformant verifiers disagreed on whether
+  a key was valid. §3.1 now states the exact bytes.
+
+---
+
 ## [NOMOS-SPEC-008 0.5.0, Draft] — 2026-10-22 (Equal-priority escalations)
 
 ### Why — found by proof
