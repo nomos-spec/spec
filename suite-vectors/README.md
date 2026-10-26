@@ -16,7 +16,7 @@ node check.mjs vectors.json          # an independent verifier, Node built-in cr
 | `generate.py` | Builds `vectors.json` from published seeds |
 | `check.py` | Runs the reference verifier against the vectors |
 | `check.mjs` | A second verifier, written from the specification text alone, sharing no code with the reference |
-| `vectors.json` | 27 cases: Ed25519, ES256 (including low-S and P1363 encoding), WebAuthn-ES256 (including user verification and challenge binding), canonical keys, and closed-registry rejection |
+| `vectors.json` | 30 cases: Ed25519 (including the key-validity rule of §3.1), ES256 (including low-S and P1363 encoding), WebAuthn-ES256 (including user verification and challenge binding), canonical keys, and closed-registry rejection |
 
 Each case gives the suite, the public key, the exact payload bytes (`payload_b64`) and the proof,
 and expects `{ ok, reason }`. A conformant verifier reproduces `expected` exactly, including the

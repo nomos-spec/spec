@@ -9,35 +9,51 @@ exist only to make the vectors regenerable and auditable. Never treat them as tr
 Usage:  python3 generate.py <path/to/pub_lending_v1.nomos>  >  vectors.json
 """
 import base64, copy, hashlib, json, sys
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from cryptography.hazmat.primitives import serialization
-from act_verify import jcs, sha256_hex, compute_kid, cert_payload, testimony_payload, consent_payload, in_force_payload, binding_digest
+from act_verify import jcs, sha256_hex, cert_payload, testimony_payload, consent_payload, in_force_payload, binding_digest
+from nomos import suites as S
 
-def key(label):
-    sk = Ed25519PrivateKey.from_private_bytes(hashlib.sha256(b"nomos-spec-008-vector:" + label.encode()).digest())
-    pem = sk.public_key().public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo).decode()
-    return {"sk": sk, "pem": pem, "kid": compute_kid(pem), "label": label}
+def key(label, kind="Ed25519"):
+    seed = b"nomos-spec-008-vector:" + label.encode()
+    sk = S.ed25519_key_from_seed(seed) if kind == "Ed25519" else S.p256_key_from_seed(seed)
+    pem = S.public_pem(sk)
+    return {"sk": sk, "pem": pem, "kid": S.compute_kid(pem), "label": label, "suite": "Ed25519" if kind == "Ed25519" else "ES256"}
 
-def sign(k, payload): return base64.b64encode(k["sk"].sign(jcs(payload))).decode()
+def sign(k, payload):
+    return S.sign_ed25519(k["sk"], jcs(payload)) if k["suite"] == "Ed25519" else S.sign_es256(k["sk"], jcs(payload))
 
 ROOT, ISSUER, BUREAU, APPROVER_A, APPROVER_B, REVIEWER, ROGUE = (key(x) for x in
     ("root", "issuer:acme-bank-credit-policy", "witness:credit-bureau", "approver:senior-a", "approver:senior-b", "approver:reviewer", "rogue:uncertified"))
+# 0.6.0: P-256 keys (NOMOS-SPEC-010) — a second key of approver A, two passkeys, a P-256 witness
+APPROVER_A2 = key("approver:senior-a:second-device", "P-256")
+PASSKEY_B = key("approver:senior-b:passkey", "P-256")
+UNNAMED = key("approver:no-approver-term")
+DOUBLE = key("approver:certified-as-two-people")
+BUREAU_P = key("witness:credit-bureau:p256", "P-256")
+PASSKEY_W = key("witness:passkey", "P-256")
 ISS, EXP = "2026-01-01T00:00:00.000Z", "2030-01-01T00:00:00.000Z"
 NOW = "2026-10-01T12:00:00.000Z"
 RP = "acme-bank:core-ledger"
 
 def cert(parent, child, scope=None):
     c = {"parent_kid": parent["kid"], "child_kid": child["kid"], "child_public_key_pem": child["pem"],
-         "scope": scope, "issued_at": ISS, "expires_at": EXP, "algorithm": "Ed25519"}
+         "scope": scope, "issued_at": ISS, "expires_at": EXP, "algorithm": parent["suite"]}
     c["signature"] = sign(parent, cert_payload(c)); return c
 
 POOL = [
     cert(ROOT, ISSUER),                                                             # may seal rules
     cert(ROOT, BUREAU, "claim:credit_score,dti_ratio,bankruptcy_active,delinquency_severity,days_since_delinquency"),
-    cert(ROOT, APPROVER_A, "consent:SENIOR_APPROVER"),
-    cert(ROOT, APPROVER_B, "consent:SENIOR_APPROVER"),
-    cert(ROOT, REVIEWER, "consent:REVIEWER"),
+    cert(ROOT, APPROVER_A, "consent:SENIOR_APPROVER approver:p-senior-a"),         # 0.6.0 §4.4: consent keys
+    cert(ROOT, APPROVER_B, "consent:SENIOR_APPROVER approver:p-senior-b"),         # name the person they belong to
+    cert(ROOT, REVIEWER, "consent:REVIEWER approver:p-reviewer"),
 ]
+# 0.6.0 certificates, presented only by the cases that use them
+CERT_A2 = cert(ROOT, APPROVER_A2, "consent:SENIOR_APPROVER approver:p-senior-a")      # a second key of the same person
+CERT_PASSKEY_B = cert(ROOT, PASSKEY_B, "suite:WebAuthn-ES256 consent:SENIOR_APPROVER approver:p-senior-b")
+CERT_UNNAMED = cert(ROOT, UNNAMED, "consent:SENIOR_APPROVER")                        # 0.5.0-style: no approver term
+CERT_DOUBLE_1 = cert(ROOT, DOUBLE, "consent:SENIOR_APPROVER approver:p-senior-c")
+CERT_DOUBLE_2 = cert(ROOT, DOUBLE, "consent:SENIOR_APPROVER approver:p-senior-d")    # the same key, a different person
+CERT_BUREAU_P = cert(ROOT, BUREAU_P, "claim:credit_score,dti_ratio,bankruptcy_active,delinquency_severity,days_since_delinquency")
+CERT_PASSKEY_W = cert(ROOT, PASSKEY_W, "suite:WebAuthn-ES256 claim:credit_score,dti_ratio,bankruptcy_active,delinquency_severity")
 
 # ── the authority: the public lending policy, re-sealed for these vectors ──────────────
 SOURCES = {"amount": "action", "loan_purpose": "action", "has_cosigner": "action",
@@ -78,7 +94,7 @@ def build_artifact(src, extra_rule=None, extra_inputs=None, artifact_id=None, ve
     return a
 
 def testimony(witness, claim, value, about="APP-1042", as_of="2026-10-01T11:30:00.000Z", valid_until="2026-10-02T11:30:00.000Z"):
-    t = {"claim": claim, "value": value, "about": about, "as_of": as_of, "valid_until": valid_until, "kid": witness["kid"], "algorithm": "Ed25519"}
+    t = {"claim": claim, "value": value, "about": about, "as_of": as_of, "valid_until": valid_until, "kid": witness["kid"], "algorithm": witness["suite"]}
     t["signature"] = sign(witness, testimony_payload(t)); return t
 
 def act(n, params, witnessed, artifact, presenter_facts=None, rp=RP, issued="2026-10-01T11:59:00.000Z", expires="2026-10-01T12:04:00.000Z", pool=None):
@@ -91,8 +107,14 @@ def act(n, params, witnessed, artifact, presenter_facts=None, rp=RP, issued="202
     return a
 
 def consent(approver, a, role="SENIOR_APPROVER"):
-    c = {"binding_digest": binding_digest(a), "role": role, "decision": "approve", "signed_at": "2026-10-01T11:59:30.000Z", "kid": approver["kid"], "algorithm": "Ed25519"}
+    c = {"binding_digest": binding_digest(a), "role": role, "decision": "approve", "signed_at": "2026-10-01T11:59:30.000Z", "kid": approver["kid"], "algorithm": approver["suite"]}
     c["signature"] = sign(approver, consent_payload(c)); return c
+
+def passkey_consent(passkey, a, role="SENIOR_APPROVER", **assertion):
+    """A WebAuthn-ES256 consent (0.6.0 §4.5): the authenticator signs authenticatorData ‖
+    SHA-256(clientDataJSON), and the challenge commits to the consent payload."""
+    c = {"binding_digest": binding_digest(a), "role": role, "decision": "approve", "signed_at": "2026-10-01T11:59:30.000Z", "kid": passkey["kid"], "algorithm": "WebAuthn-ES256"}
+    c.update(S.webauthn_assert(passkey["sk"], jcs(consent_payload(c)), **assertion)); return c
 
 def good_profile(credit, dti):
     # The bureau states the absence of a 90-day delinquency explicitly: under SPEC-008 §6.2 an
@@ -103,9 +125,10 @@ def good_profile(credit, dti):
 def main():
     art = build_artifact(json.load(open(sys.argv[1])))
     cases = []
-    def add(name, a, expected, note, now=NOW, seen=None, revoked_artifacts=None):
+    def add(name, a, expected, note, now=NOW, seen=None, revoked_artifacts=None, currency_policy=None):
         c = {"name": name, "note": note, "now": now, "seen_nonces": seen or [], "act": a, "expected": expected}
         if revoked_artifacts: c["revoked_artifacts"] = revoked_artifacts
+        if currency_policy: c["currency_policy"] = currency_policy
         cases.append(c)
 
     small = {"amount": 4000, "loan_purpose": "education", "has_cosigner": False}
@@ -132,7 +155,7 @@ def main():
     add("escalated_one_of_two", a7, {"decision": "ESCALATED", "consents_valid": 1, "consents_required": 2, "commit": False}, "One valid senior consent of the two required.")
     a8 = act(8, mid, good_profile(742, 0.31), art); c = consent(APPROVER_A, a8); a8["consents"] = [c, c]
     add("same_approver_twice_counts_once", a8, {"decision": "ESCALATED", "consents_valid": 1, "consents_required": 2, "commit": False},
-        "Dual control means two different keys, not the same approval presented twice.")
+        "Dual control means two different people, not the same approval presented twice.")
     a9 = act(9, mid, good_profile(742, 0.31), art); a9["consents"] = [consent(APPROVER_A, a9), consent(APPROVER_B, a9)]
     add("authorized_by_dual_consent", a9, {"decision": "AUTHORIZED", "rule": "R6", "by_consent": True, "consents_valid": 2, "commit": True},
         "Both senior approvers signed this Act's binding digest. The escalation is satisfied and the exact change may be committed.")
@@ -227,14 +250,69 @@ def main():
     tied = build_artifact(tie_src, artifact_id="vector-lending-acts-r16")
     a30 = act(30, {"amount": 20000, "loan_purpose": "education", "has_cosigner": False}, good_profile(768, 0.22), tied)
     a30["consents"] = [consent(REVIEWER, a30, role="REVIEWER")]
-    add("equal_priority_escalation_withheld", a30,
-        {"decision": "INCOMPLETE", "reason_code": "undecided_rules", "open_rules": ["R16"], "open_facts": ["days_since_delinquency"], "commit": False},
-        "A $20,000 loan under a policy where R16 (a delinquency in the last year needs two senior approvers) and R10 (loans over $10,000 need one reviewer) share priority 70, R16 listed first. The Act omits days_since_delinquency and carries one reviewer consent. Under 0.4.0 neither escalation outranks the other, so the reviewer's consent authorized the loan; on the true facts R16 decides and two senior approvers are needed. The carrier would have chosen who approves by staying silent.")
+    add("equal_priority_escalation_refused", a30,
+        {"decision": "MALFORMED", "reason_code": "ambiguous_escalation"},
+        "A $20,000 loan under a policy where R16 (a delinquency in the last year needs two senior approvers) and R10 (loans over $10,000 need one reviewer) share priority 70. Under 0.4.0 the carrier could choose who approves by staying silent; 0.5.0 withheld the verdict (INCOMPLETE). Under 0.6.0 (NOMOS-SPEC-001 amendment 2.3.0) such an authority cannot authorize anything new: which escalation governs would depend on listing order, so the author must give the two rules distinct priorities. Historical verification is unaffected.")
 
-    out = {"_readme": "NOMOS-SPEC-008 Act test vectors. Verify each case's act with root_public_key_pem as the pinned root, relying_party_id and local_facts as the relying party's own configuration, `now` as the evaluation time and `seen_nonces` as the nonce ledger, and compare against expected (only the keys present in expected are normative). Keys are derived from published seeds: never use them as trust material.",
-           "root_public_key_pem": ROOT["pem"], "relying_party_id": RP, "local_facts": {"is_first_loan": False},
+    # ── 0.6.0: consents counted by person (§4.4), WebAuthn (§4.5), suites (§6.3) ──────────
+    def mid_act(n, consents_of, extra_certs=(), witnessed=None):
+        a = act(n, mid, witnessed or good_profile(742, 0.31), art, pool=POOL + list(extra_certs))
+        a["consents"] = consents_of(a); return a
+    add("two_keys_of_one_person_count_once", mid_act(31, lambda a: [consent(APPROVER_A, a), consent(APPROVER_A2, a)], [CERT_A2]),
+        {"decision": "ESCALATED", "consents_valid": 1, "consents_required": 2, "commit": False},
+        "Senior approver A signs from two devices, with two different keys certified as the same person (approver:p-senior-a). Dual control needs two people; this is one.")
+    add("two_people_count_twice", mid_act(32, lambda a: [consent(APPROVER_A2, a), consent(APPROVER_B, a)], [CERT_A2]),
+        {"decision": "AUTHORIZED", "rule": "R6", "by_consent": True, "consents_valid": 2, "commit": True},
+        "A's second device (an ES256 key) and B: two people, so the escalation is satisfied.")
+    add("consent_key_without_approver", mid_act(33, lambda a: [consent(APPROVER_A, a), consent(UNNAMED, a)], [CERT_UNNAMED]),
+        {"decision": "CONSENT_OUT_OF_SCOPE", "role": "SENIOR_APPROVER", "dimension": "approver"},
+        "A key certified to consent as SENIOR_APPROVER but not tied to a person. Under 0.6.0 its consent cannot be counted, so it is refused rather than ignored.")
+    add("approver_depends_on_the_path", mid_act(34, lambda a: [consent(APPROVER_A, a), consent(DOUBLE, a)], [CERT_DOUBLE_1, CERT_DOUBLE_2]),
+        {"decision": "CONSENT_INVALID", "reason_code": "approver_ambiguous"},
+        "One key certified twice, as two different people. Whoever carries the Act would choose which person the consent counts for by choosing which certificate to send, so the consent is refused.")
+    add("passkey_consent_authorizes", mid_act(35, lambda a: [consent(APPROVER_A, a), passkey_consent(PASSKEY_B, a)], [CERT_PASSKEY_B]),
+        {"decision": "AUTHORIZED", "rule": "R6", "by_consent": True, "consents_valid": 2, "commit": True},
+        "B approves with a passkey: a WebAuthn assertion whose challenge commits to this exact Act's binding digest, the role, the decision and the time.")
+    add("passkey_user_not_verified", mid_act(36, lambda a: [consent(APPROVER_A, a), passkey_consent(PASSKEY_B, a, flags=0x01)], [CERT_PASSKEY_B]),
+        {"decision": "CONSENT_INVALID", "reason_code": "user_not_verified"},
+        "The authenticator reports user presence (a touch) but not user verification. A touch is not an approval.")
+    def other_role_challenge(a):
+        c = passkey_consent(PASSKEY_B, a)
+        forged = dict(c, role="REVIEWER")
+        made_for = S.b64url_encode(hashlib.sha256(jcs(consent_payload(forged))).digest())
+        return [consent(APPROVER_A, a), passkey_consent(PASSKEY_B, a, challenge=made_for)]
+    add("passkey_challenge_for_another_role", mid_act(37, other_role_challenge, [CERT_PASSKEY_B]),
+        {"decision": "CONSENT_INVALID", "reason_code": "challenge_mismatch"},
+        "A genuine passkey assertion whose challenge was made for a REVIEWER consent, presented as a SENIOR_APPROVER consent.")
+    add("passkey_registration_is_not_approval", mid_act(38, lambda a: [consent(APPROVER_A, a), passkey_consent(PASSKEY_B, a, type_="webauthn.create")], [CERT_PASSKEY_B]),
+        {"decision": "CONSENT_INVALID", "reason_code": "bad_client_data"},
+        "The authenticator data comes from a registration ceremony, not an approval.")
+    add("es256_witness", act(39, small, [testimony(BUREAU_P, "credit_score", 768), testimony(BUREAU_P, "dti_ratio", 0.22),
+                                          testimony(BUREAU_P, "bankruptcy_active", False), testimony(BUREAU_P, "delinquency_severity", "none")],
+                             art, pool=POOL + [CERT_BUREAU_P]),
+        {"decision": "AUTHORIZED", "rule": "R0", "commit": True},
+        "The first case with the bureau signing from a P-256 key held in a KMS (ES256, low-S).")
+    add("passkey_cannot_testify", act(40, small, [testimony(PASSKEY_W, "credit_score", 768), testimony(BUREAU, "dti_ratio", 0.22),
+                                                   testimony(BUREAU, "bankruptcy_active", False), testimony(BUREAU, "delinquency_severity", "none")],
+                                      art, pool=POOL + [CERT_PASSKEY_W]),
+        {"decision": "TESTIMONY_OUT_OF_SCOPE", "claim": "credit_score", "dimension": "suite"},
+        "A key enrolled as a passkey (suite:WebAuthn-ES256) signs testimony under ES256. Even with a claim term, a passkey approves and does nothing else.")
+
+    # ── 0.6.0: currency policy (§5.5) ─────────────────────────────────────────────────
+    a41 = act(41, small, good_profile(768, 0.22), unpinned); a41["authority"]["in_force"] = in_force_statement(unpinned)
+    add("record_only_refuses_a_statement", a41, {"decision": "VERSION_UNVERIFIED", "reason_code": "not_in_record"},
+        "The in-force statement case, at a relying party that establishes currency from its own record only. The issuer's statement is not read: under this policy a compromised issuer key cannot make any version current (R-19 Theorem 9.4).",
+        currency_policy="record")
+    add("record_only_with_a_record", act(42, small, good_profile(768, 0.22), art),
+        {"decision": "AUTHORIZED", "rule": "R0", "commit": True, "in_force_source": "record", "currency_policy": "record"},
+        "The first case under record-only currency: the relying party's own record shows this version in force.",
+        currency_policy="record")
+
+    out = {"_readme": "NOMOS-SPEC-008 Act test vectors. Verify each case's act with root_public_key_pem as the pinned root, relying_party_id, local_facts and currency_policy (a case's own currency_policy overrides it) as the relying party's own configuration, `now` as the evaluation time and `seen_nonces` as the nonce ledger, and compare against expected (only the keys present in expected are normative). Keys are derived from published seeds: never use them as trust material.",
+           "spec": "NOMOS-SPEC-008 0.6.0",
+           "root_public_key_pem": ROOT["pem"], "relying_party_id": RP, "local_facts": {"is_first_loan": False}, "currency_policy": "record_or_statement",
            "in_force": {a["meta"]["artifact_id"]: a["seal"]["hash"] for a in (art, flagged, termed, tied)},
-           "keys": {k["label"]: k["kid"] for k in (ROOT, ISSUER, BUREAU, APPROVER_A, APPROVER_B, REVIEWER, ROGUE)},
+           "keys": {k["label"]: k["kid"] for k in (ROOT, ISSUER, BUREAU, APPROVER_A, APPROVER_B, REVIEWER, ROGUE, APPROVER_A2, PASSKEY_B, UNNAMED, DOUBLE, BUREAU_P, PASSKEY_W)},
            "cases": cases}
     print(json.dumps(out, indent=2, ensure_ascii=False))
 
