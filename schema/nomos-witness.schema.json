@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/nomos-witness.schema.json",
+  "title": "NOMOS-SPEC-009 \u00a73.3 witness document",
+  "type": "object",
+  "required": [
+    "nomos_document",
+    "version",
+    "witness_id",
+    "kid",
+    "claims",
+    "statement_endpoint"
+  ],
+  "properties": {
+    "nomos_document": {
+      "const": "witness"
+    },
+    "version": {
+      "const": "1"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "witness_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kid": {
+      "type": "string"
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "statement_endpoint": {
+      "type": "string",
+      "pattern": "^(https://|http://(localhost|127\\.0\\.0\\.1|\\[::1\\])(:\\d+)?/)"
+    },
+    "access": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

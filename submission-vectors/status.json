@@ -1,0 +1,34 @@
+{
+  "_readme": "NOMOS-SPEC-009 \u00a76.2: the HTTP status for each SPEC-008 \u00a76 verdict. An implementation maps every verdict here exactly.",
+  "spec": "NOMOS-SPEC-009 0.1.0",
+  "statuses": {
+    "AUTHORIZED": 201,
+    "ESCALATED": 202,
+    "INCOMPLETE": 422,
+    "DENIED": 403,
+    "REPLAYED": 409,
+    "MALFORMED": 400,
+    "WRONG_RELYING_PARTY": 400,
+    "NOT_YET_VALID": 400,
+    "EXPIRED": 400,
+    "ISSUER_NOT_RECOGNIZED": 400,
+    "KEY_REVOKED": 400,
+    "CERTIFICATE_REVOKED": 400,
+    "OUT_OF_SCOPE": 400,
+    "SEAL_INVALID": 400,
+    "ARTIFACT_REVOKED": 400,
+    "SUPERSEDED": 400,
+    "VERSION_UNVERIFIED": 400,
+    "TESTIMONY_INVALID": 400,
+    "TESTIMONY_OUT_OF_SCOPE": 400,
+    "FACT_SOURCE_VIOLATION": 400,
+    "FACT_TYPE_VIOLATION": 400,
+    "CONSENT_INVALID": 400,
+    "CONSENT_OUT_OF_SCOPE": 400,
+    "NOT_ACCEPTED": 400
+  },
+  "transport": {
+    "wrong_media_type": 415,
+    "body_too_large": 413
+  }
+}

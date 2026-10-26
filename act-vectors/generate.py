@@ -298,6 +298,15 @@ def main():
         {"decision": "TESTIMONY_OUT_OF_SCOPE", "claim": "credit_score", "dimension": "suite"},
         "A key enrolled as a passkey (suite:WebAuthn-ES256) signs testimony under ES256. Even with a claim term, a passkey approves and does nothing else.")
 
+    # ── 0.6.0: open_facts names only the absent operand (§6.2) ────────────────────────
+    limited = build_artifact(json.load(open(sys.argv[1])), extra_rule={
+        "id": "R15", "name": "over_approved_limit", "description": "A loan above the applicant's approved limit is refused.",
+        "when": "amount > approved_limit", "then": [{"type": "block"}], "else": [], "priority": 120},
+        extra_inputs={"approved_limit": {"type": "number", "required": False, "description": "The applicant's approved limit", "source": "testimony"}})
+    add("two_field_rule_names_only_the_absent_fact", act(43, small, good_profile(768, 0.22), limited),
+        {"decision": "INCOMPLETE", "reason_code": "undecided_rules", "open_rules": ["R15"], "open_facts": ["approved_limit"], "commit": False},
+        "A rule compares two facts, amount (in the action) and approved_limit (witnessed, and withheld). It is undecided, and open_facts names approved_limit alone: the amount is present and well typed, so it did not leave the rule undecided (§6.2).")
+
     # ── 0.6.0: currency policy (§5.5) ─────────────────────────────────────────────────
     a41 = act(41, small, good_profile(768, 0.22), unpinned); a41["authority"]["in_force"] = in_force_statement(unpinned)
     add("record_only_refuses_a_statement", a41, {"decision": "VERSION_UNVERIFIED", "reason_code": "not_in_record"},
@@ -311,7 +320,7 @@ def main():
     out = {"_readme": "NOMOS-SPEC-008 Act test vectors. Verify each case's act with root_public_key_pem as the pinned root, relying_party_id, local_facts and currency_policy (a case's own currency_policy overrides it) as the relying party's own configuration, `now` as the evaluation time and `seen_nonces` as the nonce ledger, and compare against expected (only the keys present in expected are normative). Keys are derived from published seeds: never use them as trust material.",
            "spec": "NOMOS-SPEC-008 0.6.0",
            "root_public_key_pem": ROOT["pem"], "relying_party_id": RP, "local_facts": {"is_first_loan": False}, "currency_policy": "record_or_statement",
-           "in_force": {a["meta"]["artifact_id"]: a["seal"]["hash"] for a in (art, flagged, termed, tied)},
+           "in_force": {a["meta"]["artifact_id"]: a["seal"]["hash"] for a in (art, flagged, termed, tied, limited)},
            "keys": {k["label"]: k["kid"] for k in (ROOT, ISSUER, BUREAU, APPROVER_A, APPROVER_B, REVIEWER, ROGUE, APPROVER_A2, PASSKEY_B, UNNAMED, DOUBLE, BUREAU_P, PASSKEY_W)},
            "cases": cases}
     print(json.dumps(out, indent=2, ensure_ascii=False))

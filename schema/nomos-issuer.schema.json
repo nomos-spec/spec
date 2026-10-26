@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nomosprotocol.com/schema/nomos-issuer.schema.json",
+  "title": "NOMOS-SPEC-009 \u00a73.2 issuer document",
+  "type": "object",
+  "required": [
+    "nomos_document",
+    "version",
+    "issuer_id",
+    "authorities",
+    "key_certs"
+  ],
+  "properties": {
+    "nomos_document": {
+      "const": "issuer"
+    },
+    "version": {
+      "const": "1"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "issuer_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authorities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "version",
+          "seal_hash",
+          "artifact_url"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "seal_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "artifact_url": {
+            "type": "string",
+            "pattern": "^(https://|http://(localhost|127\\.0\\.0\\.1|\\[::1\\])(:\\d+)?/)"
+          },
+          "in_force_url": {
+            "type": "string",
+            "pattern": "^(https://|http://(localhost|127\\.0\\.0\\.1|\\[::1\\])(:\\d+)?/)"
+          }
+        }
+      }
+    },
+    "key_certs": {
+      "type": "array",
+      "maxItems": 20
+    },
+    "witnesses": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(https://|http://(localhost|127\\.0\\.0\\.1|\\[::1\\])(:\\d+)?/)"
+      }
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "role",
+          "endpoint"
+        ],
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string",
+            "pattern": "^(https://|http://(localhost|127\\.0\\.0\\.1|\\[::1\\])(:\\d+)?/)"
+          }
+        }
+      }
+    },
+    "revocations_url": {
+      "type": "string",
+      "pattern": "^(https://|http://(localhost|127\\.0\\.0\\.1|\\[::1\\])(:\\d+)?/)"
+    }
+  },
+  "additionalProperties": true
+}
