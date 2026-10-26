@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-NOMOS-SPEC-008 reference verifier — Act Binding.
+NOMOS-SPEC-008 0.6.0 reference verifier — Act Binding.
 
 Verifies a self-verifying Act at the relying party (the system that commits the change):
   1. the Act is addressed to this relying party, inside its validity window, not replayed
-  2. the authority artifact's issuer resolves to the pinned root   (NOMOS-SPEC-007 §4)
+  2. the authority artifact's issuer resolves to the pinned root, scope-aware (NOMOS-SPEC-007
+     rev. 1.9 §4.2a), its seal verifies, it is the version in force under the relying party's
+     declared currency policy (§5.4, §5.5), and its escalations are unambiguous (step 5b)
   3. every fact is testimony from a witness whose chain carries `claim:` scope for it
      (NOMOS-SPEC-007 rev. 1.8 §3.4.1), or comes from the channel its data_contract declares,
      and has the type that input declares (SPEC-008 §7.1)
@@ -12,9 +14,10 @@ Verifies a self-verifying Act at the relying party (the system that commits the 
      (NOMOS-SPEC-001 §4, with the §4.6 default-outcome amendment), three-valued: a condition
      that needs an absent fact is UNDECIDED, and an allow or escalate result stands only when
      every block or escalate rule that outranks it is decided (SPEC-008 §6.2)
-  5. an ESCALATED verdict becomes AUTHORIZED only with enough consents, each signed over this
-     Act's binding digest by a key whose chain carries `consent:` scope for the required role
+  5. an ESCALATED verdict becomes AUTHORIZED only with consents from enough distinct people
+     (§4.4), each signed over this Act's binding digest, by Ed25519, ES256 or passkey (§4.5)
 
+Signatures follow NOMOS-SPEC-010; chain resolution is the shared python/nomos/chain.py.
 Everything is resolved from the Act itself plus the relying party's own configuration
 (pinned root, its own identifier, its own state facts, its nonce ledger). No network call.
 
@@ -60,9 +63,28 @@ def type_ok(value: Any, spec: dict) -> bool:
     return False        # no type, or one this verifier does not know: fail closed
 
 
-def sig_ok(pem: str, msg: bytes, sig_b64: str) -> bool:
-    """SPEC-008 0.5.0 statements are Ed25519 (NOMOS-SPEC-010 §4)."""
-    return suites.verify("Ed25519", pem, msg, {"signature": sig_b64})[0]
+# §6.3 (0.6.0): the suites each statement may be signed under (NOMOS-SPEC-010)
+TESTIMONY_SUITES = ("Ed25519", "ES256")          # testimony and in-force statements
+CONSENT_SUITES = ("Ed25519", "ES256", "WebAuthn-ES256")
+CURRENCY_POLICIES = ("record", "record_or_statement")
+WEBAUTHN_FIELDS = ("authenticator_data", "client_data_json", "signature")
+
+def proof_of(st: dict) -> dict:
+    """The NOMOS-SPEC-010 proof object a statement carries for its suite."""
+    if st.get("algorithm") == "WebAuthn-ES256": return {k: st.get(k) for k in WEBAUTHN_FIELDS}
+    return {"signature": st.get("signature")}
+
+def statement_sig(pem: str, st: dict, payload: dict) -> Tuple[bool, Optional[str]]:
+    return suites.verify(st.get("algorithm"), pem, jcs(payload), proof_of(st))
+
+def ambiguous_escalation(art: dict) -> bool:
+    """NOMOS-SPEC-001 amendment 2.3.0: two escalate decisions of equal priority naming different
+    escalations. The verdict would depend on which is listed first (R-19 §7.5)."""
+    named: Dict[Any, Set[Any]] = {}
+    for d in (art.get("logic") or {}).get("decisions") or []:
+        t = (d.get("then") or [{}])[0]
+        if t.get("type") == "escalate": named.setdefault(d.get("priority"), set()).add(t.get("escalation_id"))
+    return any(len(ids) > 1 for ids in named.values())
 
 
 # ── signed payloads ─────────────────────────────────────────────────────────────────────
@@ -85,10 +107,14 @@ def binding_digest(act: dict) -> str: return sha256_hex(jcs(binding_core(act)))
 
 
 # ── chain resolution: NOMOS-SPEC-007 rev. 1.9, shared (python/nomos/chain.py) ─────────────
-def resolve_statement_key(kind: str, name: str, kid: str, pool: list, root_pem: str, now: datetime,
+def resolve_statement_key(kind: str, name: str, st: dict, pool: list, root_pem: str, now: datetime,
                           meta: dict, revoked_kids: Set[str], revoked_certs: Set[str]) -> dict:
-    """§4.6: resolve a witness or approver key for one statement, scope-aware (rev. 1.9 §4.2a)."""
-    return chain.resolve(kid, pool, root_pem, now, chain.for_statement(kind, name, meta, "Ed25519"), revoked_kids, revoked_certs)
+    """§4.6: resolve a witness or approver key for one statement, scope-aware (rev. 1.9 §4.2a),
+    under the statement's own suite. A consent key must carry an `approver` (§4.4), and every
+    admitted path to it is collected so the approver cannot depend on the path presented."""
+    consent = kind == "consent"
+    admit = chain.for_statement(kind, name, meta, st["algorithm"], required=("approver",) if consent else ())
+    return chain.resolve(st["kid"], pool, root_pem, now, admit, revoked_kids, revoked_certs, all_paths=consent)
 
 def statement_failure(r: dict, invalid: str, out_of_scope: str, **who) -> dict:
     """An admission failure (the key is genuine but not permitted this statement) is *_OUT_OF_SCOPE;
@@ -271,11 +297,14 @@ def evaluate(artifact: dict, facts: dict) -> dict:
 
 # ── the Act verifier (SPEC-008 §6) ──────────────────────────────────────────────────────
 def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
-               seen_nonces: Set[str], local_facts: Optional[dict] = None,
+               seen_nonces: Set[str], currency_policy: str, local_facts: Optional[dict] = None,
                revoked_kids: Optional[Set[str]] = None, revoked_certs: Optional[Set[str]] = None,
                in_force: Optional[Dict[str, str]] = None, revoked_artifacts: Optional[Set[str]] = None) -> dict:
     """`in_force` is the relying party's own record of the version in force, artifact_id -> seal hash
-    (§5.4); `revoked_artifacts` the seal hashes its revocation source lists (NOMOS-SPEC-006)."""
+    (§5.4); `revoked_artifacts` the seal hashes its revocation source lists (NOMOS-SPEC-006);
+    `currency_policy` the policy it declares for establishing currency (§5.5): "record" or
+    "record_or_statement". There is no default: the choice is the relying party's to declare."""
+    if currency_policy not in CURRENCY_POLICIES: raise ValueError(f"currency_policy must be one of {CURRENCY_POLICIES}")
     revoked_kids = revoked_kids or set(); revoked_certs = revoked_certs or set(); local_facts = local_facts or {}
     in_force = in_force or {}; revoked_artifacts = revoked_artifacts or set()
     # 1. structure
@@ -321,15 +350,21 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
         if in_force[art_id] != seal["hash"]:
             return {"decision": "SUPERSEDED", "artifact_id": art_id, "in_force_seal_hash": in_force[art_id]}
         in_force_source = "record"
+    elif currency_policy == "record":
+        # §5.5: only the relying party's own record establishes currency; no statement is read,
+        # so a compromised issuer key cannot make a version current (R-19 Theorem 9.4).
+        return {"decision": "VERSION_UNVERIFIED", "artifact_id": art_id, "reason_code": "not_in_record"}
     else:
         st = auth.get("in_force")
         def unverified(reason): return {"decision": "VERSION_UNVERIFIED", "artifact_id": art_id, "reason_code": reason}
         if st is None: return unverified("no_in_force_evidence")
-        if not isinstance(st, dict) or not all(isinstance(st.get(k), str) for k in ("artifact_id", "version", "seal_hash", "as_of", "valid_until", "kid", "signature")):
+        if not isinstance(st, dict) or not all(isinstance(st.get(k), str) for k in ("artifact_id", "version", "seal_hash", "as_of", "valid_until", "kid", "signature")) \
+                or st.get("algorithm") not in TESTIMONY_SUITES:
             return unverified("bad_statement")
         if st["artifact_id"] != art_id or st["seal_hash"] != seal["hash"] or st["version"] != meta.get("version"):
             return unverified("statement_mismatch")
-        if st["kid"] != seal["kid"] or not sig_ok(r["key"], jcs(in_force_payload(st)), st["signature"]):
+        if st["kid"] != seal["kid"] or not chain.suite_permitted(r["effective"], st["algorithm"]) \
+                or not statement_sig(r["key"], st, in_force_payload(st))[0]:
             return unverified("bad_signature")
         try:
             sa, su = ts(st["as_of"]), ts(st["valid_until"])
@@ -338,6 +373,8 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
         if (su - sa).total_seconds() > MAX_IN_FORCE_SECONDS or su <= sa: return unverified("statement_window")
         if now < sa or now > su: return unverified("stale")
         in_force_source = "statement"
+    # 5b. an authority whose verdict would depend on listing order cannot authorize (SPEC-001 2.3.0)
+    if ambiguous_escalation(art): return {"decision": "MALFORMED", "reason_code": "ambiguous_escalation"}
     # 6. testimony
     facts: Dict[str, Any] = {}; channel: Dict[str, str] = {}
     def put(name, value, src):
@@ -345,13 +382,14 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
         facts[name] = value; channel[name] = src
     subject = action.get("subject")
     for t in act.get("testimony") or []:
-        if not isinstance(t, dict) or not all(k in t for k in ("claim", "value", "as_of", "valid_until", "kid", "signature")):
+        if not isinstance(t, dict) or not all(k in t for k in ("claim", "value", "as_of", "valid_until", "kid", "signature")) \
+                or t.get("algorithm") not in TESTIMONY_SUITES:
             return {"decision": "MALFORMED", "reason_code": "bad_testimony"}
-        w = resolve_statement_key("claim", t["claim"], t["kid"], pool, root_pem, now, meta, revoked_kids, revoked_certs)
+        w = resolve_statement_key("claim", t["claim"], t, pool, root_pem, now, meta, revoked_kids, revoked_certs)
         if w["decision"] != "RESOLVED":
             return statement_failure(w, "TESTIMONY_INVALID", "TESTIMONY_OUT_OF_SCOPE", claim=t["claim"])
-        if not sig_ok(w["key"], jcs(testimony_payload(t)), t["signature"]):
-            return {"decision": "TESTIMONY_INVALID", "claim": t["claim"], "reason_code": "bad_signature"}
+        ok, why = statement_sig(w["key"], t, testimony_payload(t))
+        if not ok: return {"decision": "TESTIMONY_INVALID", "claim": t["claim"], "reason_code": why}
         if now > ts(t["valid_until"]) or now < ts(t["as_of"]):
             return {"decision": "TESTIMONY_INVALID", "claim": t["claim"], "reason_code": "stale"}
         if t.get("about") is not None and t.get("about") != subject:
@@ -382,7 +420,7 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     # 8. evaluate the sealed rules over exactly these facts
     ev = evaluate(art, facts)
     digest = binding_digest(act)
-    base = {"rule": ev["rule"], "act_digest": digest, "in_force_source": in_force_source}
+    base = {"rule": ev["rule"], "act_digest": digest, "in_force_source": in_force_source, "currency_policy": currency_policy}
     if ev["outcome"] == "undecided":            # §6.2: no consent can stand in for a missing fact
         return {"decision": "INCOMPLETE", "commit": False, "reason_code": "undecided_rules",
                 "open_rules": ev["open_rules"], "open_facts": ev["open_facts"], **base}
@@ -393,18 +431,24 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     esc = next((e for e in art.get("governance", {}).get("escalations", []) if e.get("id") == ev["escalation_id"]), None)
     if esc is None: return {"decision": "ESCALATED", "commit": False, "escalation_id": ev["escalation_id"], "consents_valid": 0, "consents_required": None, **base}
     role, need_n = esc["role_required"], int(esc.get("required_consents", 1))
-    signers: Set[str] = set()
+    approvers: Set[str] = set()
     for c in act.get("consents") or []:
-        if not isinstance(c, dict) or not all(k in c for k in ("binding_digest", "role", "decision", "signed_at", "kid", "signature")):
+        if not isinstance(c, dict) or not all(isinstance(c.get(k), str) for k in ("binding_digest", "role", "decision", "signed_at", "kid", "signature")) \
+                or c.get("algorithm") not in CONSENT_SUITES \
+                or (c["algorithm"] == "WebAuthn-ES256" and not all(isinstance(c.get(k), str) for k in WEBAUTHN_FIELDS)):
             return {"decision": "MALFORMED", "reason_code": "bad_consent"}
-        k = resolve_statement_key("consent", c["role"], c["kid"], pool, root_pem, now, meta, revoked_kids, revoked_certs)
+        k = resolve_statement_key("consent", c["role"], c, pool, root_pem, now, meta, revoked_kids, revoked_certs)
         if k["decision"] != "RESOLVED":
             r = statement_failure(k, "CONSENT_INVALID", "CONSENT_OUT_OF_SCOPE", role=c["role"])
             if r["decision"] == "CONSENT_INVALID": r.pop("role")
             return r
-        if not sig_ok(k["key"], jcs(consent_payload(c)), c["signature"]): return {"decision": "CONSENT_INVALID", "reason_code": "bad_signature"}
+        # §4.4: the person a consent counts for must not depend on which certificates were sent
+        if len({e["approver"] for e in k["admitted"]}) > 1: return {"decision": "CONSENT_INVALID", "reason_code": "approver_ambiguous"}
+        ok, why = statement_sig(k["key"], c, consent_payload(c))
+        if not ok: return {"decision": "CONSENT_INVALID", "reason_code": why}
         if c["binding_digest"] != digest: return {"decision": "CONSENT_INVALID", "reason_code": "binding_mismatch"}
-        if c["decision"] == "approve" and c["role"] == role: signers.add(c["kid"])
-    if len(signers) >= need_n:
-        return {"decision": "AUTHORIZED", "commit": True, "by_consent": True, "escalation_id": ev["escalation_id"], "consents_valid": len(signers), "consents_required": need_n, **base}
-    return {"decision": "ESCALATED", "commit": False, "escalation_id": ev["escalation_id"], "consents_valid": len(signers), "consents_required": need_n, **base}
+        if c["decision"] == "approve" and c["role"] == role: approvers.add(k["effective"]["approver"])
+    # §4.4: n consents means n distinct people, never n keys
+    if len(approvers) >= need_n:
+        return {"decision": "AUTHORIZED", "commit": True, "by_consent": True, "escalation_id": ev["escalation_id"], "consents_valid": len(approvers), "consents_required": need_n, **base}
+    return {"decision": "ESCALATED", "commit": False, "escalation_id": ev["escalation_id"], "consents_valid": len(approvers), "consents_required": need_n, **base}

@@ -159,12 +159,16 @@ def for_artifact(meta: dict, suite: str) -> Admit:
     return admit
 
 
-def for_statement(kind: str, name: str, meta: dict, suite: str) -> Admit:
+def for_statement(kind: str, name: str, meta: dict, suite: str, required: Tuple[str, ...] = ()) -> Admit:
     """§3.4.1, §3.6, §3.7: may this key sign a `kind` statement about `name`, under this suite,
-    for an act whose authority artifact carries `meta`?"""
+    for an act whose authority artifact carries `meta`? `required` names dimensions the calling
+    specification requires on the key (NOMOS-SPEC-008 0.6.0 requires `approver` on consent keys);
+    a path whose scope lacks one is refused on that dimension, like any other refusal."""
     allowed = (kind, "approver") if kind == "consent" else (kind,)
     def admit(effective: Effective) -> Optional[str]:
         if kind not in effective or name not in _set(effective[kind]): return kind
+        for d in required:
+            if d not in effective: return d
         for d, v in effective.items():
             if _term_fails(d, v, meta, suite, allowed): return d
         return "suite" if _default_suite_fails(effective, suite) else None
@@ -187,8 +191,18 @@ def _fail(decision: str, **kw) -> Verdict:
     return {"decision": decision, **kw}
 
 
+def _sig_ok(cert: dict, parent_pem: str, memo: Optional[dict]) -> Tuple[bool, Optional[str]]:
+    """A certificate's signature under its parent, verified once per resolution (§4.5 bounds the
+    candidates; this bounds the cost of each)."""
+    k = (fingerprint(cert), cert["signature"], cert["algorithm"], parent_pem)
+    if memo is not None and k in memo: return memo[k]
+    r = suites.verify(cert["algorithm"], parent_pem, jcs(cert_payload(cert)), {"signature": cert["signature"]})
+    if memo is not None: memo[k] = r
+    return r
+
+
 def _validate(path: list, root_pem: str, now: datetime, admit: Admit,
-              revoked_kids: Set[str], revoked_certs: Set[str]) -> Verdict:
+              revoked_kids: Set[str], revoked_certs: Set[str], memo: Optional[dict] = None) -> Verdict:
     cur_pem, effective = root_pem, {}
     hops = []
     for cert in path:
@@ -198,7 +212,7 @@ def _validate(path: list, root_pem: str, now: datetime, admit: Admit,
             return _fail("ISSUER_NOT_RECOGNIZED", reason_code="kid_mismatch")
         if not suite_permitted(effective, cert["algorithm"]):
             return _fail("OUT_OF_SCOPE", dimension="suite", reason_code="suite_not_permitted")
-        ok, why = suites.verify(cert["algorithm"], cur_pem, jcs(cert_payload(cert)), {"signature": cert["signature"]})
+        ok, why = _sig_ok(cert, cur_pem, memo)
         if not ok: return _fail("ISSUER_NOT_RECOGNIZED", reason_code=why)
         try:
             issued, expires = ts(cert["issued_at"]), ts(cert["expires_at"])
@@ -226,22 +240,33 @@ def _validate(path: list, root_pem: str, now: datetime, admit: Admit,
 
 
 def resolve(target_kid: str, pool: list, root_pem: str, now: datetime, admit: Admit,
-            revoked_kids: Optional[Set[str]] = None, revoked_certs: Optional[Set[str]] = None) -> Verdict:
+            revoked_kids: Optional[Set[str]] = None, revoked_certs: Optional[Set[str]] = None,
+            all_paths: bool = False) -> Verdict:
     """§4.2a. `pool` must already have passed check_pool. On success the verdict carries the
-    resolved key, its effective scope, the kids on the path (root first) and the hops."""
+    resolved key, its effective scope, the kids on the path (root first) and the hops. With
+    `all_paths`, every candidate is tried and `admitted` lists the effective scope of each one
+    that validates (NOMOS-SPEC-008 0.6.0 §4.4 reads it to make the approver path-independent);
+    the first, in fingerprint order, is still the one reported."""
     revoked_kids = revoked_kids or set()
     revoked_certs = revoked_certs or set()
     _, _, reason = suites.load_key(root_pem)
     if reason: return _fail("MALFORMED", reason_code="bad_root")
     root_kid = suites.compute_kid(root_pem)
     if root_kid in revoked_kids: return _fail("KEY_REVOKED", revoked_kid=root_kid)
-    first_failure = None
+    first_failure, first_resolved, admitted = None, None, []
+    memo: dict = {}
     for path in _candidates(target_kid, root_kid, pool, frozenset()):
-        r = _validate(path, root_pem, now, admit, revoked_kids, revoked_certs)
+        r = _validate(path, root_pem, now, admit, revoked_kids, revoked_certs, memo)
         if r["decision"] == "RESOLVED":
             r["path"] = [root_kid] + [c["child_kid"] for c in path]
-            return r
+            if not all_paths: return r
+            first_resolved = first_resolved or r
+            admitted.append(r["effective"])
+            continue
         first_failure = first_failure or r
+    if first_resolved:
+        first_resolved["admitted"] = admitted     # the effective scope of every admitted path
+        return first_resolved
     if first_failure: return first_failure
     from_root = any(c.get("parent_kid") == root_kid for c in pool)
     return _fail("ISSUER_NOT_RECOGNIZED", reason_code="chain_broken" if from_root else "no_certificate_for_root")

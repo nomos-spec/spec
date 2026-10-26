@@ -7,6 +7,48 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-008 0.6.0, Draft; NOMOS-SPEC-001 amendment 2.3.0] — 2026-10-26
+
+Implements RFC-0001 changes 4–7.
+
+### Changed
+
+- **Consents are counted by person (SPEC-008 §4.4).** Consent keys must carry an `approver` term
+  (SPEC-007 rev. 1.9 §3.7). An escalation needing `n` consents needs `n` distinct approvers.
+- **The approver cannot depend on the path.** Every admitted path to an approver key is
+  evaluated. If they disagree on `approver`, the consent is `CONSENT_INVALID`
+  (`approver_ambiguous`), so the presenter cannot choose who a consent counts for.
+- **Ambiguous escalations are refused (SPEC-001 amendment 2.3.0, SPEC-008 step 5b).** Two
+  `escalate` decisions of equal priority that name different escalations cannot be sealed. For a
+  new authorization such an artifact is `MALFORMED` (`ambiguous_escalation`). This adopts option
+  (b) of R-19 §7.5. Vector 30 now expects this.
+
+### Added
+
+- **Consent by passkey (§4.5).** A WebAuthn-ES256 assertion, with a challenge committing to the
+  consent payload, user-verified.
+- **ES256 testimony and in-force statements (§3.1, §5.4).**
+- **Currency policy (§5.5).** `record` or `record_or_statement`, declared per authority, with no
+  default. `record` is RECOMMENDED, because it is the only policy under which issuer-key
+  compromise authorizes nothing new (R-19 Theorem 9.4).
+- **Vectors 31–42.**
+  - Earlier consent keys are re-certified with `approver` terms; every earlier verdict is
+    unchanged except vector 30's.
+  - The 0.5.0 verifier fails closed on all the re-certified consent keys.
+  - A single-rule mutant for each new rule fails exactly its own vector: counting keys, no
+    ambiguity check, no ambiguous-escalation check, record policy ignored, approver not required.
+
+### Breaking
+
+- **Approver terms, both directions.** A 0.5.0 verifier refuses consent keys carrying `approver`,
+  and a 0.6.0 verifier refuses consent keys without one. Re-certify approver keys before enabling
+  0.6.0.
+- **Ambiguous escalations.** Authorities with the pattern are refused for new authorizations.
+  None of the platform's 139 repository artifacts, 5 public demonstration authorities or EU AI
+  Act authority contains it.
+
+---
+
 ## [NOMOS-SPEC-007 rev. 1.9.0, Draft] — 2026-10-26 (Scope-aware resolution, suites, approvers)
 
 ### Changed
