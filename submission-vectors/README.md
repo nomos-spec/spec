@@ -6,7 +6,7 @@ speaks HTTP, so the relying party can be written in any language.
 
 ```
 npm install
-node reference-rp.mjs 4801 &          # an independent reference relying party (optional)
+node reference-rp.mjs 4801 &          # a reference relying party (optional)
 node run.mjs http://localhost:4801    # or your own relying party, configured with profile.json
 ```
 
@@ -18,5 +18,5 @@ node run.mjs http://localhost:4801    # or your own relying party, configured wi
 | `status.json` | The status for every SPEC-008 verdict (§6.2). |
 | `keys.mjs` | The test keys, policy and statement builders shared by the three scripts. |
 
-Two independent relying parties pass all 17: `reference-rp.mjs`, and `accept()` from `@nomosprotocol/sdk`. The keys are
+Two relying parties pass all 17: `reference-rp.mjs`, and `accept()` from `@nomosprotocol/sdk`. They were written separately but share `@nomosprotocol/verify`, so they test the submission binding independently, not the verifier. The keys are
 derived from published seeds: never use them as trust material.

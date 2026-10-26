@@ -83,9 +83,8 @@ agree on nine fields. A mutant that checks scope only after choosing a path (the
 behaviour) fails exactly the two scope-aware selection cases. Both implementations are by the
 authors, so neither is independent. The rev. 1.9 call for an independent implementation stands.
 
-The hosted platform's verifier implements rev. 1.8. It checks scope only after choosing a path,
-so it can refuse where rev. 1.9 allows, and it cannot wrongly allow. It adopts rev. 1.9 when the
-shared verifier package replaces it.
+The hosted platform now verifies through `@nomosprotocol/verify`, which implements rev. 1.9 and
+passes all 37 cases in every listed order; it no longer selects paths without regard to scope.
 
 ## Regenerating
 
