@@ -1,6 +1,6 @@
 # RFC-0001: Protocol changes for Act enforcement as infrastructure
 
-**Status:** Proposed, for Working Group decision
+**Status:** Accepted by the Working Group, 2026-10-26. Implementation in progress.
 **Proposed:** 2026-10-26
 **Authors:** NOMOS Protocol Working Group
 **Affects:** NOMOS-SPEC-001 (amendment), NOMOS-SPEC-007 (rev. 1.9), NOMOS-SPEC-008 (0.6.0), and two new specifications, NOMOS-SPEC-009 (Discovery and Submission) and NOMOS-SPEC-010 (Signature Suites)
