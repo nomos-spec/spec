@@ -7,6 +7,58 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Repository] — 2026-10-26 (Implementation status)
+
+### Changed
+
+- **The hosted platform implements rev. 1.9.** Its Act and chain verification now run on
+  `@nomosprotocol/verify`, which passes all 37 rev. 1.9 cases in every listed order, all 43
+  SPEC-008 vectors, all 30 SPEC-010 vectors, and agrees with the Python reference on all 1,693
+  mutants. The known gap recorded under rev. 1.9 below, that the platform selected paths without
+  regard to scope, is closed. The revision's own §8.2 text is left as published.
+- README, `act-vectors/README.md`, `chain-of-trust-vectors/README.md` and
+  `submission-vectors/README.md` brought up to SPEC-008 0.6.0 (43 vectors, 1,693 mutants),
+  SPEC-009 0.1.0 and SPEC-010 0.2.0.
+- `submission-vectors/`: the reference relying party and `accept()` are described as written
+  separately on the same verifier, which is what they are. They test the submission binding
+  independently of each other, not the verifier.
+
+---
+
+## [NOMOS-SPEC-009 0.1.0, Draft; NOMOS-SPEC-008 0.6.0 errata] — 2026-10-26 (Discovery and submission)
+
+### Added
+
+- **NOMOS-SPEC-009, Discovery and Submission** (new, Draft). Implements RFC-0001 change 8.
+  - Relying-party, issuer and witness documents at `/.well-known/nomos-relying-party`,
+    `/.well-known/nomos-issuer` and `/.well-known/nomos-witness`. They are hints, never inputs:
+    the relying party evaluates the Act alone and generates its own document from the
+    configuration its verifier enforces, so a false document can make an Act fail, never succeed.
+  - The statement request (a carrier asks a witness for testimony) and the approval request (a
+    carrier asks an approver for consent over one exact Act).
+  - The submission binding: `application/nomos-act+json`, one status per verdict (201, 202, 422,
+    403, 409 with the stored receipt, 400; 415 and 413 for transport), `NOT_ACCEPTED` for an
+    authority or action type the relying party does not take.
+  - The nonce as idempotency key; an escalated Act resubmitted unchanged with consents while
+    unexpired; the commit rule in one transaction.
+- `schema/nomos-relying-party.schema.json`, `nomos-issuer.schema.json`, `nomos-witness.schema.json`.
+- `submission-vectors/`: `status.json`, a test profile, `run.mjs` (17 HTTP checks against any
+  relying party, in any language) and a reference relying party.
+
+### Fixed (SPEC-008 0.6.0 reference verifier)
+
+- **`open_facts` (§6.2)** named a present operand beside an absent one, for example `amount` in
+  `amount > approved_limit` when only `approved_limit` was missing. Both implementations did it;
+  the text already said otherwise. Found by the SPEC-009 sandbox, not by the vectors, because no
+  vector compared two fields. Vector 43, `two_field_rule_names_only_the_absent_fact`, pins it; the
+  42 earlier vectors are byte-identical and the mutants were regenerated (1,693). Recorded in
+  SPEC-008's own changelog.
+- **Act window (§5.1).** `act_verify.py` takes the relying party's own configured maximum window
+  (default 300 seconds), as §5.1 already allowed, so a relying party that commits under human approval
+  can leave a person time to approve.
+
+---
+
 ## [NOMOS-SPEC-010 0.2.0, Draft] — 2026-10-26 (Ed25519 key validity)
 
 ### Fixed — found by differential testing

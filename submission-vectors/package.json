@@ -2,7 +2,7 @@
   "name": "nomos-spec-009-conformance",
   "private": true,
   "type": "module",
-  "description": "NOMOS-SPEC-009 relying-party conformance: a profile, a runner, and an independent reference relying party.",
+  "description": "NOMOS-SPEC-009 relying-party conformance: a profile, a runner, and a reference relying party.",
   "scripts": {
     "profile": "node profile.mjs > profile.json",
     "reference": "node reference-rp.mjs",
