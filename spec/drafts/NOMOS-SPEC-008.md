@@ -42,7 +42,7 @@ The consequence is a different security property from a gateway's. An agent is f
 every NOMOS component. Its act still cannot take effect, because the only system able to make the
 change is the one that demands the proof.
 
-**Status of this document.** Draft, published with a reference implementation and forty-two test
+**Status of this document.** Draft, published with a reference implementation and forty-three test
 vectors (§10). Two implementations by the authors pass every vector; promotion from Draft awaits a
 second-party implementation.
 
@@ -727,6 +727,12 @@ design:
   - **Step 5 order.** Scope admission is decided before the seal (rev. 1.9 §4.7).
   - **Vectors.** Twelve vectors added (31–42). The consent keys of the earlier vectors are
     re-certified with `approver` terms, and every earlier verdict is unchanged except vector 30's.
+  - **`open_facts` names only the operands that left a primitive undecided (§6.2).** Both
+    implementations also listed a present operand beside an absent one, for example `amount` in
+    `amount > approved_limit` when only `approved_limit` was missing. The text already said
+    otherwise. Found by the NOMOS-SPEC-009 sandbox, not by the vectors, because no vector compared
+    two fields. Vector 43, `two_field_rule_names_only_the_absent_fact`, pins it, and the earlier
+    42 vectors are byte-identical.
   - **Breaking.**
     - A 0.5.0 verifier refuses consent keys that carry `approver` (fail closed).
     - A 0.6.0 verifier refuses consent keys that lack one. Migration: re-certify approver keys

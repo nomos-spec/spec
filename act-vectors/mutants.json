@@ -22566,6 +22566,660 @@
    "seen_nonces": []
   },
   {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "741cd4cc6d21f56956b7e88657c4d2d665a5a6cc80c528ec518cea47d0b3c168",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "identity",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record",
+   "expected": {
+    "act_digest": "741cd4cc6d21f56956b7e88657c4d2d665a5a6cc80c528ec518cea47d0b3c168",
+    "commit": false,
+    "currency_policy": "record",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "policy_record",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "741cd4cc6d21f56956b7e88657c4d2d665a5a6cc80c528ec518cea47d0b3c168",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "policy_statement",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "9859a7cc1f5e9e2d8a6221dc735455d6a37c50f7048bdc61e95b2081cde22d1f",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "DENIED",
+    "in_force_source": "record",
+    "reason_code": "no_matching_rule",
+    "rule": null
+   },
+   "mutant": "drop_testimony_0",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "claim": "credit_score",
+    "decision": "TESTIMONY_INVALID",
+    "reason_code": "bad_signature"
+   },
+   "mutant": "tamper_testimony_0",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "claim": "credit_score",
+    "decision": "TESTIMONY_INVALID",
+    "reason_code": "suite_key_mismatch"
+   },
+   "mutant": "relabel_testimony_0",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "d6a34c2ff14b70284d13d1db1f0855f516012d4c6f1bc5c2eb7d9a7fbf434c7e",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "DENIED",
+    "in_force_source": "record",
+    "reason_code": "no_matching_rule",
+    "rule": null
+   },
+   "mutant": "drop_testimony_1",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "claim": "dti_ratio",
+    "decision": "TESTIMONY_INVALID",
+    "reason_code": "bad_signature"
+   },
+   "mutant": "tamper_testimony_1",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "claim": "dti_ratio",
+    "decision": "TESTIMONY_INVALID",
+    "reason_code": "suite_key_mismatch"
+   },
+   "mutant": "relabel_testimony_1",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "30c8ace20f85c7d4e0be8a6950ab5873ad1ffa4b7621330bdde6b535a88ad517",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit",
+     "bankruptcy_active"
+    ],
+    "open_rules": [
+     "R15",
+     "R1"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "drop_testimony_2",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "claim": "bankruptcy_active",
+    "decision": "TESTIMONY_INVALID",
+    "reason_code": "bad_signature"
+   },
+   "mutant": "tamper_testimony_2",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "claim": "bankruptcy_active",
+    "decision": "TESTIMONY_INVALID",
+    "reason_code": "suite_key_mismatch"
+   },
+   "mutant": "relabel_testimony_2",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "5dada4d22182de196899809f63f0d7a6b4b4d055b7c45e760afb2ee5b3fcd662",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit",
+     "days_since_delinquency",
+     "delinquency_severity"
+    ],
+    "open_rules": [
+     "R15",
+     "R4"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "drop_testimony_3",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "claim": "delinquency_severity",
+    "decision": "TESTIMONY_INVALID",
+    "reason_code": "bad_signature"
+   },
+   "mutant": "tamper_testimony_3",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "claim": "delinquency_severity",
+    "decision": "TESTIMONY_INVALID",
+    "reason_code": "suite_key_mismatch"
+   },
+   "mutant": "relabel_testimony_3",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "decision": "ISSUER_NOT_RECOGNIZED",
+    "reason_code": "chain_broken"
+   },
+   "mutant": "drop_cert_0",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "decision": "ISSUER_NOT_RECOGNIZED",
+    "reason_code": "bad_signature"
+   },
+   "mutant": "widen_cert_0",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "claim": "credit_score",
+    "decision": "TESTIMONY_INVALID",
+    "reason_code": "witness_issuer_not_recognized"
+   },
+   "mutant": "drop_cert_1",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "claim": "credit_score",
+    "decision": "TESTIMONY_INVALID",
+    "reason_code": "witness_issuer_not_recognized"
+   },
+   "mutant": "widen_cert_1",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "741cd4cc6d21f56956b7e88657c4d2d665a5a6cc80c528ec518cea47d0b3c168",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "drop_cert_2",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "741cd4cc6d21f56956b7e88657c4d2d665a5a6cc80c528ec518cea47d0b3c168",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "widen_cert_2",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "741cd4cc6d21f56956b7e88657c4d2d665a5a6cc80c528ec518cea47d0b3c168",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "drop_cert_3",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "741cd4cc6d21f56956b7e88657c4d2d665a5a6cc80c528ec518cea47d0b3c168",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "widen_cert_3",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "741cd4cc6d21f56956b7e88657c4d2d665a5a6cc80c528ec518cea47d0b3c168",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "drop_cert_4",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "741cd4cc6d21f56956b7e88657c4d2d665a5a6cc80c528ec518cea47d0b3c168",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "widen_cert_4",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "741cd4cc6d21f56956b7e88657c4d2d665a5a6cc80c528ec518cea47d0b3c168",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "reverse_pool",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "4a48a835a8e553eb11436ec9cfe781dd6fbd591c851cbf8aef931d5ab3167227",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "DENIED",
+    "in_force_source": "record",
+    "reason_code": "no_matching_rule",
+    "rule": null
+   },
+   "mutant": "drop_param_amount",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "3404e185a96f5dfe92399cdbb1a954f7c61dbb2eb67e4361016f01f87e924724",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R8"
+   },
+   "mutant": "change_param_amount",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "46482749dfb626aabef79c3e23567226de4ed97f9b1236e5e092e1159e98551a",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit",
+     "loan_purpose"
+    ],
+    "open_rules": [
+     "R15",
+     "R11"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "drop_param_loan_purpose",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "13374aa5282b2c568f834f0f632e1a432d083ac8a631da2fad12db7b30c88731",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "change_param_loan_purpose",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "act_digest": "293dda14947239092df93d4e2c82a8ee9a1efa9047188438e9101062a6f3eb1d",
+    "commit": false,
+    "currency_policy": "record_or_statement",
+    "decision": "INCOMPLETE",
+    "in_force_source": "record",
+    "open_facts": [
+     "approved_limit"
+    ],
+    "open_rules": [
+     "R15"
+    ],
+    "reason_code": "undecided_rules",
+    "rule": "R0"
+   },
+   "mutant": "drop_param_has_cosigner",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "decision": "FACT_TYPE_VIOLATION",
+    "declared": "boolean",
+    "field": "has_cosigner",
+    "supplied_via": "action"
+   },
+   "mutant": "change_param_has_cosigner",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "decision": "SEAL_INVALID",
+    "reason_code": "hash_mismatch"
+   },
+   "mutant": "tamper_rules",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "decision": "SEAL_INVALID",
+    "reason_code": "suite_key_mismatch"
+   },
+   "mutant": "relabel_seal",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "decision": "WRONG_RELYING_PARTY"
+   },
+   "mutant": "readdress",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "decision": "FACT_SOURCE_VIOLATION",
+    "field": "credit_score",
+    "reason_code": "duplicate"
+   },
+   "mutant": "presenter_claims_fact",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
+   "base": "two_field_rule_names_only_the_absent_fact",
+   "currency_policy": "record_or_statement",
+   "expected": {
+    "decision": "MALFORMED",
+    "reason_code": "bad_envelope"
+   },
+   "mutant": "bad_authority",
+   "now": "2026-10-01T12:00:00.000Z",
+   "revoked_artifacts": [],
+   "seen_nonces": []
+  },
+  {
    "base": "record_only_refuses_a_statement",
    "currency_policy": "record",
    "expected": {
@@ -23603,6 +24257,6 @@
    "seen_nonces": []
   }
  ],
- "count": 1656,
+ "count": 1693,
  "spec": "NOMOS-SPEC-008 0.6.0"
 }

@@ -226,7 +226,9 @@ class _Parser:
         if k2 == "op" and op in ("==", "!=", ">", ">=", "<", "<="):
             self.take(); right = self.operand()
             a, b = self.val(left), self.val(right)
-            if a is ABSENT or b is ABSENT: return self._u(left, right)
+            # §6.2: open_facts names the fields that left the primitive undecided — the absent ones,
+            # not a present operand beside them.
+            if a is ABSENT or b is ABSENT: return self._u(*[x for x, v in ((left, a), (right, b)) if v is ABSENT])
             ka, kb = _kind(a), _kind(b)
             if ka != kb or ka == "other" or (op not in ("==", "!=") and ka not in ("number", "string")): return self._u(left, right)
             if ka in ("object", "array"):
@@ -235,7 +237,7 @@ class _Parser:
             return _tri({"==": a == b, "!=": a != b, ">": a > b, ">=": a >= b, "<": a < b, "<=": a <= b}[op])
         if (k2, op) in (("id", "in"), ("id", "contains"), ("id", "between")):
             self.take(); right = self.operand(); rhs = self.val(right); a = self.val(left)
-            if a is ABSENT or rhs is ABSENT: return self._u(left, right)
+            if a is ABSENT or rhs is ABSENT: return self._u(*[x for x, v in ((left, a), (right, rhs)) if v is ABSENT])
             if op == "between":
                 if _kind(a) != "number": return self._u(left)
                 lo, hi = (float(p) for p in str(rhs).split(","))
@@ -299,11 +301,14 @@ def evaluate(artifact: dict, facts: dict) -> dict:
 def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
                seen_nonces: Set[str], currency_policy: str, local_facts: Optional[dict] = None,
                revoked_kids: Optional[Set[str]] = None, revoked_certs: Optional[Set[str]] = None,
-               in_force: Optional[Dict[str, str]] = None, revoked_artifacts: Optional[Set[str]] = None) -> dict:
+               in_force: Optional[Dict[str, str]] = None, revoked_artifacts: Optional[Set[str]] = None,
+               max_window_seconds: int = MAX_WINDOW_SECONDS) -> dict:
     """`in_force` is the relying party's own record of the version in force, artifact_id -> seal hash
     (§5.4); `revoked_artifacts` the seal hashes its revocation source lists (NOMOS-SPEC-006);
     `currency_policy` the policy it declares for establishing currency (§5.5): "record" or
-    "record_or_statement". There is no default: the choice is the relying party's to declare."""
+    "record_or_statement". There is no default: the choice is the relying party's to declare.
+    `max_window_seconds` is the relying party's own maximum Act window (§5.1), 300 unless it
+    configures otherwise, for example to leave a human time to approve (NOMOS-SPEC-009 §6.3)."""
     if currency_policy not in CURRENCY_POLICIES: raise ValueError(f"currency_policy must be one of {CURRENCY_POLICIES}")
     revoked_kids = revoked_kids or set(); revoked_certs = revoked_certs or set(); local_facts = local_facts or {}
     in_force = in_force or {}; revoked_artifacts = revoked_artifacts or set()
@@ -327,7 +332,7 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
         t0, t1 = ts(act["issued_at"]), ts(act["expires_at"])
     except (ValueError, TypeError):
         return {"decision": "MALFORMED", "reason_code": "bad_time"}
-    if (t1 - t0).total_seconds() > MAX_WINDOW_SECONDS or t1 <= t0:
+    if (t1 - t0).total_seconds() > max_window_seconds or t1 <= t0:
         return {"decision": "MALFORMED", "reason_code": "validity_window"}
     # 2-4. addressed to us, in time, not replayed
     if act["relying_party"] != relying_party_id: return {"decision": "WRONG_RELYING_PARTY"}
