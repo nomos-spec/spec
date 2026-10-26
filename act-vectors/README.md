@@ -70,6 +70,20 @@ purpose. Never use them as trust material.**
 | record_only_refuses_a_statement | VERSION_UNVERIFIED | Under `record`, an issuer's in-force statement is never read |
 | record_only_with_a_record | AUTHORIZED | Under `record`, the relying party's own record establishes currency |
 
+`mutants.py` derives 1,656 mutants of the 42 vectors and records the reference verdict for each, in
+`mutants.json`. Each mutant is one small change an attacker or a faulty presenter could make:
+- a dropped, tampered or relabelled statement;
+- a dropped or duplicated consent;
+- a removed or widened certificate;
+- a reversed certificate pool;
+- a changed parameter;
+- tampered rules or a relabelled seal;
+- a re-addressed Act, or the presenter asserting a fact;
+- either currency policy.
+
+A second implementation re-derives them from the recipe and must reproduce every verdict field for
+field.
+
 All 42 cases pass in `act_verify.py` here and in `@nomosprotocol/verify`, the TypeScript verifier the
-NOMOS platform and SDK use. Both are by the authors. Second-party implementations are invited — run `check.py`'s cases against
+NOMOS platform and SDK use, and the two agree on every field of all 1,656 mutants. Both are by the authors. Second-party implementations are invited — run `check.py`'s cases against
 yours and open an issue with the result.
