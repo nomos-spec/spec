@@ -1,11 +1,20 @@
 # Reference Implementation: NOMOS-SPEC-007 (Draft) — Chain-of-Trust Key Certificates
 
 **Status:** the pure reference implementation for [NOMOS-SPEC-007](../../spec/NOMOS-SPEC-007.md)
-(Draft 1.7.0). It passes all 14 vectors in [`../../chain-of-trust-vectors/`](../../chain-of-trust-vectors/)
-and is the starting point for a second-party implementation. Chain resolution here is the 1.7.0
-root-first walk; the target-first resolution of
-[revision 1.8.0](../../spec/drafts/NOMOS-SPEC-007-rev-1.8.0.md) is implemented in
-[`../../act-vectors/act_verify.py`](../../act-vectors/act_verify.py) and in the hosted platform.
+(Draft), at [revision 1.9.0](../../spec/drafts/NOMOS-SPEC-007-rev-1.9.0.md). It passes all 14
+vectors in [`vectors.json`](../../chain-of-trust-vectors/vectors.json) and all 37 in
+[`vectors-1.9.json`](../../chain-of-trust-vectors/vectors-1.9.json), in every listed order, and
+agrees field for field with the Python reference (`../../python/nomos/chain.py`).
+
+Chain resolution is **target-first and scope-aware** (`resolveKey()` in `chain-verify-core.ts`):
+- candidate paths run from the signing key back to the pinned root, tried in fingerprint order;
+- a path whose scope does not admit the purpose is a failed candidate;
+- the same resolver serves artifacts and testimony and consent keys.
+
+Certificates, staples and seals may be Ed25519 or ES256 (`suites.ts`, NOMOS-SPEC-010), and scope
+carries the `suite` and `approver` dimensions. Until rev. 1.9 this prototype still implemented the
+1.7.0 root-first walk. It was updated by the same authors, so it is a second implementation but
+not an independent one.
 
 **§3.4 delegation scope is enforced here** (`scope.ts`): a certificate's `scope` limits what the
 certified key may sign, narrowing monotonically down the chain and failing closed on a dimension
@@ -90,8 +99,8 @@ fixtures, not an assertion from reading the code:
    lapsed. Reported with a distinct reason, not conflated with "never recognized."
 4. **Order independence** — the same two certificates as case 1, reversed, reach the
    byte-identical `ALLOWED` result. `--chain` is a **set**, not a sequence:
-   `chain-verify-core.ts`'s `walkChain()` matches each step by `parent_kid`/`child_kid` content
-   across the whole remaining set, never by array position. Deliberate, not incidental — a wire
+   `chain-verify-core.ts`'s `resolveKey()` finds candidate parents by `child_kid` content across
+   the whole set, never by array position, and tries them in fingerprint order. Deliberate, not incidental — a wire
    format that required certificates in a specific order would be smuggling in a trust assumption
    ("as-transmitted sequence implies as-intended chain") that doesn't belong there.
 5. **`SEAL_INVALID`** (exit 3) — the chain resolves fine, but the artifact's content was edited
@@ -133,12 +142,13 @@ A dedicated pass found and fixed real issues, rather than assuming the happy-pat
   by the CLI, which would have printed a raw stack trace. Fixed at the root (inside the core), so
   neither caller needs its own defense.
 - **Every certificate's shape is validated before any crypto touches it** — each field must be the
-  right primitive type, `algorithm` must literally be `"Ed25519"` — producing a clear `MALFORMED`
+  right primitive type, `algorithm` must be `"Ed25519"` or `"ES256"` — producing a clear `MALFORMED`
   instead of an incidental crypto exception or a silent type-coercion.
 - **A 20-certificate chain-length cap**, independent of and in addition to the transport's body
   size limit — no real chain is ever that deep.
-- **Cycle detection is tested with a real signed cycle** (root certifies A, A certifies root, the
-  walk must detect it rather than loop), not just traced by reading the code.
+- **Termination is tested with real signed cycles** (root and A certifying each other; A and B
+  certifying each other on the only way from the target): resolution never revisits a key on the
+  current path, so it terminates, not just by reading the code.
 - **The receiver binds to `127.0.0.1` by default**, not `0.0.0.0` — Node's own `server.listen(port)`
   binds every interface if you don't say otherwise, and a demo server silently reachable from the
   network was a real footgun. `--host` opts into anything wider deliberately.

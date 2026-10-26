@@ -7,6 +7,60 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-007 rev. 1.9.0, Draft] — 2026-10-26 (Scope-aware resolution, suites, approvers)
+
+### Changed
+
+- **Scope-aware path selection (§4.2a step 4).** A candidate path whose effective scope does
+  not admit the purpose of the resolution is a failed candidate, and the next one is tried.
+  This closes the wrongful refusal R-19 §5.6 found, where a valid extra certificate turned an
+  authorization into `OUT_OF_SCOPE`. Propositions 2–4 of R-19 still hold, now per candidate path.
+- **Normative check order and outcomes (§3.3, §4.4).** Every failure has one decision and one
+  reason code, so two verifiers report the same failure for the same presentation.
+  - A malformed scope is `OUT_OF_SCOPE` (`malformed_scope`). The two earlier implementations
+    disagreed.
+  - The seal is checked once, after the path is chosen. That is sound because the resolved key is
+    the same on every candidate path. `OUT_OF_SCOPE` is therefore decided before `SEAL_INVALID`.
+
+### Added
+
+- **Signature suites.** Certificates, staples and seals may be Ed25519 or ES256, and certified
+  keys may be Ed25519 or P-256 (NOMOS-SPEC-010). Certificate fingerprints are unchanged.
+- **`suite` dimension (§3.6).** A key without a `suite` term never signs `WebAuthn-ES256`, and
+  `WebAuthn-ES256` stands alone in any set, so an enrolled passkey can approve and do nothing
+  else.
+- **`approver` dimension (§3.7).** One opaque person identifier, narrowed by equality, admitted
+  only on consent keys. NOMOS-SPEC-008 0.6.0 will use it to count consents by person.
+- **`python/nomos/`**, one Python package (`jcs`, `suites`, `chain`) shared by the SPEC-007,
+  SPEC-008 and SPEC-010 references. It replaces three copies of JCS and two of chain resolution.
+  Its JCS number output now follows ECMAScript exactly, cross-checked against Node on 30,000
+  floats.
+- **`chain-of-trust-vectors/vectors-1.9.json`**: 37 cases with hand-written expectations, each run
+  in every presentation order it lists (91 resolutions). The Python reference and the TypeScript
+  prototype, updated from its 1.7.0 walk, pass all of them. On every artifact verdict in both
+  vector files they agree on nine fields.
+
+### Fixed
+
+- The 1.7.0 vector generator emitted seals with `algorithm` instead of SPEC-001's
+  `signature_algorithm`. Fixed at the generator and regenerated; only that field changed.
+- The TypeScript prototype still implemented the 1.7.0 root-first walk, so the 1.8.0 ordering fix
+  had never reached SPEC-007's own reference. It is now target-first and scope-aware.
+
+### RFC-0001 errata (recorded in the revision)
+
+- Suite names are spelled exactly as in the registry (`suite:WebAuthn-ES256`).
+- `WebAuthn-ES256` must stand alone in a suite set.
+- The consent key MUST carry an `approver` term. This rule is enforced by NOMOS-SPEC-008 0.6.0,
+  together with the counting rule it serves.
+
+### Known gap
+
+- The hosted platform's verifier implements rev. 1.8 and selects paths without regard to scope. It
+  can refuse where rev. 1.9 allows; it cannot wrongly allow.
+
+---
+
 ## [NOMOS-SPEC-010 0.1.0, Draft] — 2026-10-26 (Signature Suites)
 
 ### Added
