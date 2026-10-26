@@ -1,0 +1,402 @@
+{
+  "_readme": "NOMOS-SPEC-010 signature suite vectors. For each case, decode payload_b64 to the exact payload bytes and call verify(suite, public_key_pem, payload, proof). The result must equal expected. Keys are derived from published seeds: never use them as trust material.",
+  "spec": "NOMOS-SPEC-010 0.1.0",
+  "cases": [
+    {
+      "name": "ed25519_valid",
+      "suite": "Ed25519",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATcSoD4ZQg1cFbPf5YaCxj5CiFJ/uYS7DVm3nliW+Uok=\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "1Y8Sn3ofbVLKSS8xw7TzQcf/Jq9Qrl7zIYWehlqHBMUMqi0JyBMsEmsvVxjWvMbL1wQI0GuzWz9W0H81bkaRBw=="
+      },
+      "expected": {
+        "ok": true,
+        "reason": null
+      },
+      "why": ""
+    },
+    {
+      "name": "ed25519_other_payload",
+      "suite": "Ed25519",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATcSoD4ZQg1cFbPf5YaCxj5CiFJ/uYS7DVm3nliW+Uok=\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo5OTk5OX0=",
+      "proof": {
+        "signature": "1Y8Sn3ofbVLKSS8xw7TzQcf/Jq9Qrl7zIYWehlqHBMUMqi0JyBMsEmsvVxjWvMbL1wQI0GuzWz9W0H81bkaRBw=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "bad_signature"
+      },
+      "why": "The signature is genuine, over a different payload."
+    },
+    {
+      "name": "ed25519_wrong_length",
+      "suite": "Ed25519",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATcSoD4ZQg1cFbPf5YaCxj5CiFJ/uYS7DVm3nliW+Uok=\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "1Y8Sn3ofbVLKSS8xw7TzQcf/Jq9Qrl7zIYWehlqHBMUMqi0JyBMsEmsvVxjWvMbL1wQI0GuzWz9W0H81bkaR"
+      },
+      "expected": {
+        "ok": false,
+        "reason": "bad_encoding"
+      },
+      "why": ""
+    },
+    {
+      "name": "ed25519_unpadded_base64",
+      "suite": "Ed25519",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATcSoD4ZQg1cFbPf5YaCxj5CiFJ/uYS7DVm3nliW+Uok=\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "1Y8Sn3ofbVLKSS8xw7TzQcf/Jq9Qrl7zIYWehlqHBMUMqi0JyBMsEmsvVxjWvMbL1wQI0GuzWz9W0H81bkaRBw"
+      },
+      "expected": {
+        "ok": false,
+        "reason": "bad_encoding"
+      },
+      "why": "Base64 must be canonical: the same signature without padding is a second encoding."
+    },
+    {
+      "name": "es256_valid",
+      "suite": "ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE22dVZhCG5EuNgxLO+n8HtihX8PcM\nIZvcJx8jNMwLthuR3FQI5UzaRQqWOVmZSVCUBOCt5HvjFOIWDMmpwINEOg==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "dHGA5vPXXFOWUa60JQPxLgv2Z2af6LL0sfHyKa7D6K9PxRpCJevA6TkqWmeUUseZZa1eASzDaRrSrLMemLDhVg=="
+      },
+      "expected": {
+        "ok": true,
+        "reason": null
+      },
+      "why": ""
+    },
+    {
+      "name": "es256_high_s",
+      "suite": "ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE22dVZhCG5EuNgxLO+n8HtihX8PcM\nIZvcJx8jNMwLthuR3FQI5UzaRQqWOVmZSVCUBOCt5HvjFOIWDMmpwINEOg==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "dHGA5vPXXFOWUa60JQPxLgv2Z2af6LL0sfHyKa7D6K+wOuW82hQ/F8bVpZhrrThmVzmcrHpUNWohDRekY7JD+w=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "high_s"
+      },
+      "why": "The same signature with s replaced by n - s verifies mathematically, but has a second encoding (§4)."
+    },
+    {
+      "name": "es256_der_encoded",
+      "suite": "ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE22dVZhCG5EuNgxLO+n8HtihX8PcM\nIZvcJx8jNMwLthuR3FQI5UzaRQqWOVmZSVCUBOCt5HvjFOIWDMmpwINEOg==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "MEQCIHRxgObz11xTllGutCUD8S4L9mdmn+iy9LHx8imuw+ivAiBPxRpCJevA6TkqWmeUUseZZa1eASzDaRrSrLMemLDhVg=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "bad_encoding"
+      },
+      "why": "ES256 is P1363 r||s, never DER."
+    },
+    {
+      "name": "es256_r_zero",
+      "suite": "ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE22dVZhCG5EuNgxLO+n8HtihX8PcM\nIZvcJx8jNMwLthuR3FQI5UzaRQqWOVmZSVCUBOCt5HvjFOIWDMmpwINEOg==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABPxRpCJevA6TkqWmeUUseZZa1eASzDaRrSrLMemLDhVg=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "bad_encoding"
+      },
+      "why": ""
+    },
+    {
+      "name": "es256_other_payload",
+      "suite": "ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE22dVZhCG5EuNgxLO+n8HtihX8PcM\nIZvcJx8jNMwLthuR3FQI5UzaRQqWOVmZSVCUBOCt5HvjFOIWDMmpwINEOg==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo5OTk5OX0=",
+      "proof": {
+        "signature": "dHGA5vPXXFOWUa60JQPxLgv2Z2af6LL0sfHyKa7D6K9PxRpCJevA6TkqWmeUUseZZa1eASzDaRrSrLMemLDhVg=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "bad_signature"
+      },
+      "why": ""
+    },
+    {
+      "name": "es256_tampered",
+      "suite": "ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE22dVZhCG5EuNgxLO+n8HtihX8PcM\nIZvcJx8jNMwLthuR3FQI5UzaRQqWOVmZSVCUBOCt5HvjFOIWDMmpwINEOg==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "dHGA5vPXXFOWUa60JQPxLgv2Z2af6LL0sfHyKa7D6K9PxRpCJevA6TkqWmeUUseZZa1eASzDaRrSrLMemLDhVw=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "bad_signature"
+      },
+      "why": ""
+    },
+    {
+      "name": "key_compressed_point",
+      "suite": "ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgAC22dVZhCG5EuNgxLO+n8HtihX8PcM\nIZvcJx8jNMwLths=\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "dHGA5vPXXFOWUa60JQPxLgv2Z2af6LL0sfHyKa7D6K9PxRpCJevA6TkqWmeUUseZZa1eASzDaRrSrLMemLDhVg=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "invalid_key"
+      },
+      "why": "The same key with a compressed point would have a second key id (§3.1)."
+    },
+    {
+      "name": "key_p384",
+      "suite": "ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEcjSFPruz5866H6W0KZcBLjWpa61MUB18\nBEmpVarLUEFYYj+0DtwpuieNn3WfBKGZHDoPan0uDNPFKcoBvb1O0v46eS1OnaTX\nd2ttKuIyX3lRmh7299MDkRQm7FILt1BO\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "dHGA5vPXXFOWUa60JQPxLgv2Z2af6LL0sfHyKa7D6K9PxRpCJevA6TkqWmeUUseZZa1eASzDaRrSrLMemLDhVg=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "invalid_key"
+      },
+      "why": ""
+    },
+    {
+      "name": "key_p256_point_off_curve",
+      "suite": "ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "dHGA5vPXXFOWUa60JQPxLgv2Z2af6LL0sfHyKa7D6K9PxRpCJevA6TkqWmeUUseZZa1eASzDaRrSrLMemLDhVg=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "invalid_key"
+      },
+      "why": "Canonical bytes, but the point is not on the curve."
+    },
+    {
+      "name": "suite_ed25519_on_p256_key",
+      "suite": "Ed25519",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE22dVZhCG5EuNgxLO+n8HtihX8PcM\nIZvcJx8jNMwLthuR3FQI5UzaRQqWOVmZSVCUBOCt5HvjFOIWDMmpwINEOg==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "1Y8Sn3ofbVLKSS8xw7TzQcf/Jq9Qrl7zIYWehlqHBMUMqi0JyBMsEmsvVxjWvMbL1wQI0GuzWz9W0H81bkaRBw=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "suite_key_mismatch"
+      },
+      "why": "The key decides what it can be (§3.3)."
+    },
+    {
+      "name": "suite_es256_on_ed25519_key",
+      "suite": "ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATcSoD4ZQg1cFbPf5YaCxj5CiFJ/uYS7DVm3nliW+Uok=\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "dHGA5vPXXFOWUa60JQPxLgv2Z2af6LL0sfHyKa7D6K9PxRpCJevA6TkqWmeUUseZZa1eASzDaRrSrLMemLDhVg=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "suite_key_mismatch"
+      },
+      "why": ""
+    },
+    {
+      "name": "suite_rs256_unknown",
+      "suite": "RS256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE22dVZhCG5EuNgxLO+n8HtihX8PcM\nIZvcJx8jNMwLthuR3FQI5UzaRQqWOVmZSVCUBOCt5HvjFOIWDMmpwINEOg==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "dHGA5vPXXFOWUa60JQPxLgv2Z2af6LL0sfHyKa7D6K9PxRpCJevA6TkqWmeUUseZZa1eASzDaRrSrLMemLDhVg=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "unknown_suite"
+      },
+      "why": "The registry is closed (§2)."
+    },
+    {
+      "name": "suite_none_unknown",
+      "suite": "none",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE22dVZhCG5EuNgxLO+n8HtihX8PcM\nIZvcJx8jNMwLthuR3FQI5UzaRQqWOVmZSVCUBOCt5HvjFOIWDMmpwINEOg==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": ""
+      },
+      "expected": {
+        "ok": false,
+        "reason": "unknown_suite"
+      },
+      "why": ""
+    },
+    {
+      "name": "webauthn_valid",
+      "suite": "WebAuthn-ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXJyn5rn6uiOT9/OfZwwXqSpFjCYN\nvIq2SUfopMk8avDvcZw1j02MZGvEKq4JNs28SRqVKlziIZFSav+0UWmXAw==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "authenticator_data": "vZmyirb3IjT3FV0b-z5b_eK-7PKWP6U1IQryP1IpUjMFAAAAAA",
+        "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiZ09QMGFCazZuUW9xcGxvX3VDYVUzaEtzREU0VU0xT3hFR0JabEhseW5JOCIsIm9yaWdpbiI6Imh0dHBzOi8vYXBwcm92ZS5leGFtcGxlIiwiY3Jvc3NPcmlnaW4iOmZhbHNlfQ",
+        "signature": "MEYCIQCA_7eZSHH2Xrxg1EOX1MUQEPTedWBLyDSRij-3SFOpzgIhAOg5BqBaa15A98C3naYZ-Kq5YSufyn6QfV1vH-nz1cKf"
+      },
+      "expected": {
+        "ok": true,
+        "reason": null
+      },
+      "why": ""
+    },
+    {
+      "name": "webauthn_high_s_accepted",
+      "suite": "WebAuthn-ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXJyn5rn6uiOT9/OfZwwXqSpFjCYN\nvIq2SUfopMk8avDvcZw1j02MZGvEKq4JNs28SRqVKlziIZFSav+0UWmXAw==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "authenticator_data": "vZmyirb3IjT3FV0b-z5b_eK-7PKWP6U1IQryP1IpUjMFAAAAAA",
+        "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiZ09QMGFCazZuUW9xcGxvX3VDYVUzaEtzREU0VU0xT3hFR0JabEhseW5JOCIsIm9yaWdpbiI6Imh0dHBzOi8vYXBwcm92ZS5leGFtcGxlIiwiY3Jvc3NPcmlnaW4iOmZhbHNlfQ",
+        "signature": "MEUCIQCA_7eZSHH2Xrxg1EOX1MUQEPTedWBLyDSRij-3SFOpzgIgF8b5XqWUocAIP0hiWeYHVQOFzw3cmQ4Hlkqq2QiNYrI"
+      },
+      "expected": {
+        "ok": true,
+        "reason": null
+      },
+      "why": "WebAuthn signatures are exempt from low-S: the authenticator chooses the encoding (§5)."
+    },
+    {
+      "name": "webauthn_user_present_only",
+      "suite": "WebAuthn-ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXJyn5rn6uiOT9/OfZwwXqSpFjCYN\nvIq2SUfopMk8avDvcZw1j02MZGvEKq4JNs28SRqVKlziIZFSav+0UWmXAw==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "authenticator_data": "vZmyirb3IjT3FV0b-z5b_eK-7PKWP6U1IQryP1IpUjMBAAAAAA",
+        "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiZ09QMGFCazZuUW9xcGxvX3VDYVUzaEtzREU0VU0xT3hFR0JabEhseW5JOCIsIm9yaWdpbiI6Imh0dHBzOi8vYXBwcm92ZS5leGFtcGxlIiwiY3Jvc3NPcmlnaW4iOmZhbHNlfQ",
+        "signature": "MEYCIQD2CCnLScz_hM2WGxJJTErMAPoC0hrM4i2Zn5g1U74OogIhAO1SzQVl4h3inEvjMsAB-dyfo5_ujpOPfrzSI9d4Z8Is"
+      },
+      "expected": {
+        "ok": false,
+        "reason": "user_not_verified"
+      },
+      "why": "A touch is not an approval: the device must have verified the person (§5)."
+    },
+    {
+      "name": "webauthn_wrong_type",
+      "suite": "WebAuthn-ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXJyn5rn6uiOT9/OfZwwXqSpFjCYN\nvIq2SUfopMk8avDvcZw1j02MZGvEKq4JNs28SRqVKlziIZFSav+0UWmXAw==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "authenticator_data": "vZmyirb3IjT3FV0b-z5b_eK-7PKWP6U1IQryP1IpUjMFAAAAAA",
+        "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiZ09QMGFCazZuUW9xcGxvX3VDYVUzaEtzREU0VU0xT3hFR0JabEhseW5JOCIsIm9yaWdpbiI6Imh0dHBzOi8vYXBwcm92ZS5leGFtcGxlIiwiY3Jvc3NPcmlnaW4iOmZhbHNlfQ",
+        "signature": "MEUCIQCgCaS2L9KQAwHarEExLBwsz7b2fumXHk3yO0VNjreWSwIgMw6LZ66tanj-YdfrzPRd1mzBprBr2dLNbKOkXhSkfFU"
+      },
+      "expected": {
+        "ok": false,
+        "reason": "bad_client_data"
+      },
+      "why": "A registration ceremony is not an approval."
+    },
+    {
+      "name": "webauthn_challenge_for_other_payload",
+      "suite": "WebAuthn-ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXJyn5rn6uiOT9/OfZwwXqSpFjCYN\nvIq2SUfopMk8avDvcZw1j02MZGvEKq4JNs28SRqVKlziIZFSav+0UWmXAw==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "authenticator_data": "vZmyirb3IjT3FV0b-z5b_eK-7PKWP6U1IQryP1IpUjMFAAAAAA",
+        "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoicU5xU3FTNGpHZTJxc2YydUY4bWVvTUlIbXdTYzBSdHBIcUtxYmdLNTNURSIsIm9yaWdpbiI6Imh0dHBzOi8vYXBwcm92ZS5leGFtcGxlIiwiY3Jvc3NPcmlnaW4iOmZhbHNlfQ",
+        "signature": "MEUCIDrNbpShaofv8dqk-8nt938hWgdov06g7qBsGeGJXgtMAiEArRg9OKA6dmNRWFZdaV3OEjKHDGg-78TgsI1ha3zY48g"
+      },
+      "expected": {
+        "ok": false,
+        "reason": "challenge_mismatch"
+      },
+      "why": "A genuine approval of a different payload."
+    },
+    {
+      "name": "webauthn_short_authenticator_data",
+      "suite": "WebAuthn-ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXJyn5rn6uiOT9/OfZwwXqSpFjCYN\nvIq2SUfopMk8avDvcZw1j02MZGvEKq4JNs28SRqVKlziIZFSav+0UWmXAw==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "authenticator_data": "vZmyirb3IjT3FV0b-z5b_eK-7PKWP6U1IQryP1IpUjMFAAAA",
+        "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiZ09QMGFCazZuUW9xcGxvX3VDYVUzaEtzREU0VU0xT3hFR0JabEhseW5JOCIsIm9yaWdpbiI6Imh0dHBzOi8vYXBwcm92ZS5leGFtcGxlIiwiY3Jvc3NPcmlnaW4iOmZhbHNlfQ",
+        "signature": "MEYCIQCA_7eZSHH2Xrxg1EOX1MUQEPTedWBLyDSRij-3SFOpzgIhAOg5BqBaa15A98C3naYZ-Kq5YSufyn6QfV1vH-nz1cKf"
+      },
+      "expected": {
+        "ok": false,
+        "reason": "bad_encoding"
+      },
+      "why": ""
+    },
+    {
+      "name": "webauthn_tampered_authenticator_data",
+      "suite": "WebAuthn-ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXJyn5rn6uiOT9/OfZwwXqSpFjCYN\nvIq2SUfopMk8avDvcZw1j02MZGvEKq4JNs28SRqVKlziIZFSav+0UWmXAw==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "authenticator_data": "vZmyirb3IjT3FV0b-z5b_eK-7PKWP6U1IQryP1IpUjMFAAAAAQ",
+        "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiZ09QMGFCazZuUW9xcGxvX3VDYVUzaEtzREU0VU0xT3hFR0JabEhseW5JOCIsIm9yaWdpbiI6Imh0dHBzOi8vYXBwcm92ZS5leGFtcGxlIiwiY3Jvc3NPcmlnaW4iOmZhbHNlfQ",
+        "signature": "MEYCIQCA_7eZSHH2Xrxg1EOX1MUQEPTedWBLyDSRij-3SFOpzgIhAOg5BqBaa15A98C3naYZ-Kq5YSufyn6QfV1vH-nz1cKf"
+      },
+      "expected": {
+        "ok": false,
+        "reason": "bad_signature"
+      },
+      "why": ""
+    },
+    {
+      "name": "webauthn_padded_base64url",
+      "suite": "WebAuthn-ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXJyn5rn6uiOT9/OfZwwXqSpFjCYN\nvIq2SUfopMk8avDvcZw1j02MZGvEKq4JNs28SRqVKlziIZFSav+0UWmXAw==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "authenticator_data": "vZmyirb3IjT3FV0b-z5b_eK-7PKWP6U1IQryP1IpUjMFAAAAAA",
+        "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiZ09QMGFCazZuUW9xcGxvX3VDYVUzaEtzREU0VU0xT3hFR0JabEhseW5JOCIsIm9yaWdpbiI6Imh0dHBzOi8vYXBwcm92ZS5leGFtcGxlIiwiY3Jvc3NPcmlnaW4iOmZhbHNlfQ==",
+        "signature": "MEYCIQCA_7eZSHH2Xrxg1EOX1MUQEPTedWBLyDSRij-3SFOpzgIhAOg5BqBaa15A98C3naYZ-Kq5YSufyn6QfV1vH-nz1cKf"
+      },
+      "expected": {
+        "ok": false,
+        "reason": "bad_encoding"
+      },
+      "why": "base64url must be unpadded and canonical."
+    },
+    {
+      "name": "webauthn_on_ed25519_key",
+      "suite": "WebAuthn-ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATcSoD4ZQg1cFbPf5YaCxj5CiFJ/uYS7DVm3nliW+Uok=\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "authenticator_data": "vZmyirb3IjT3FV0b-z5b_eK-7PKWP6U1IQryP1IpUjMFAAAAAA",
+        "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiZ09QMGFCazZuUW9xcGxvX3VDYVUzaEtzREU0VU0xT3hFR0JabEhseW5JOCIsIm9yaWdpbiI6Imh0dHBzOi8vYXBwcm92ZS5leGFtcGxlIiwiY3Jvc3NPcmlnaW4iOmZhbHNlfQ",
+        "signature": "MEYCIQCA_7eZSHH2Xrxg1EOX1MUQEPTedWBLyDSRij-3SFOpzgIhAOg5BqBaa15A98C3naYZ-Kq5YSufyn6QfV1vH-nz1cKf"
+      },
+      "expected": {
+        "ok": false,
+        "reason": "suite_key_mismatch"
+      },
+      "why": ""
+    },
+    {
+      "name": "webauthn_proof_missing_fields",
+      "suite": "WebAuthn-ES256",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXJyn5rn6uiOT9/OfZwwXqSpFjCYN\nvIq2SUfopMk8avDvcZw1j02MZGvEKq4JNs28SRqVKlziIZFSav+0UWmXAw==\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "MEYCIQCA_7eZSHH2Xrxg1EOX1MUQEPTedWBLyDSRij-3SFOpzgIhAOg5BqBaa15A98C3naYZ-Kq5YSufyn6QfV1vH-nz1cKf"
+      },
+      "expected": {
+        "ok": false,
+        "reason": "bad_encoding"
+      },
+      "why": ""
+    }
+  ]
+}
