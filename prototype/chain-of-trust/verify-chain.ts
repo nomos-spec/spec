@@ -92,8 +92,8 @@ function main(): void {
     else if (args[i] === "--root-pubkey" && args[i + 1]) rootPubkeyPath = path.resolve(args[++i]);
     else if (args[i] === "--staples" && args[i + 1]) staplesPath = path.resolve(args[++i]);
   }
-  if (!rootPubkeyPath) printAndExit({ decision: "MALFORMED", detail: "--root-pubkey is required. There is no default root — you must supply the key you've decided to trust." });
-  if (!chainPath) printAndExit({ decision: "MALFORMED", detail: "--chain <certs.json> is required — the set of key certificates presented alongside the artifact (order does not matter)." });
+  if (!rootPubkeyPath) printAndExit({ decision: "MALFORMED", reason_code: "usage", detail: "--root-pubkey is required. There is no default root — you must supply the key you've decided to trust." });
+  if (!chainPath) printAndExit({ decision: "MALFORMED", reason_code: "usage", detail: "--chain <certs.json> is required — the set of key certificates presented alongside the artifact (order does not matter)." });
 
   let artifact: any, chain: unknown, rootPublicKeyPem: string, freshnessStaples: unknown;
   try {
@@ -102,7 +102,7 @@ function main(): void {
     rootPublicKeyPem = fs.readFileSync(rootPubkeyPath, "utf8");
     freshnessStaples = staplesPath ? JSON.parse(fs.readFileSync(staplesPath, "utf8")) : undefined;
   } catch (e: any) {
-    printAndExit({ decision: "MALFORMED", detail: `Could not read/parse input files: ${e?.message ?? e}` });
+    printAndExit({ decision: "MALFORMED", reason_code: "bad_input", detail: `Could not read/parse input files: ${e?.message ?? e}` });
   }
 
   console.log(`\nVerifying chain for: ${artifactPath}`);

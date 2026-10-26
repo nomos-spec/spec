@@ -300,3 +300,24 @@ The derived-mutant suite is extended to every new field.
 2. Confirm that NOMOS-SPEC-009 and NOMOS-SPEC-010 are new numbered specifications, entering as
    Draft.
 3. Confirm the two breaking changes (§9) and their migration paths.
+
+---
+
+## Errata (2026-10-26, recorded while implementing)
+
+Implementing changes 2–4 in NOMOS-SPEC-007 rev. 1.9 found four points where this text was
+imprecise. The decisions are recorded in that revision ("Relation to RFC-0001"), and summarized here.
+
+1. **§5.3 suite names.** `suite:webauthn-es256` should read `suite:WebAuthn-ES256`. Scope values use
+   the NOMOS-SPEC-010 registry's exact spelling, so every object has one canonical form
+   (invariant 5).
+2. **§5.3 WebAuthn-ES256 stands alone.** A `suite` set that contains `WebAuthn-ES256` contains
+   nothing else. Without this rule, "an enrolled passkey is therefore an approval key and nothing
+   else" is false: a key certified `suite:ES256,WebAuthn-ES256` could also testify.
+3. **§5.4 where the approver MUST is enforced.** "A key with a `consent` term MUST also carry
+   exactly one `approver` term" is enforced by NOMOS-SPEC-008 0.6.0, together with the counting
+   rule of §6.2 that it serves. SPEC-007 rev. 1.9 defines the dimension. Implementation also
+   showed that 0.6.0 must make the counted identity independent of the path the carrier presents.
+4. **A malformed scope fails its candidate path** (`OUT_OF_SCOPE`, `malformed_scope`). It does not
+   fail the whole presentation. This text was silent on it, and the two earlier implementations
+   disagreed.

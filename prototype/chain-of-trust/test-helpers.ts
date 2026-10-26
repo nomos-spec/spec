@@ -28,5 +28,5 @@ export function sealToyArtifact(signerKid: string, signerPrivateKeyPem: string, 
   const signature = crypto
     .sign(null, jcs({ hash, signed_by: signedBy }), crypto.createPrivateKey(signerPrivateKeyPem))
     .toString("base64");
-  return { ...unsealed, seal: { status: "sealed", hash, signature, algorithm: "Ed25519", kid: signerKid, signed_by: signedBy } };
+  return { ...unsealed, seal: { status: "sealed", hash, signature, signature_algorithm: "Ed25519", kid: signerKid, signed_by: signedBy } };
 }

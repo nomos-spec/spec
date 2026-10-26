@@ -1,7 +1,8 @@
 # NOMOS-SPEC-007 interop test vectors
 
-**Status:** both NOMOS implementations — the pure reference in `../prototype/chain-of-trust/`
-and the hosted platform's verifier — pass every case. These vectors are the test a second-party
+**Status:** the pure references (`../prototype/chain-of-trust/`, `../python/nomos/chain.py`)
+and the hosted platform's verifier pass every case in `vectors.json`; the platform does not yet
+implement rev. 1.9 (see below). These vectors are the test a second-party
 implementation runs to show it agrees.
 
 ## What's here
@@ -48,6 +49,43 @@ npx tsx chain-of-trust-vectors/check.ts
 
 Runs every case through this repo's own reference implementation and confirms the result
 matches `expected`.
+
+## Rev. 1.9 vectors
+
+`vectors-1.9.json` — 37 cases for NOMOS-SPEC-007 rev. 1.9
+(`../spec/drafts/NOMOS-SPEC-007-rev-1.9.0.md`), generated deterministically in Python
+(`generate_19.py`, keys from published seeds, RFC 6979 ECDSA). Every `expected` value is written
+by hand from the text. Each case lists the presentation `orders` it must give the same answer in,
+and has one of two purposes:
+
+- `artifact`: resolve `seal.kid` and verify the seal (§4);
+- `statement`: resolve a witness or approver key for a `claim` or `consent` statement under a
+  given suite (§4.6).
+
+The cases cover:
+- scope-aware path selection, including the R-19 §5.6 example exactly;
+- tree-shaped pools in every order;
+- ES256 and mixed chains and seals, high-S, compressed keys and suite/key mismatch;
+- the `suite` dimension (passkeys can approve and nothing else);
+- the `approver` dimension.
+
+A verifier compares `decision`, `reason_code`, `dimension`, `path`, `effective_scope` and
+`revoked_kid`. A field absent from `expected` must also be absent from the result.
+
+```bash
+python3 chain-of-trust-vectors/python/check_19.py chain-of-trust-vectors/vectors-1.9.json   # Python reference
+npx tsx chain-of-trust-vectors/check-1.9.ts                                                 # TypeScript prototype
+python3 chain-of-trust-vectors/generate_19.py > chain-of-trust-vectors/vectors-1.9.json     # byte-identical
+```
+
+Both pass all 37, in all 91 listed orders. On every artifact verdict in both vector files they
+agree on nine fields. A mutant that checks scope only after choosing a path (the rev. 1.8
+behaviour) fails exactly the two scope-aware selection cases. Both implementations are by the
+authors, so neither is independent. The rev. 1.9 call for an independent implementation stands.
+
+The hosted platform's verifier implements rev. 1.8. It checks scope only after choosing a path,
+so it can refuse where rev. 1.9 allows, and it cannot wrongly allow. It adopts rev. 1.9 when the
+shared verifier package replaces it.
 
 ## Regenerating
 

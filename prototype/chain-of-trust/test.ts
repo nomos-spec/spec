@@ -101,9 +101,9 @@ test("MALFORMED — artifact has no seal", () => {
   assert.equal(v.decision, "MALFORMED");
 });
 
-test("MALFORMED — non-Ed25519 seal algorithm", () => {
+test("MALFORMED — a seal no chain can vouch for (HMAC)", () => {
   const f = buildBasicChain();
-  const artifact = { ...f.artifactHonored, seal: { ...f.artifactHonored.seal, algorithm: "HMAC-SHA256" } };
+  const artifact = { ...f.artifactHonored, seal: { ...f.artifactHonored.seal, signature_algorithm: "HMAC-SHA256" } };
   const v = verifyChainPresentation({ artifact, chain: f.chainSuccess, rootPublicKeyPem: f.root.publicKeyPem });
   assert.equal(v.decision, "MALFORMED");
 });
@@ -152,7 +152,8 @@ test("ISSUER_NOT_RECOGNIZED, not a crash — a validly-signed certificate names 
   };
   const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: [rootToGarbage, garbageToLeaf], rootPublicKeyPem: f.root.publicKeyPem });
   assert.equal(v.decision, "ISSUER_NOT_RECOGNIZED");
-  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason_code, "bad_signature");
+  // rev. 1.9: the certified key is checked for canonical form before anything is verified with it.
+  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason_code, "invalid_key");
 });
 
 test("ISSUER_NOT_RECOGNIZED, not an infinite loop — a real signed cycle that never reaches the target", () => {
@@ -162,13 +163,26 @@ test("ISSUER_NOT_RECOGNIZED, not an infinite loop — a real signed cycle that n
   const rootToA = createKeyCertificate({ parentPrivateKeyPem: f.root.privateKeyPem, parentKid: f.rootKid, childPublicKeyPem: a.publicKeyPem, expiresAt: ONE_YEAR });
   const aToRoot = createKeyCertificate({ parentPrivateKeyPem: a.privateKeyPem, parentKid: aKid, childPublicKeyPem: f.root.publicKeyPem, expiresAt: ONE_YEAR });
   // Target (f.artifactHonored's leaf kid) never appears in this chain — root and A only certify
-  // each other, so the walk must detect the cycle rather than loop forever.
+  // each other. Target-first resolution (§4.2a) never walks a cycle: no certificate names the
+  // target, so there is no candidate path, and the set does contain a certificate from the root.
   const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: [rootToA, aToRoot], rootPublicKeyPem: f.root.publicKeyPem });
   assert.equal(v.decision, "ISSUER_NOT_RECOGNIZED");
-  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason_code, "cycle");
+  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason_code, "chain_broken");
 });
 
 // ── §5.1-5.2 key revocation + §5.5 freshness staples ──────────────────────────────────────────
+
+test("terminates — a signed cycle sits on the only way from the target toward the root", () => {
+  const f = buildBasicChain();
+  const a = generateKeypair(), b = generateKeypair();
+  const aKid = computeKid(a.publicKeyPem), bKid = computeKid(b.publicKeyPem);
+  const aToLeaf = createKeyCertificate({ parentPrivateKeyPem: a.privateKeyPem, parentKid: aKid, childPublicKeyPem: f.leaf.publicKeyPem, expiresAt: ONE_YEAR });
+  const bToA = createKeyCertificate({ parentPrivateKeyPem: b.privateKeyPem, parentKid: bKid, childPublicKeyPem: a.publicKeyPem, expiresAt: ONE_YEAR });
+  const aToB = createKeyCertificate({ parentPrivateKeyPem: a.privateKeyPem, parentKid: aKid, childPublicKeyPem: b.publicKeyPem, expiresAt: ONE_YEAR });
+  const v = verifyChainPresentation({ artifact: f.artifactHonored, chain: [aToLeaf, bToA, aToB], rootPublicKeyPem: f.root.publicKeyPem });
+  assert.equal(v.decision, "ISSUER_NOT_RECOGNIZED");
+  if (v.decision === "ISSUER_NOT_RECOGNIZED") assert.equal(v.reason_code, "no_certificate_for_root");
+});
 
 test("KEY_REVOKED — an own revocation source overrides everything, staples included", () => {
   const f = buildBasicChain();

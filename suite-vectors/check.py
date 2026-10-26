@@ -7,7 +7,9 @@ import base64
 import json
 import sys
 
-import nomos_suites as S
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "python"))
+from nomos import suites as S  # noqa: E402
 
 vectors = json.load(open(sys.argv[1] if len(sys.argv) > 1 else "vectors.json"))
 passed = failed = 0

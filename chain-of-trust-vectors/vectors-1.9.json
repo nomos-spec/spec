@@ -1,0 +1,2238 @@
+{
+  "_readme": "NOMOS-SPEC-007 rev. 1.9 vectors. For each case and for every permutation in `orders`, present key_certs in that order and resolve: purpose 'artifact' resolves artifact.seal.kid for the artifact and verifies the seal; purpose 'statement' resolves statement.kid for a statement of that kind, name and suite. Compare decision, reason_code, dimension, path, effective_scope and revoked_kid with `expected`; a field absent from `expected` must be absent from the result. Keys are derived from published seeds: never use them as trust material.",
+  "spec": "NOMOS-SPEC-007 rev. 1.9.0",
+  "check_at": "2027-01-01T00:00:00.000Z",
+  "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAOurGwLaSroefRcBbtif0Vz6AL6ktEtTH2n4vrTag9eI=\n-----END PUBLIC KEY-----\n",
+  "cases": [
+    {
+      "name": "scope_aware_selection_r19",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-lending",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "3fb2d770ad40b418cb73d7ee515c22e517701476cd52398faefddd00897604da",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:lending",
+          "signature": "hePziDFYPuGIWc/9E/MOD3VENgdGD9cJLIscozJt6PMI8FiKWvKfv/dpQYynQmM7GkNKSlmuyObNBClbaCrYDg=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "industry:insurance",
+          "algorithm": "Ed25519",
+          "signature": "sxnrKWwLZhLv7DE6jI2JmmUaDJg19koMxULg9FpLZC40YWbmHoMmYwG8xbh3voooKoXXRfsN1wpuXiXpuMi2Ag=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "DtQBeXMSls/BaCBgWlJhmE4QqsTBZ9q74LuM91NJ4r92/8tNCwq4gzuP3tmnAlUeXV9DTeNHyV9T5sU+RugwCw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "Xc3TV+gp/nZm0L3YathGCAvWddHyHvGWOZXYiM9pP+GNDXpT8zuJ/Ch6+WSyNEScKzRcuqTgiTnOA/O79QSNCg=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "N2BTtlsIRy53NEGR",
+          "w0vb8k81OYZEExXa"
+        ]
+      },
+      "why": "R-19 §5.6. The issuer is certified twice: directly with industry:insurance (the lower fingerprint, so tried first) and through an unscoped intermediate. The artifact is financial/lending. Rev. 1.8 chose the direct path on its signature alone and returned OUT_OF_SCOPE; rev. 1.9 treats the out-of-scope path as a failed candidate and resolves the other."
+    },
+    {
+      "name": "scope_aware_selection_only_intermediate",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-lending",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "3fb2d770ad40b418cb73d7ee515c22e517701476cd52398faefddd00897604da",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:lending",
+          "signature": "hePziDFYPuGIWc/9E/MOD3VENgdGD9cJLIscozJt6PMI8FiKWvKfv/dpQYynQmM7GkNKSlmuyObNBClbaCrYDg=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "DtQBeXMSls/BaCBgWlJhmE4QqsTBZ9q74LuM91NJ4r92/8tNCwq4gzuP3tmnAlUeXV9DTeNHyV9T5sU+RugwCw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "Xc3TV+gp/nZm0L3YathGCAvWddHyHvGWOZXYiM9pP+GNDXpT8zuJ/Ch6+WSyNEScKzRcuqTgiTnOA/O79QSNCg=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "N2BTtlsIRy53NEGR",
+          "w0vb8k81OYZEExXa"
+        ]
+      },
+      "why": "The same Act without the extra certificate. Adding a valid certificate must never turn this into a refusal."
+    },
+    {
+      "name": "scope_aware_all_fail_first_reported",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-lending",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "3fb2d770ad40b418cb73d7ee515c22e517701476cd52398faefddd00897604da",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:lending",
+          "signature": "hePziDFYPuGIWc/9E/MOD3VENgdGD9cJLIscozJt6PMI8FiKWvKfv/dpQYynQmM7GkNKSlmuyObNBClbaCrYDg=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.004Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "industry:insurance",
+          "algorithm": "Ed25519",
+          "signature": "QQkb7XfqQX8EAlafa538+PfWOoVHEGt4+frEwoDYNpJ8s+nb9JEELJD9q7PqIKfjUcZ5R6+P7h91AzKMfvQ3CQ=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "DtQBeXMSls/BaCBgWlJhmE4QqsTBZ9q74LuM91NJ4r92/8tNCwq4gzuP3tmnAlUeXV9DTeNHyV9T5sU+RugwCw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "industry:health",
+          "algorithm": "Ed25519",
+          "signature": "PXLMrTer2aHJGU7CiC8LfYzPgmvU0R5pBHLrpgoHeRCu12YanvYhV4oUYzA8bJahn5DON90fvr9StPRktXXkDA=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "industry"
+      },
+      "why": "Both paths are out of scope. The failure of the first candidate tried (fingerprint order) is reported."
+    },
+    {
+      "name": "scope_aware_first_failure_is_the_lowest_fingerprint",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-lending",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "3fb2d770ad40b418cb73d7ee515c22e517701476cd52398faefddd00897604da",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:lending",
+          "signature": "hePziDFYPuGIWc/9E/MOD3VENgdGD9cJLIscozJt6PMI8FiKWvKfv/dpQYynQmM7GkNKSlmuyObNBClbaCrYDg=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "jurisdiction:QA",
+          "algorithm": "Ed25519",
+          "signature": "1GqWxkAX6CxneR3oRu0ZIvUUFgEMTueiaUuRFJeT7ONnG58ET+RzlYHmaAMa8jEXyYM14NvIMQ6owHmb/wn3Dw=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "DtQBeXMSls/BaCBgWlJhmE4QqsTBZ9q74LuM91NJ4r92/8tNCwq4gzuP3tmnAlUeXV9DTeNHyV9T5sU+RugwCw=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "industry:insurance",
+          "algorithm": "Ed25519",
+          "signature": "sxnrKWwLZhLv7DE6jI2JmmUaDJg19koMxULg9FpLZC40YWbmHoMmYwG8xbh3voooKoXXRfsN1wpuXiXpuMi2Ag=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "industry"
+      },
+      "why": "The two paths fail on different dimensions. The reported one is the lowest-fingerprint candidate's (industry), whatever the presentation order."
+    },
+    {
+      "name": "expired_direct_path_falls_through",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-lending",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "3fb2d770ad40b418cb73d7ee515c22e517701476cd52398faefddd00897604da",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:lending",
+          "signature": "hePziDFYPuGIWc/9E/MOD3VENgdGD9cJLIscozJt6PMI8FiKWvKfv/dpQYynQmM7GkNKSlmuyObNBClbaCrYDg=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2026-06-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "vaem4caQP5ZVCT6YNXCdX8J7t0OMGDiNHlUkISOMW+GC043RESInxq3skZr6DW7cHzmNROC6BZ4UHFQpA10dDw=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "DtQBeXMSls/BaCBgWlJhmE4QqsTBZ9q74LuM91NJ4r92/8tNCwq4gzuP3tmnAlUeXV9DTeNHyV9T5sU+RugwCw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "Xc3TV+gp/nZm0L3YathGCAvWddHyHvGWOZXYiM9pP+GNDXpT8zuJ/Ch6+WSyNEScKzRcuqTgiTnOA/O79QSNCg=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "N2BTtlsIRy53NEGR",
+          "w0vb8k81OYZEExXa"
+        ]
+      },
+      "why": "An expired candidate is a failed candidate (unchanged from rev. 1.8)."
+    },
+    {
+      "name": "revoked_key_is_dead_on_every_path",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-lending",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "3fb2d770ad40b418cb73d7ee515c22e517701476cd52398faefddd00897604da",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:lending",
+          "signature": "hePziDFYPuGIWc/9E/MOD3VENgdGD9cJLIscozJt6PMI8FiKWvKfv/dpQYynQmM7GkNKSlmuyObNBClbaCrYDg=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "industry:insurance",
+          "algorithm": "Ed25519",
+          "signature": "sxnrKWwLZhLv7DE6jI2JmmUaDJg19koMxULg9FpLZC40YWbmHoMmYwG8xbh3voooKoXXRfsN1wpuXiXpuMi2Ag=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "DtQBeXMSls/BaCBgWlJhmE4QqsTBZ9q74LuM91NJ4r92/8tNCwq4gzuP3tmnAlUeXV9DTeNHyV9T5sU+RugwCw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "Xc3TV+gp/nZm0L3YathGCAvWddHyHvGWOZXYiM9pP+GNDXpT8zuJ/Ch6+WSyNEScKzRcuqTgiTnOA/O79QSNCg=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "expected": {
+        "decision": "KEY_REVOKED",
+        "revoked_kid": "w0vb8k81OYZEExXa"
+      },
+      "why": "Proposition 3: a revoked key fails every candidate, so no alternative path resurrects it.",
+      "revoked_kids": [
+        "w0vb8k81OYZEExXa"
+      ]
+    },
+    {
+      "name": "revoked_certificate_withdraws_one_delegation",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-lending",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "3fb2d770ad40b418cb73d7ee515c22e517701476cd52398faefddd00897604da",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:lending",
+          "signature": "hePziDFYPuGIWc/9E/MOD3VENgdGD9cJLIscozJt6PMI8FiKWvKfv/dpQYynQmM7GkNKSlmuyObNBClbaCrYDg=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "sm9NW1GrWW5W/A33WpU2tSVYF4Vuu7WcdYIA4U3bBMOjxR6gNyn/rK/r3AYUuqyCqfUu8LHdBqG1jHqyc9kHDg=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "DtQBeXMSls/BaCBgWlJhmE4QqsTBZ9q74LuM91NJ4r92/8tNCwq4gzuP3tmnAlUeXV9DTeNHyV9T5sU+RugwCw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "Xc3TV+gp/nZm0L3YathGCAvWddHyHvGWOZXYiM9pP+GNDXpT8zuJ/Ch6+WSyNEScKzRcuqTgiTnOA/O79QSNCg=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "N2BTtlsIRy53NEGR",
+          "w0vb8k81OYZEExXa"
+        ]
+      },
+      "why": "A revoked certificate withdraws one delegation; the other, unrevoked, still resolves the key (§5.4).",
+      "revoked_certs": [
+        "6a457e2791fd086cfce6c7167a3fa572bd2b13426e27b34da945707f22a409b6"
+      ]
+    },
+    {
+      "name": "tree_resolves_in_every_order",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-tree",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "f9c97f7dc72ced9a5e0c6776be7218e779248dfd35073b287a1fb40d9974b1d5",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:tree",
+          "signature": "W8sq2Cx7Tmdampz2mr2qhSFVrIEfmSucFClhntJQ5xItJ6YIgRzzQrmLCednTCEAwl9lhdgR7YfT+nzl32qTBA=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "sm9NW1GrWW5W/A33WpU2tSVYF4Vuu7WcdYIA4U3bBMOjxR6gNyn/rK/r3AYUuqyCqfUu8LHdBqG1jHqyc9kHDg=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "k4sY1tbBZiw36Mnk",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErBi3a5CjPVxrH7HmxwBOys6GFDl8\nRQqMIqn7uWj6x/fA8ZXs/T+1lwDQIrZRt6Apid7or0sECsGOhda58YMurQ==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "claim:credit_score",
+          "algorithm": "Ed25519",
+          "signature": "CMaHSTGZ22UHXHf+WCUp7A7oPOyXYn/hhqubD7I1tiX5bVv8q2/cOfrabTolcNefZKLuPoVD6sHwu6+8LZRrDQ=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "DtQBeXMSls/BaCBgWlJhmE4QqsTBZ9q74LuM91NJ4r92/8tNCwq4gzuP3tmnAlUeXV9DTeNHyV9T5sU+RugwCw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "cvnHxmW9jiPxmW3G",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk/O5Xj7jA5r5g45vYJPi5QqFjwQa0LHGCmLecyQ8ci0=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "consent:SENIOR approver:p-17",
+          "algorithm": "Ed25519",
+          "signature": "cflpGpVpgEDu6IgbSVsNAwfsVQBgkpcKD4j+pl5eOiTm/nQ4qfOXsKwOtk7aBK44Qz114VzPDv9uE0lFR52UBw=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          3,
+          2,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          3,
+          0
+        ],
+        [
+          2,
+          3,
+          0,
+          1
+        ],
+        [
+          3,
+          0,
+          1,
+          2
+        ]
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "w0vb8k81OYZEExXa"
+        ]
+      },
+      "why": "A pool carrying the sealing key, a witness and an approver forms a tree. Every order resolves."
+    },
+    {
+      "name": "tree_statement_key_in_every_order",
+      "purpose": "statement",
+      "statement": {
+        "kind": "consent",
+        "name": "SENIOR",
+        "kid": "cvnHxmW9jiPxmW3G",
+        "suite": "Ed25519",
+        "authority_meta": {
+          "artifact_id": "rev19-authority",
+          "industry": "financial/lending"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "sm9NW1GrWW5W/A33WpU2tSVYF4Vuu7WcdYIA4U3bBMOjxR6gNyn/rK/r3AYUuqyCqfUu8LHdBqG1jHqyc9kHDg=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "k4sY1tbBZiw36Mnk",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErBi3a5CjPVxrH7HmxwBOys6GFDl8\nRQqMIqn7uWj6x/fA8ZXs/T+1lwDQIrZRt6Apid7or0sECsGOhda58YMurQ==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "claim:credit_score",
+          "algorithm": "Ed25519",
+          "signature": "CMaHSTGZ22UHXHf+WCUp7A7oPOyXYn/hhqubD7I1tiX5bVv8q2/cOfrabTolcNefZKLuPoVD6sHwu6+8LZRrDQ=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "DtQBeXMSls/BaCBgWlJhmE4QqsTBZ9q74LuM91NJ4r92/8tNCwq4gzuP3tmnAlUeXV9DTeNHyV9T5sU+RugwCw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "cvnHxmW9jiPxmW3G",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk/O5Xj7jA5r5g45vYJPi5QqFjwQa0LHGCmLecyQ8ci0=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "consent:SENIOR approver:p-17",
+          "algorithm": "Ed25519",
+          "signature": "cflpGpVpgEDu6IgbSVsNAwfsVQBgkpcKD4j+pl5eOiTm/nQ4qfOXsKwOtk7aBK44Qz114VzPDv9uE0lFR52UBw=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1,
+          2,
+          3
+        ],
+        [
+          3,
+          2,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          3,
+          0
+        ],
+        [
+          2,
+          3,
+          0,
+          1
+        ],
+        [
+          3,
+          0,
+          1,
+          2
+        ]
+      ],
+      "expected": {
+        "decision": "RESOLVED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "N2BTtlsIRy53NEGR",
+          "cvnHxmW9jiPxmW3G"
+        ],
+        "effective_scope": "consent:SENIOR approver:p-17"
+      },
+      "why": "The approver's key, resolved from the same tree, in every order."
+    },
+    {
+      "name": "es256_issuer_es256_seal",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-es256",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "6a24070493221f57c5489a440dd1a91a693809e72babe270a6a4be9ac44b1107",
+          "canonicalization": "JCS",
+          "signature_algorithm": "ES256",
+          "kid": "KbJWfXCuq3ys6NO0",
+          "signed_by": "vectors-1.9:es256",
+          "signature": "M8rg+rjgzDZ85Bjv9WfGjb0t9SfSURCWgAjrvrWeD+Qv6xGLO1O+0TFpsy99NWT4DEX8aurF/ReAm9TaKeb8PQ=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "KbJWfXCuq3ys6NO0",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEpfNitEBdHtgNPOIWXxyxEiFR+ZfC\nLrydB6tYJywXxzV5OJEv53+mwukGxKVjKJreYK+9hw0ugZJ3bjGnPVr7Bg==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "XRDMRcNZMc9jn9mPJfRIarBer6y1Xf1Vd7Fsc6zEm5l36dhAPvinXhqAGu24czGRT21gsDfyjnvAMMNsGlSKDA=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "KbJWfXCuq3ys6NO0"
+        ]
+      },
+      "why": "An Ed25519 root certifies a P-256 issuer; the artifact carries an ES256 seal (NOMOS-SPEC-010)."
+    },
+    {
+      "name": "mixed_chain",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-mixed",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "a706275a769f866d0090cab864cc1d6d069cf4edd54e264cd9ad537154d11ea7",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:mixed",
+          "signature": "Ov12+H3ISsJ+cIseVoEA/Jrc6DIzUvDTMFFgXluYwaCyKg40moIKwDsrJtvfCiZAFBiNtPmipSOAazxBunYVAg=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "xDyc3inXvynrMgyf",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1LfG+95I4K6syZPwUmoRirsM9pGr\nHoIGeDJ38rewssPt7VoJXpY2r8SnQF2cd7hSmFbsYefAJZsd3ky0DNmRlg==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "r8T3Pn+aKyrBVT2p6zaumUWSQV5qYDNiHbn0Jk3ekfxq3ytalxCQ4L5NUHKxZZ0f1dAlehiv1XopyLWQrRkGDQ=="
+        },
+        {
+          "parent_kid": "xDyc3inXvynrMgyf",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "ES256",
+          "signature": "Ej8aDpus9xzDYV5oZ+B18WV2n1okCM18sl/SDeKQYnZ1QAjEdN1HyII1EnKPVVlioT3R/2Zg+Kkt+Wu7BA3Ojw=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "xDyc3inXvynrMgyf",
+          "w0vb8k81OYZEExXa"
+        ]
+      },
+      "why": "Ed25519 root, P-256 intermediate signing an ES256 certificate, Ed25519 issuer."
+    },
+    {
+      "name": "es256_certificate_high_s",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-high-s",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "e6d85fbb755522b6e804add3ce4f25a5280b920056a49e9566c55446e6f9c51d",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:high-s",
+          "signature": "aa0jeaSfwDhYQrQOZGQMBm4tuZoLRPxA6eOxz8Ojm4RKfJ1Blq7MVrLePCV1bdO2SMlTvwO8/DYiyihRgWfHDA=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "xDyc3inXvynrMgyf",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1LfG+95I4K6syZPwUmoRirsM9pGr\nHoIGeDJ38rewssPt7VoJXpY2r8SnQF2cd7hSmFbsYefAJZsd3ky0DNmRlg==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "r8T3Pn+aKyrBVT2p6zaumUWSQV5qYDNiHbn0Jk3ekfxq3ytalxCQ4L5NUHKxZZ0f1dAlehiv1XopyLWQrRkGDQ=="
+        },
+        {
+          "parent_kid": "xDyc3inXvynrMgyf",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "ES256",
+          "signature": "Ej8aDpus9xzDYV5oZ+B18WV2n1okCM18sl/SDeKQYnaKv/c6iyK4OH3K7Y1wqqadG6korkC2pdvFwF8H+FVWwg=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "ISSUER_NOT_RECOGNIZED",
+        "reason_code": "high_s"
+      },
+      "why": "The certificate's ES256 signature with s replaced by n - s: one canonical encoding only (NOMOS-SPEC-010 §4)."
+    },
+    {
+      "name": "certificate_suite_does_not_match_parent_key",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-mismatch",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "ca9bb33c0abbbd48cc96be6034e7add38aa3a17aac719f8ba32f7be28dc0cda0",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:mismatch",
+          "signature": "a+49hto9DNfNgw/kPh1kagR76Ss5/DoCDcUymdgXiqOVG3JnGK8kPq7lWEOKQOcQiguadsRPfuHu9IoznLZnCA=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "xDyc3inXvynrMgyf",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1LfG+95I4K6syZPwUmoRirsM9pGr\nHoIGeDJ38rewssPt7VoJXpY2r8SnQF2cd7hSmFbsYefAJZsd3ky0DNmRlg==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "r8T3Pn+aKyrBVT2p6zaumUWSQV5qYDNiHbn0Jk3ekfxq3ytalxCQ4L5NUHKxZZ0f1dAlehiv1XopyLWQrRkGDQ=="
+        },
+        {
+          "parent_kid": "xDyc3inXvynrMgyf",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "Ej8aDpus9xzDYV5oZ+B18WV2n1okCM18sl/SDeKQYnZ1QAjEdN1HyII1EnKPVVlioT3R/2Zg+Kkt+Wu7BA3Ojw=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "ISSUER_NOT_RECOGNIZED",
+        "reason_code": "suite_key_mismatch"
+      },
+      "why": "The certificate names Ed25519, but its parent is a P-256 key. The key decides what it can be."
+    },
+    {
+      "name": "certificate_algorithm_webauthn_is_malformed",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-webauthn-cert",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "a39f6d92e58a41f0bc4aae7016837ab30e53a2d5749c14670060f33c6186c077",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:webauthn-cert",
+          "signature": "raDESU3mL3pBnApz41ClwjKn9lqvfQ08TvCaO9OxRomtmhQjMsidiPQ+sIocvEh3eNx+iLqS0+PLeskMHuJcBA=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "xDyc3inXvynrMgyf",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1LfG+95I4K6syZPwUmoRirsM9pGr\nHoIGeDJ38rewssPt7VoJXpY2r8SnQF2cd7hSmFbsYefAJZsd3ky0DNmRlg==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "WebAuthn-ES256",
+          "signature": "r8T3Pn+aKyrBVT2p6zaumUWSQV5qYDNiHbn0Jk3ekfxq3ytalxCQ4L5NUHKxZZ0f1dAlehiv1XopyLWQrRkGDQ=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "MALFORMED",
+        "reason_code": "bad_certificate"
+      },
+      "why": "No certificate is WebAuthn-signed (§3.1); the shape is rejected before any cryptography."
+    },
+    {
+      "name": "compressed_child_key",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-compressed",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "02dbf10d31ed418bc3fae3e13b08432184ca36901087b543c69cdf6983c5bb00",
+          "canonicalization": "JCS",
+          "signature_algorithm": "ES256",
+          "kid": "KbJWfXCuq3ys6NO0",
+          "signed_by": "vectors-1.9:compressed",
+          "signature": "6pLlNzHr6KUMOUcIg9xRqgf0m0JDqAaYh4BAua31drZ5A846s21FU3/L6iWOLqvR8LXIxYsyOp6BAXdV3EzPpQ=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "KbJWfXCuq3ys6NO0",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMDkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDIgACpfNitEBdHtgNPOIWXxyxEiFR+ZfC\nLrydB6tYJywXxzU=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "YhpZEABQ2RaMP5im+v/VVkNN7aIb/IfM81TWBPb/YA/PsXcWRZ2upcmmi4uKneyhZlKjZLRqFrZQZBeeGGQLCw=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "ISSUER_NOT_RECOGNIZED",
+        "reason_code": "invalid_key"
+      },
+      "why": "A compressed P-256 point is not the canonical SPKI (NOMOS-SPEC-010 §3.1): one key, one kid."
+    },
+    {
+      "name": "es256_seal_on_ed25519_key",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-seal-mismatch",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "ba00858ed3c7bfb8ff9b59236191104fd3cbd91d63c00e8cddffa7f267ffcd51",
+          "canonicalization": "JCS",
+          "signature_algorithm": "ES256",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:seal-mismatch",
+          "signature": "UJ0K8si+Wrbm9kqMBrEQVsqG8eQHczFZ3LM2L8eZW+VflrWbvznBhducyMWU9h8gMrSbozBKNoWVXSO4IOhwCg=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "sm9NW1GrWW5W/A33WpU2tSVYF4Vuu7WcdYIA4U3bBMOjxR6gNyn/rK/r3AYUuqyCqfUu8LHdBqG1jHqyc9kHDg=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "SEAL_INVALID",
+        "reason_code": "suite_key_mismatch"
+      },
+      "why": "The seal declares ES256; the resolved key is Ed25519."
+    },
+    {
+      "name": "seal_hmac_not_chain_verifiable",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-hmac",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "4a44142754cff172c69caeaa17af7e95dadfffdb94d16836b536862eb3663c24",
+          "canonicalization": "JCS",
+          "signature_algorithm": "HMAC-SHA256",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:hmac",
+          "signature": "hNcmArp1Xe1sgJuZhTITnYjXuvs5jKBVw+an+dgCfJjxsGd5sn2tfmTvw2rmA7h7edM6+2/TyW7kkvipcbEnDQ=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "sm9NW1GrWW5W/A33WpU2tSVYF4Vuu7WcdYIA4U3bBMOjxR6gNyn/rK/r3AYUuqyCqfUu8LHdBqG1jHqyc9kHDg=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "MALFORMED",
+        "reason_code": "seal_algorithm"
+      },
+      "why": "HMAC is not publicly verifiable; a chain cannot vouch for it."
+    },
+    {
+      "name": "passkey_cannot_seal",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-passkey-seal",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "8aec2133822ad25800fd0994858e19fd7e1db73f12d6596318b695ee1f2bb2df",
+          "canonicalization": "JCS",
+          "signature_algorithm": "ES256",
+          "kid": "FE1rTpsrmdaADH0L",
+          "signed_by": "vectors-1.9:passkey-seal",
+          "signature": "32VcHW7sQQp2EAgoHh2bohyeVobX932gwV5YJxRpeHFu2CDFKgjjXEQNHDZopjvxN2TXjvIsf4OTVAiZLPmuIA=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "FE1rTpsrmdaADH0L",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEbRLJZVaGAkEi9rNR1MaWut5R9YWx\nGj/yMiLBOsMAawLeRbopSjn8CD+UZmy2FgkCfD+iwDclTpj8fpdSMI409Q==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "suite:WebAuthn-ES256 consent:SENIOR approver:p-17",
+          "algorithm": "Ed25519",
+          "signature": "Aj+SlPVwhCFVDTcLm1xRKSY0LIEx9cNAASLc4wa7EV0w1p0BtC+q4UzCuc2zSVpVvWiPOv7ErdqhrLIqJodjCA=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "suite"
+      },
+      "why": "An enrolled passkey cannot seal. Its first term, suite, already refuses an ES256 seal (§3.6, §3.8)."
+    },
+    {
+      "name": "consent_key_cannot_seal",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-consent-seal",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "6f055ce612fc022e492791b663badb974e60f00f824698afb56337bd23ebfd7f",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "cvnHxmW9jiPxmW3G",
+          "signed_by": "vectors-1.9:consent-seal",
+          "signature": "4RVtOqPkNtsVWMbBUUXZAIsFwDWU1tSgKfDFMKMtYytdOTOaf48MKxH/p82u2qQu9zZxyr0KkrHL7xCFkignAw=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "cvnHxmW9jiPxmW3G",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk/O5Xj7jA5r5g45vYJPi5QqFjwQa0LHGCmLecyQ8ci0=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "consent:SENIOR approver:p-17",
+          "algorithm": "Ed25519",
+          "signature": "99N8e5GA76M6IR9IKV3t4Iv2w5zZBYXRLHtAwvA+iPsXMzy2diDbrdp2jKMn4zBJdWMcNxVDDFS1MGbiOSnbAQ=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "consent"
+      },
+      "why": "A key certified to consent cannot seal rules (§3.5)."
+    },
+    {
+      "name": "passkey_suite_alone_cannot_seal",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-passkey-seal-2",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "efa0b7119d11a38358115a89f447fbe5a247f2bbae95b7a3f72b0ab5f1d0d1c9",
+          "canonicalization": "JCS",
+          "signature_algorithm": "ES256",
+          "kid": "FE1rTpsrmdaADH0L",
+          "signed_by": "vectors-1.9:passkey-seal-2",
+          "signature": "9Da9QQu2g/TJXMCNWsZDnlRfU/aEQSWgfetthe2T1socRglPsDz2sbBOuP2uHrNMgVuiqJK8kP3YUsqp86HhXg=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "FE1rTpsrmdaADH0L",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEbRLJZVaGAkEi9rNR1MaWut5R9YWx\nGj/yMiLBOsMAawLeRbopSjn8CD+UZmy2FgkCfD+iwDclTpj8fpdSMI409Q==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "suite:WebAuthn-ES256",
+          "algorithm": "Ed25519",
+          "signature": "VtywPr9kR5qOHGSzC/fypGm0ILoYo2yoYb8waeXFglvywv+HCftDGlhIy6A6pah3AP3p22t6gwNttp+b5DFyAw=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "suite"
+      },
+      "why": "A key restricted to WebAuthn-ES256 cannot sign an ES256 seal."
+    },
+    {
+      "name": "passkey_cannot_be_a_parent",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-passkey-parent",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "f2d17a7f9b33ad55e9c0a5a793c704bf456c69c8677bcd078747e6614b819472",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "6kmkZw6gLlkgmFkD",
+          "signed_by": "vectors-1.9:passkey-parent",
+          "signature": "pOnxoB1cpgo3SM7MOSHjp/2bjg0/hD2ogGPy7xnKwDVbuLhRrRNAWJhufVMu/q/kADocOtdHajVK+z1FGSKiAQ=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "FE1rTpsrmdaADH0L",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEbRLJZVaGAkEi9rNR1MaWut5R9YWx\nGj/yMiLBOsMAawLeRbopSjn8CD+UZmy2FgkCfD+iwDclTpj8fpdSMI409Q==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "suite:WebAuthn-ES256",
+          "algorithm": "Ed25519",
+          "signature": "VtywPr9kR5qOHGSzC/fypGm0ILoYo2yoYb8waeXFglvywv+HCftDGlhIy6A6pah3AP3p22t6gwNttp+b5DFyAw=="
+        },
+        {
+          "parent_kid": "FE1rTpsrmdaADH0L",
+          "child_kid": "6kmkZw6gLlkgmFkD",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAregN/AR4LWUaq3uqkKGsRgSx9nRxV3F6um2Vq/SrwHw=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "ES256",
+          "signature": "dsai8O/ND+Yj0xsFWIrCN+jXJrI4uhCPF8KUcaLBALkwNUhdTXh8OV2AGYxVXoKfy+xJaUHwP6f1LnpT3hAqBg=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "suite",
+        "reason_code": "suite_not_permitted"
+      },
+      "why": "A key restricted to WebAuthn-ES256 signed an ES256 certificate. It may not certify anything (§3.6)."
+    },
+    {
+      "name": "suite_restricts_issuer_to_ed25519",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-suite-ed",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "3adcced6b206b7c7b1bedb1606409cb5314c05edcd8937e8907a0210e935a24a",
+          "canonicalization": "JCS",
+          "signature_algorithm": "ES256",
+          "kid": "KbJWfXCuq3ys6NO0",
+          "signed_by": "vectors-1.9:suite-ed",
+          "signature": "VZzkGBFCwBtG201CfvIY6/ccJjWjpRe2ifTS+/6t6J1qq61NUpAOIlupwbn9xKMJp3SiejyJ4kgrcZ22hyVp5A=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "KbJWfXCuq3ys6NO0",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEpfNitEBdHtgNPOIWXxyxEiFR+ZfC\nLrydB6tYJywXxzV5OJEv53+mwukGxKVjKJreYK+9hw0ugZJ3bjGnPVr7Bg==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "suite:Ed25519",
+          "algorithm": "Ed25519",
+          "signature": "bTJSlbE6WLQBvgw5w4Ba5+wphV9846UYmv0vNR8jiXp1prJzMrvIMSKPtiinL/YiUBzfoDOXWFSE2OgY0uLvCg=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "suite"
+      },
+      "why": "The issuer's certificate permits Ed25519 only; it sealed under ES256."
+    },
+    {
+      "name": "suite_widening_rejected",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-suite-widen",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "f4528e1b11546e2358e894ca541bd0e23f285ddd8e6163fc230d163e0cecd475",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:suite-widen",
+          "signature": "pYmxfbedqMXFlcYGd8DdouZH8MyZW2QjoKI3cw7rzNU3w+3oEsoh9lExiVpuY0uDI7T/d/PQkNmPFrKgHfHsAA=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "suite:Ed25519",
+          "algorithm": "Ed25519",
+          "signature": "jW3/s16Zij1HRD7WEzZnthtVcL8so1rzknPgnxz2a4Z5lAEjAecJznbA2dO1B8kC+CW8As+g/Dp2hz6GNJWxAw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "suite:Ed25519,ES256",
+          "algorithm": "Ed25519",
+          "signature": "pYOwfYLM8TMs/MRPmquRyjXCUqn+pfMWmjv72AeKH6s/bKYbgtjbMm1TYLo6TLTPhUtNCGO7/I9PU0tQwUJYDQ=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "suite",
+        "reason_code": "widening"
+      },
+      "why": "A child's suite set must be a subset of its parent's."
+    },
+    {
+      "name": "suite_webauthn_with_another_is_malformed",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-suite-mixed",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "1277e1fa70ec136123edeec867c615dd4f8c0b1bcb2facbfb25c98e669f263ee",
+          "canonicalization": "JCS",
+          "signature_algorithm": "ES256",
+          "kid": "KbJWfXCuq3ys6NO0",
+          "signed_by": "vectors-1.9:suite-mixed",
+          "signature": "gY/na4XI9KzhukwkiMoFU8jh3KZdEYk23P5zlEmau9JrhUtOYBjQtTkaQxdq6SpWtgtd738UquZxgZ97uOPtMg=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "KbJWfXCuq3ys6NO0",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEpfNitEBdHtgNPOIWXxyxEiFR+ZfC\nLrydB6tYJywXxzV5OJEv53+mwukGxKVjKJreYK+9hw0ugZJ3bjGnPVr7Bg==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "suite:ES256,WebAuthn-ES256",
+          "algorithm": "Ed25519",
+          "signature": "mV7aszLkvceA6YSqfqmXW8MOuD/QktAFIwBCleViHwC3+M7BCA6dXbZyhHOlh5fjRs29QzNiDZrTd93swOJCAQ=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "reason_code": "malformed_scope"
+      },
+      "why": "WebAuthn-ES256 must stand alone in a suite set, or a passkey could also testify or seal (§3.6)."
+    },
+    {
+      "name": "suite_unknown_name_is_malformed",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-suite-unknown",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "fe50c6610f4fd5d20f0487af0c9ac20ef31a9388bed0258a01d53707f80fa94c",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:suite-unknown",
+          "signature": "3xdlnWh4lxdf+KeprMRKK1liMswH7n8b66NDGWl/ZqXp6zu0zPWfimW5fzEkEG4xTJJrx2vXru6D3BMN6spICQ=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "suite:RS256",
+          "algorithm": "Ed25519",
+          "signature": "6mBRL5eaBAg8BmanY5FqxDPdYVkRBiLiK9/KKhnVaFR7638p8lHDNOOuLkuyR1Cw4+eEcx/LZX4Q7ewutVKsAw=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "reason_code": "malformed_scope"
+      },
+      "why": "Suite names come from the closed registry (NOMOS-SPEC-010 §2)."
+    },
+    {
+      "name": "malformed_scope_is_out_of_scope",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-scope-bad",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "270d249f5f37ebdf44cc7885c9cdac00fd08d3fedc9f22c540d2c0861a938c09",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:scope-bad",
+          "signature": "hQsHQyiZV9RpGQ78WX11gk0DxO2yA6NjADdWwp8yxbz89D8nPPmO1Ck3KyDvHSKbdhgeAhyLzwa4/MkPtXu1DQ=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "industry",
+          "algorithm": "Ed25519",
+          "signature": "NsNnrrZUhv3dh5Gg5yx5WOfa5poR+AQBdhvjqUaLLRlPnk9/P4GvD/vDsYdltkadcfJzo91baO4PzCM9EtpFBA=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "reason_code": "malformed_scope"
+      },
+      "why": "A malformed scope fails its candidate path (OUT_OF_SCOPE, malformed_scope), never the whole presentation: another, well-formed path may still resolve the key."
+    },
+    {
+      "name": "malformed_scope_on_one_path_falls_through",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-lending",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "3fb2d770ad40b418cb73d7ee515c22e517701476cd52398faefddd00897604da",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:lending",
+          "signature": "hePziDFYPuGIWc/9E/MOD3VENgdGD9cJLIscozJt6PMI8FiKWvKfv/dpQYynQmM7GkNKSlmuyObNBClbaCrYDg=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "industry",
+          "algorithm": "Ed25519",
+          "signature": "NsNnrrZUhv3dh5Gg5yx5WOfa5poR+AQBdhvjqUaLLRlPnk9/P4GvD/vDsYdltkadcfJzo91baO4PzCM9EtpFBA=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "DtQBeXMSls/BaCBgWlJhmE4QqsTBZ9q74LuM91NJ4r92/8tNCwq4gzuP3tmnAlUeXV9DTeNHyV9T5sU+RugwCw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "Xc3TV+gp/nZm0L3YathGCAvWddHyHvGWOZXYiM9pP+GNDXpT8zuJ/Ch6+WSyNEScKzRcuqTgiTnOA/O79QSNCg=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "expected": {
+        "decision": "ALLOWED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "N2BTtlsIRy53NEGR",
+          "w0vb8k81OYZEExXa"
+        ]
+      },
+      "why": "The direct certificate's scope is malformed; the path through the intermediate resolves."
+    },
+    {
+      "name": "approver_key_cannot_seal",
+      "purpose": "artifact",
+      "artifact": {
+        "meta": {
+          "artifact_id": "rev19-approver-seal",
+          "version": "1.0.0",
+          "industry": "financial/lending",
+          "jurisdiction_codes": [
+            "AE"
+          ]
+        },
+        "logic": {
+          "decisions": []
+        },
+        "seal": {
+          "status": "sealed",
+          "hash": "51074378e3d9a6f955a9f0ce96b5e5508c77a5aeca396865b022bffd7a183131",
+          "canonicalization": "JCS",
+          "signature_algorithm": "Ed25519",
+          "kid": "w0vb8k81OYZEExXa",
+          "signed_by": "vectors-1.9:approver-seal",
+          "signature": "kFIK4taNeDMnuctXoDZJiLvK5v9MJMfbru44X+o7gkJKAdZC3lD2xTQemb2Ig38NGYcdsCs3gjMoEHzK93KmAw=="
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "w0vb8k81OYZEExXa",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApWQDJom0acMho/rW1/pxLJiDVjliskkMqQXPHgzrJzg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "approver:p-17",
+          "algorithm": "Ed25519",
+          "signature": "UYdzMk/Exi/Ar2nET3g2tw2hJEd9gZ8VKtFrwe1cPveu7G+Yx+G60mk5dGKQrwXI406gvFf4dEy4d9SBnMXQAA=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "approver"
+      },
+      "why": "An approver term marks a person's approval key; it never seals rules."
+    },
+    {
+      "name": "passkey_consent_resolves",
+      "purpose": "statement",
+      "statement": {
+        "kind": "consent",
+        "name": "SENIOR",
+        "kid": "FE1rTpsrmdaADH0L",
+        "suite": "WebAuthn-ES256",
+        "authority_meta": {
+          "artifact_id": "rev19-authority",
+          "industry": "financial/lending"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "DtQBeXMSls/BaCBgWlJhmE4QqsTBZ9q74LuM91NJ4r92/8tNCwq4gzuP3tmnAlUeXV9DTeNHyV9T5sU+RugwCw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "FE1rTpsrmdaADH0L",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEbRLJZVaGAkEi9rNR1MaWut5R9YWx\nGj/yMiLBOsMAawLeRbopSjn8CD+UZmy2FgkCfD+iwDclTpj8fpdSMI409Q==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "suite:WebAuthn-ES256 consent:SENIOR approver:p-17",
+          "algorithm": "Ed25519",
+          "signature": "178E2gC43TyH9mj7+XIKR4A4hlgBVE7i5M4JEQ2TkyijMxuD9yKgJK0mrf9H6g6RlSi/ZZ/x5m541Mf35F4aDg=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "RESOLVED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "N2BTtlsIRy53NEGR",
+          "FE1rTpsrmdaADH0L"
+        ],
+        "effective_scope": "suite:WebAuthn-ES256 consent:SENIOR approver:p-17"
+      },
+      "why": "An enrolled passkey resolves for a WebAuthn consent in its role."
+    },
+    {
+      "name": "p256_key_without_suite_term_cannot_use_webauthn",
+      "purpose": "statement",
+      "statement": {
+        "kind": "consent",
+        "name": "SENIOR",
+        "kid": "FE1rTpsrmdaADH0L",
+        "suite": "WebAuthn-ES256",
+        "authority_meta": {
+          "artifact_id": "rev19-authority",
+          "industry": "financial/lending"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "FE1rTpsrmdaADH0L",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEbRLJZVaGAkEi9rNR1MaWut5R9YWx\nGj/yMiLBOsMAawLeRbopSjn8CD+UZmy2FgkCfD+iwDclTpj8fpdSMI409Q==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "consent:SENIOR approver:p-17",
+          "algorithm": "Ed25519",
+          "signature": "DI3100KXt5BH1dmdoW2iJ3c7zdCrj1Str0rdXCM4fcYDQZkFTd6UtJHuGQdTwF/iUOD8FrP+O+mRT5tjZh3uCg=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "suite"
+      },
+      "why": "WebAuthn-ES256 is accepted only when the effective scope names it explicitly (§3.6)."
+    },
+    {
+      "name": "passkey_cannot_testify",
+      "purpose": "statement",
+      "statement": {
+        "kind": "claim",
+        "name": "credit_score",
+        "kid": "FE1rTpsrmdaADH0L",
+        "suite": "ES256",
+        "authority_meta": {
+          "artifact_id": "rev19-authority",
+          "industry": "financial/lending"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "FE1rTpsrmdaADH0L",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEbRLJZVaGAkEi9rNR1MaWut5R9YWx\nGj/yMiLBOsMAawLeRbopSjn8CD+UZmy2FgkCfD+iwDclTpj8fpdSMI409Q==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "suite:WebAuthn-ES256 claim:credit_score",
+          "algorithm": "Ed25519",
+          "signature": "kSzzuE6PUv7E4qKiNQ1Rwnrl96dPkw7XbEGAqeuEODhAyDMJLpAvYajs2xekBECsCYB06eih7zCluXu1N96CCw=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "suite"
+      },
+      "why": "Even with a claim term, a WebAuthn-only key cannot sign ES256 testimony."
+    },
+    {
+      "name": "approver_on_a_claim_key",
+      "purpose": "statement",
+      "statement": {
+        "kind": "claim",
+        "name": "credit_score",
+        "kid": "k4sY1tbBZiw36Mnk",
+        "suite": "ES256",
+        "authority_meta": {
+          "artifact_id": "rev19-authority",
+          "industry": "financial/lending"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "k4sY1tbBZiw36Mnk",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErBi3a5CjPVxrH7HmxwBOys6GFDl8\nRQqMIqn7uWj6x/fA8ZXs/T+1lwDQIrZRt6Apid7or0sECsGOhda58YMurQ==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "claim:credit_score approver:p-17",
+          "algorithm": "Ed25519",
+          "signature": "Uiu7OZbUyzdtmwP5P851/q4oM4dIGQce3lOzUE1NPsver567RVqIj1bwf9nI8LzanwKHojoNwLL1J+mb4TjeBw=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "approver"
+      },
+      "why": "The approver dimension belongs to consent keys only (§3.7)."
+    },
+    {
+      "name": "approver_changed_by_a_child",
+      "purpose": "statement",
+      "statement": {
+        "kind": "consent",
+        "name": "SENIOR",
+        "kid": "kZCcASxKvBqRSt-b",
+        "suite": "WebAuthn-ES256",
+        "authority_meta": {
+          "artifact_id": "rev19-authority",
+          "industry": "financial/lending"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "approver:p-17",
+          "algorithm": "Ed25519",
+          "signature": "WneoHc+FoHzvZ4P8bM3m+VcRM82XVyb/0bJmnelF0Ue490pGXwxHH+jXCgDTQQZ6bkiZxCt9ToF0K0JSokw9Cw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "kZCcASxKvBqRSt-b",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/fh5gfeTI0aIzxmE0k/Wp3sPlZ9J\nhz5KqNDSKlMM6graI/TTHjpojhagXC8aqeyH1XF0jhPGsD7xYoH1Zi4vNA==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "suite:WebAuthn-ES256 consent:SENIOR approver:p-18",
+          "algorithm": "Ed25519",
+          "signature": "J1knxwYbaPVikCaCVrUs/Hif/7QQejPOUZzICsPZbATgph8fgaUmMenlxSNFC/2SVvEvfGTkpm4HSWq3w+dkBQ=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "dimension": "approver",
+        "reason_code": "widening"
+      },
+      "why": "A child may repeat its parent's approver and must not change it."
+    },
+    {
+      "name": "approver_repeated_by_a_child",
+      "purpose": "statement",
+      "statement": {
+        "kind": "consent",
+        "name": "SENIOR",
+        "kid": "kZCcASxKvBqRSt-b",
+        "suite": "WebAuthn-ES256",
+        "authority_meta": {
+          "artifact_id": "rev19-authority",
+          "industry": "financial/lending"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "approver:p-17",
+          "algorithm": "Ed25519",
+          "signature": "WneoHc+FoHzvZ4P8bM3m+VcRM82XVyb/0bJmnelF0Ue490pGXwxHH+jXCgDTQQZ6bkiZxCt9ToF0K0JSokw9Cw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "kZCcASxKvBqRSt-b",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/fh5gfeTI0aIzxmE0k/Wp3sPlZ9J\nhz5KqNDSKlMM6graI/TTHjpojhagXC8aqeyH1XF0jhPGsD7xYoH1Zi4vNA==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "suite:WebAuthn-ES256 consent:SENIOR approver:p-17",
+          "algorithm": "Ed25519",
+          "signature": "9PLS3ikqFVkKKpLyKcJYw3jQs2UgFcopImGWtBTQN0OTYfFoCI4DBisU8SpDEI+KHABKZnESPmSGvLjVlUlWAA=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "RESOLVED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "N2BTtlsIRy53NEGR",
+          "kZCcASxKvBqRSt-b"
+        ],
+        "effective_scope": "approver:p-17 suite:WebAuthn-ES256 consent:SENIOR"
+      },
+      "why": "An institution certifies a person's enrolment key with approver:p-17, and it certifies that person's passkeys."
+    },
+    {
+      "name": "approver_set_is_malformed",
+      "purpose": "statement",
+      "statement": {
+        "kind": "consent",
+        "name": "SENIOR",
+        "kid": "cvnHxmW9jiPxmW3G",
+        "suite": "Ed25519",
+        "authority_meta": {
+          "artifact_id": "rev19-authority",
+          "industry": "financial/lending"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "cvnHxmW9jiPxmW3G",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk/O5Xj7jA5r5g45vYJPi5QqFjwQa0LHGCmLecyQ8ci0=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "consent:SENIOR approver:p-17,p-18",
+          "algorithm": "Ed25519",
+          "signature": "YT0dnRYDibhpg+mou9LhtlWlBSfvWStc9mSQoagVaq9gIgRLP8uj2rU97NGQxdytTZkGMdM0gSDqstZE0ZrADg=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "OUT_OF_SCOPE",
+        "reason_code": "malformed_scope"
+      },
+      "why": "An approver term names exactly one person."
+    },
+    {
+      "name": "scope_aware_selection_for_a_witness",
+      "purpose": "statement",
+      "statement": {
+        "kind": "claim",
+        "name": "credit_score",
+        "kid": "k4sY1tbBZiw36Mnk",
+        "suite": "ES256",
+        "authority_meta": {
+          "artifact_id": "rev19-authority",
+          "industry": "financial/lending"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "k4sY1tbBZiw36Mnk",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErBi3a5CjPVxrH7HmxwBOys6GFDl8\nRQqMIqn7uWj6x/fA8ZXs/T+1lwDQIrZRt6Apid7or0sECsGOhda58YMurQ==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.020Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "claim:dti_ratio",
+          "algorithm": "Ed25519",
+          "signature": "59BWrNW+kLC0jliESa9PSIBigJ4oenvfNfyUfZ6ZIqqMFGiYqDt8yqXS3nQNfJhZuDsHO1uXTKiJwWpRI/4xAw=="
+        },
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "N2BTtlsIRy53NEGR",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAk4po+bCH6Ek32QEw7i2o/kSx17JZRyZuz6+dvZpGfLs=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "DtQBeXMSls/BaCBgWlJhmE4QqsTBZ9q74LuM91NJ4r92/8tNCwq4gzuP3tmnAlUeXV9DTeNHyV9T5sU+RugwCw=="
+        },
+        {
+          "parent_kid": "N2BTtlsIRy53NEGR",
+          "child_kid": "k4sY1tbBZiw36Mnk",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErBi3a5CjPVxrH7HmxwBOys6GFDl8\nRQqMIqn7uWj6x/fA8ZXs/T+1lwDQIrZRt6Apid7or0sECsGOhda58YMurQ==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "claim:credit_score,dti_ratio",
+          "algorithm": "Ed25519",
+          "signature": "L5YHxfqBAdk0fpJXY9J8QstnCTUMd2PLHE/sM4mX0wd53l8WcUdyrKdimTynnPfjJbKjjy0YC2NjvxD1iWiTBQ=="
+        }
+      ],
+      "orders": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "expected": {
+        "decision": "RESOLVED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "N2BTtlsIRy53NEGR",
+          "k4sY1tbBZiw36Mnk"
+        ],
+        "effective_scope": "claim:credit_score,dti_ratio"
+      },
+      "why": "The witness is certified directly for dti_ratio only (tried first) and through an intermediate for both facts. Its credit_score statement resolves through the intermediate."
+    },
+    {
+      "name": "es256_witness_resolves",
+      "purpose": "statement",
+      "statement": {
+        "kind": "claim",
+        "name": "credit_score",
+        "kid": "k4sY1tbBZiw36Mnk",
+        "suite": "ES256",
+        "authority_meta": {
+          "artifact_id": "rev19-authority",
+          "industry": "financial/lending"
+        }
+      },
+      "key_certs": [
+        {
+          "parent_kid": "F2yMBYzKwS39wH-d",
+          "child_kid": "k4sY1tbBZiw36Mnk",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErBi3a5CjPVxrH7HmxwBOys6GFDl8\nRQqMIqn7uWj6x/fA8ZXs/T+1lwDQIrZRt6Apid7or0sECsGOhda58YMurQ==\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "claim:credit_score",
+          "algorithm": "Ed25519",
+          "signature": "CMaHSTGZ22UHXHf+WCUp7A7oPOyXYn/hhqubD7I1tiX5bVv8q2/cOfrabTolcNefZKLuPoVD6sHwu6+8LZRrDQ=="
+        }
+      ],
+      "orders": [
+        [
+          0
+        ]
+      ],
+      "expected": {
+        "decision": "RESOLVED",
+        "path": [
+          "F2yMBYzKwS39wH-d",
+          "k4sY1tbBZiw36Mnk"
+        ],
+        "effective_scope": "claim:credit_score"
+      },
+      "why": "A P-256 witness signing ES256 testimony."
+    }
+  ]
+}

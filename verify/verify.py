@@ -40,31 +40,13 @@ from typing import Any, Optional
 # RFC 8785 JSON Canonicalization Scheme (JCS) — minimal implementation
 # ---------------------------------------------------------------------------
 
-def _jcs_value(value: Any) -> str:
-    if value is None:
-        return "null"
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    if isinstance(value, int):
-        return str(value)
-    if isinstance(value, float):
-        if value != value:
-            raise ValueError("NaN is not valid in JCS")
-        if value == float("inf") or value == float("-inf"):
-            raise ValueError("Infinity is not valid in JCS")
-        return repr(value)
-    if isinstance(value, str):
-        return json.dumps(value, ensure_ascii=False)
-    if isinstance(value, list):
-        return "[" + ",".join(_jcs_value(v) for v in value) + "]"
-    if isinstance(value, dict):
-        pairs = sorted(value.items(), key=lambda kv: kv[0])
-        return "{" + ",".join(f"{json.dumps(k)}:{_jcs_value(v)}" for k, v in pairs) + "}"
-    raise TypeError(f"Unsupported type: {type(value)}")
+# The one shared implementation (python/nomos/jcs.py): ECMAScript number output, keys sorted by
+# UTF-16 code unit, strings unescaped. This file used to carry its own copy, which wrote 4.0 as
+# "4.0" and 1e-7 as "1e-07" and escaped non-ASCII keys, so it computed a different hash than the
+# sealer for any artifact containing such a value, and reported a genuine seal as tampered.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "python"))
+from nomos.jcs import jcs as jcs_canonicalize  # noqa: E402
 
-
-def jcs_canonicalize(obj: Any) -> bytes:
-    return _jcs_value(obj).encode("utf-8")
 
 
 # ---------------------------------------------------------------------------
