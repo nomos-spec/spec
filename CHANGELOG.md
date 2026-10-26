@@ -7,6 +7,22 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-010 0.2.0, Draft] — 2026-10-26 (Ed25519 key validity)
+
+### Fixed — found by differential testing
+
+- **The bug.** Under the Ed25519 identity key, the signature `(R = identity, S = 0)` verifies
+  against every message. OpenSSL, and therefore the Python reference and Node, accepted it.
+  @noble/curves, used by `@nomosprotocol/verify`, rejected it. Two conformant verifiers disagreed
+  about whether a signature was genuine.
+- **The fix.** §3.1 now requires an Ed25519 public key to be canonical, on the curve and not of
+  small order, checked at key load (`invalid_key`).
+- **Coverage.** Three vectors were added. The Python reference, the independent Node verifier
+  (BigInt decoding), the spec's TypeScript prototype and `@nomosprotocol/verify` (noble strict
+  decoding) all pass all 30. Valid keys and their key ids are unchanged.
+
+---
+
 ## [NOMOS-SPEC-008 0.6.0, Draft; NOMOS-SPEC-001 amendment 2.3.0] — 2026-10-26
 
 Implements RFC-0001 changes 4–7.

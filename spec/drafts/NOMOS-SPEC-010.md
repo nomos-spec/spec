@@ -1,7 +1,7 @@
 # NOMOS-SPEC-010: Signature Suites
 
 **Status:** Draft
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Proposed:** 2026-10-26 (RFC-0001, accepted)
 **Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
 **Used by:** NOMOS-SPEC-007 rev. 1.9, NOMOS-SPEC-008 0.6.0, NOMOS-SPEC-009
@@ -64,7 +64,28 @@ byte for byte, so that no library's re-encoding behaviour can decide which keys 
 
 A verifier MUST base64-decode the PEM body (canonically, §2) and reject the key (`invalid_key`)
 unless the DER is exactly one of these forms. For P-256 it MUST also reject a point that is not on
-the curve. A compressed point, explicit curve parameters, a key of any other type, or any other
+the curve. For Ed25519 it MUST also reject the 32-byte public key `A` (`invalid_key`) unless all of
+these hold:
+
+1. `A` is the canonical encoding of a point: its 255-bit `y` is less than p = 2^255 − 19, and the
+   sign bit is not set when `x` = 0.
+2. `A` decodes to a point on the curve.
+3. That point is not of small order. Equivalently, `A` is none of the eight canonical encodings of
+   points of order 1, 2, 4 or 8:
+   - `0100…00`;
+   - `ecff…ff7f`;
+   - `0000…00` and `0000…0080`;
+   - `26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05`, and the same with its last
+     byte `85`;
+   - `c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a`, and the same with its last
+     byte `fa`.
+
+Rule 3 is not optional hardening. Under a small-order key, a signature with `R` of small order and
+`S = 0` verifies against *every* message, and widely deployed libraries (OpenSSL among them)
+accept it. Another library may reject the same signature. Without this rule, two conformant
+verifiers would disagree about whether a signature is genuine. And a parent careless enough to
+certify such a key would have delegated authority to anyone at all. Checking the key at load
+makes every verifier reject it identically, before any signature is read. A compressed point, explicit curve parameters, a key of any other type, or any other
 alternative encoding is rejected with the same reason, whatever a cryptographic library would
 accept or re-emit. One reason for every such key means no verifier has to classify a key it
 rejects, and no two verifiers can disagree about how.
@@ -179,5 +200,11 @@ published seeds; they MUST NOT be used as trust material.
   a signature is a valid signature by a key.
 
 ## Changelog
+
+- **0.2.0** — Ed25519 public key validity (§3.1): canonical encoding, on the curve, not of small
+  order. Found by differential testing of two implementations. OpenSSL accepts a signature that
+  verifies under the identity key against any message, and @noble/curves rejects it. Three vectors
+  added: a small-order key, a non-canonical encoding, a point not on the curve. Signatures are
+  unchanged.
 
 - **0.1.0** — Initial draft (RFC-0001).

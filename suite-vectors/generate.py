@@ -108,6 +108,18 @@ add("key_compressed_point", "ES256", compressed_pem(P256), PAYLOAD, {"signature"
 add("key_p384", "ES256", P384_PEM, PAYLOAD, {"signature": es_sig}, False, "invalid_key")
 add("key_p256_point_off_curve", "ES256", off_curve_pem(), PAYLOAD, {"signature": es_sig}, False, "invalid_key",
     "Canonical bytes, but the point is not on the curve.")
+def ed_pem(raw: bytes) -> str:
+    body = b64(bytes.fromhex("302a300506032b6570032100") + raw)
+    return "-----BEGIN PUBLIC KEY-----\n" + body + "\n-----END PUBLIC KEY-----\n"
+
+
+IDENTITY = (1).to_bytes(32, "little")
+add("key_ed25519_small_order", "Ed25519", ed_pem(IDENTITY), PAYLOAD, {"signature": b64(IDENTITY + bytes(32))}, False, "invalid_key",
+    "The identity point. Under it, R = identity and S = 0 verifies against every message; some libraries accept that (§3.1).")
+add("key_ed25519_noncanonical", "Ed25519", ed_pem((2**255 - 19 + 1).to_bytes(32, "little")), PAYLOAD, {"signature": ed_sig}, False, "invalid_key",
+    "y = p + 1: a second encoding of the identity's y coordinate.")
+add("key_ed25519_not_on_curve", "Ed25519", ed_pem((2).to_bytes(32, "little")), PAYLOAD, {"signature": ed_sig}, False, "invalid_key",
+    "y = 2 has no x on the curve.")
 add("suite_ed25519_on_p256_key", "Ed25519", P256_PEM, PAYLOAD, {"signature": ed_sig}, False, "suite_key_mismatch",
     "The key decides what it can be (§3.3).")
 add("suite_es256_on_ed25519_key", "ES256", ED_PEM, PAYLOAD, {"signature": es_sig}, False, "suite_key_mismatch")
@@ -144,7 +156,7 @@ out = {
     "_readme": "NOMOS-SPEC-010 signature suite vectors. For each case, decode payload_b64 to the exact payload "
                "bytes and call verify(suite, public_key_pem, payload, proof). The result must equal expected. "
                "Keys are derived from published seeds: never use them as trust material.",
-    "spec": "NOMOS-SPEC-010 0.1.0",
+    "spec": "NOMOS-SPEC-010 0.2.0",
     "cases": cases,
 }
 json.dump(out, sys.stdout, indent=2, ensure_ascii=False)

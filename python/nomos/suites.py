@@ -71,6 +71,36 @@ ED25519_SPKI_PREFIX = bytes.fromhex("302a300506032b6570032100")
 P256_SPKI_PREFIX = bytes.fromhex("3059301306072a8648ce3d020106082a8648ce3d03010703420004")
 
 
+_ED_P = 2**255 - 19
+_ED_D = (-121665 * pow(121666, _ED_P - 2, _ED_P)) % _ED_P
+_ED_SMALL_ORDER = {bytes.fromhex(h) for h in (
+    "0100000000000000000000000000000000000000000000000000000000000000",
+    "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+    "0000000000000000000000000000000000000000000000000000000000000000",
+    "0000000000000000000000000000000000000000000000000000000000000080",
+    "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05",
+    "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85",
+    "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
+    "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa")}
+
+
+def ed25519_point_valid(a: bytes) -> bool:
+    """§3.1: canonical, on the curve, not of small order (RFC 8032 §5.1.3 decoding, strictly)."""
+    if len(a) != 32 or a in _ED_SMALL_ORDER:
+        return False
+    y = int.from_bytes(a, "little") & ((1 << 255) - 1)
+    sign = a[31] >> 7
+    if y >= _ED_P:
+        return False
+    x2 = (y * y - 1) * pow(_ED_D * y * y + 1, _ED_P - 2, _ED_P) % _ED_P
+    if x2 == 0:
+        return sign == 0
+    x = pow(x2, (_ED_P + 3) // 8, _ED_P)
+    if (x * x - x2) % _ED_P != 0:
+        x = x * pow(2, (_ED_P - 1) // 4, _ED_P) % _ED_P
+    return (x * x - x2) % _ED_P == 0
+
+
 def load_key(pem: Any) -> Tuple[Optional[str], Any, Optional[str]]:
     """Returns (key_type, key, reason). key_type is 'Ed25519' or 'P-256'.
 
@@ -81,6 +111,8 @@ def load_key(pem: Any) -> Tuple[Optional[str], Any, Optional[str]]:
     if der is None:
         return None, None, "invalid_key"
     if len(der) == 44 and der.startswith(ED25519_SPKI_PREFIX):
+        if not ed25519_point_valid(der[12:]):
+            return None, None, "invalid_key"
         ktype = "Ed25519"
     elif len(der) == 91 and der.startswith(P256_SPKI_PREFIX):
         ktype = "P-256"
