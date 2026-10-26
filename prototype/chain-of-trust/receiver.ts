@@ -113,7 +113,7 @@ function startReceiver(rootPublicKeyPem: string, port: number, host = "127.0.0.1
       const raw = await readBody(req);
       const body = JSON.parse(raw);
       if (typeof body !== "object" || body === null || !("artifact" in body) || !("key_certs" in body)) {
-        verdict = { decision: "MALFORMED", detail: "Body must be { artifact, key_certs }." };
+        verdict = { decision: "MALFORMED", reason_code: "bad_request", detail: "Body must be { artifact, key_certs }." };
       } else {
         // rootPublicKeyPem comes from this process's own startup argument — never from `body`.
         // This receiver supplies no revocation source of its own (no `revokedKids` argument
@@ -127,10 +127,10 @@ function startReceiver(rootPublicKeyPem: string, port: number, host = "127.0.0.1
       status = STATUS[verdict.decision];
     } catch (e: any) {
       if (e instanceof PayloadTooLargeError) {
-        verdict = { decision: "MALFORMED", detail: e.message };
+        verdict = { decision: "MALFORMED", reason_code: "body_too_large", detail: e.message };
         status = 413;
       } else {
-        verdict = { decision: "MALFORMED", detail: `Could not parse request body as JSON: ${e?.message ?? e}` };
+        verdict = { decision: "MALFORMED", reason_code: "bad_json", detail: `Could not parse request body as JSON: ${e?.message ?? e}` };
         status = 400;
       }
     }

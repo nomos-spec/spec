@@ -22,6 +22,7 @@
  */
 
 import * as crypto from "crypto";
+import { verifySuite, kidOf, type SuiteReason } from "./suites.js";
 
 // ── RFC 8785 JSON Canonicalization Scheme (JCS) — same minimal implementation as verify.ts ──
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
@@ -39,9 +40,13 @@ export const jcs = (obj: unknown): Buffer => Buffer.from(jcsValue(obj as JsonVal
 
 /** Same derivation as the platform's computeKid(): base64url(SHA-256(SPKI DER)), first 16 chars. */
 export function computeKid(publicKeyPem: string): string {
-  const der = crypto.createPublicKey(publicKeyPem).export({ type: "spki", format: "der" });
-  return crypto.createHash("sha256").update(der).digest("base64url").slice(0, 16);
+  const kid = kidOf(publicKeyPem);
+  if (kid === null) throw new Error("Not a canonical Ed25519 or P-256 public key (NOMOS-SPEC-010 §3.1).");
+  return kid;
 }
+
+/** rev. 1.9 §3.1: the suites a certificate or staple may be signed under. Never WebAuthn-ES256. */
+export type CertSuite = "Ed25519" | "ES256";
 
 export interface KeyCertificate {
   parent_kid: string;             // kid of the CERTIFYING key (root or intermediate)
@@ -52,8 +57,8 @@ export interface KeyCertificate {
   scope?: string;                 // delegation limits, ENFORCED per §3.4 — see scope.ts
   issued_at: string;              // ISO-8601, signed content
   expires_at: string;             // ISO-8601, signed content
-  algorithm: "Ed25519";
-  signature: string;              // base64 Ed25519 over keyCertPayload(this)
+  algorithm: CertSuite;           // the PARENT's suite (rev. 1.9 §3.1); not signed: the parent key fixes it
+  signature: string;              // base64, under `algorithm`, over keyCertPayload(this)
 }
 
 /** The exact signed content — everything in KeyCertificate except the signature itself. */
@@ -106,30 +111,20 @@ export function keyCertFingerprint(cert: Omit<KeyCertificate, "signature" | "alg
 
 export type KeyCertVerifyResult =
   | { valid: true }
-  | { valid: false; reason: "bad_signature" | "expired" | "not_yet_valid" };
+  | { valid: false; reason: SuiteReason | "bad_time" | "expired" | "not_yet_valid" };
 
-/** Verifies ONE certificate's signature + expiry against a caller-supplied parent public key.
- *  Does not resolve trust on its own — see chain-verify-core.ts for the walk that turns a
- *  sequence of these into an actual "is this issuer recognized" decision.
+/** Verifies ONE certificate's signature (under its declared suite, NOMOS-SPEC-010) and validity
+ *  window against a caller-supplied parent public key. Whether the parent was *permitted* that
+ *  suite is a scope question the resolver answers (rev. 1.9 §3.6), not this function.
  *
- *  Never throws. `cert` and `parentPublicKeyPem` may both be attacker-controlled — a malformed
- *  PEM, a non-base64 signature, or a missing field must fail closed as `bad_signature`, not
- *  propagate a raw crypto exception up to a caller that isn't expecting one. */
+ *  Never throws: every input may be attacker-controlled. */
 export function verifyKeyCertificate(cert: KeyCertificate, parentPublicKeyPem: string, now: Date = new Date()): KeyCertVerifyResult {
-  let valid: boolean;
-  try {
-    valid = crypto.verify(
-      null,
-      keyCertPayload(cert),
-      crypto.createPublicKey(parentPublicKeyPem),
-      Buffer.from(cert.signature, "base64")
-    );
-  } catch {
-    return { valid: false, reason: "bad_signature" };
-  }
-  if (!valid) return { valid: false, reason: "bad_signature" };
-  if (now.getTime() > Date.parse(cert.expires_at)) return { valid: false, reason: "expired" };
-  if (now.getTime() < Date.parse(cert.issued_at)) return { valid: false, reason: "not_yet_valid" };
+  const sig = verifySuite(cert.algorithm, parentPublicKeyPem, keyCertPayload(cert), { signature: cert.signature });
+  if (!sig.ok) return { valid: false, reason: sig.reason };
+  const issued = Date.parse(cert.issued_at), expires = Date.parse(cert.expires_at);
+  if (Number.isNaN(issued) || Number.isNaN(expires)) return { valid: false, reason: "bad_time" };
+  if (now.getTime() > expires) return { valid: false, reason: "expired" };
+  if (now.getTime() < issued) return { valid: false, reason: "not_yet_valid" };
   return { valid: true };
 }
 
@@ -160,7 +155,7 @@ export interface FreshnessStaple {
   parent_kid: string;
   as_of: string;
   valid_until: string;
-  algorithm: "Ed25519";
+  algorithm: CertSuite;
   signature: string;
 }
 
@@ -189,16 +184,6 @@ export function createFreshnessStaple(args: {
  *  does. `parentPublicKeyPem` is the key resolved as having certified `staple.child_kid` in the
  *  chain being walked; a caller MUST NOT verify a staple against any other key. */
 export function verifyFreshnessStaple(staple: FreshnessStaple, parentPublicKeyPem: string, now: Date = new Date()): boolean {
-  try {
-    const valid = crypto.verify(
-      null,
-      freshnessStaplePayload(staple),
-      crypto.createPublicKey(parentPublicKeyPem),
-      Buffer.from(staple.signature, "base64"),
-    );
-    if (!valid) return false;
-  } catch {
-    return false;
-  }
+  if (!verifySuite(staple.algorithm, parentPublicKeyPem, freshnessStaplePayload(staple), { signature: staple.signature }).ok) return false;
   return now.getTime() <= Date.parse(staple.valid_until) && now.getTime() >= Date.parse(staple.as_of);
 }

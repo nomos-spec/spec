@@ -138,30 +138,36 @@ def format_scope(effective: Effective) -> str:
 
 
 # ── purposes (§4.2a step 4) ──────────────────────────────────────────────────────────────────
+# Each term of the effective scope is examined in effective-scope order and the first that does
+# not admit the purpose is the reported dimension (§3.8). A statement checks its own kind first.
+def _term_fails(d: str, v: str, meta: dict, suite: str, allowed: Tuple[str, ...]) -> bool:
+    if d in ARTIFACT_DIMS: return not meta_matches(d, v, meta)
+    if d == "suite": return suite not in _set(v)
+    return d not in allowed                      # statement dimensions off-purpose, or unknown: fail closed
+
+
+def _default_suite_fails(effective: Effective, suite: str) -> bool:
+    return "suite" not in effective and not suite_permitted(effective, suite)
+
+
 def for_artifact(meta: dict, suite: str) -> Admit:
-    """§3.4 and §3.5: may this key seal this artifact, under this suite? Returns the failing dimension."""
+    """§3.4, §3.5, §3.6: may this key seal this artifact, under this suite?"""
     def admit(effective: Effective) -> Optional[str]:
         for d, v in effective.items():
-            if d in ARTIFACT_DIMS:
-                if not meta_matches(d, v, meta): return d
-            elif d != "suite":
-                return d                         # claim, consent, approver (§3.5) or unknown: fail closed
-        return None if suite_permitted(effective, suite) else "suite"
+            if _term_fails(d, v, meta, suite, ()): return d
+        return "suite" if _default_suite_fails(effective, suite) else None
     return admit
 
 
 def for_statement(kind: str, name: str, meta: dict, suite: str) -> Admit:
-    """§3.4.1: may this key sign a `kind` statement about `name`, under this suite, for an act
-    whose authority artifact carries `meta`? Returns the failing dimension."""
+    """§3.4.1, §3.6, §3.7: may this key sign a `kind` statement about `name`, under this suite,
+    for an act whose authority artifact carries `meta`?"""
+    allowed = (kind, "approver") if kind == "consent" else (kind,)
     def admit(effective: Effective) -> Optional[str]:
         if kind not in effective or name not in _set(effective[kind]): return kind
         for d, v in effective.items():
-            if d == kind or d == "suite": continue
-            if d in ARTIFACT_DIMS:
-                if not meta_matches(d, v, meta): return d
-            elif not (d == "approver" and kind == "consent"):
-                return d                         # the other statement kind, approver off a consent key, or unknown
-        return None if suite_permitted(effective, suite) else "suite"
+            if _term_fails(d, v, meta, suite, allowed): return d
+        return "suite" if _default_suite_fails(effective, suite) else None
     return admit
 
 
