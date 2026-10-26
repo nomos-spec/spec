@@ -61,11 +61,13 @@ A `.nomos` artifact now moves through four distinct moments:
 | `schema/chain-revocation-statement.schema.json` | JSON Schema for a NOMOS-SPEC-007 chain-key revocation statement |
 | `schema/chain-revocation-list.schema.json` | JSON Schema for a NOMOS-SPEC-007 chain-key revocation list |
 | `prototype/chain-of-trust/` | NOMOS-SPEC-007's pure reference implementation — key certificates, chain verification, a CLI verifier, a minimal HTTP receiver/presenter pair |
-| `chain-of-trust-vectors/` | NOMOS-SPEC-007 fixed interop test vectors — for a second implementer to check their verifier against |
+| `chain-of-trust-vectors/` | NOMOS-SPEC-007 interop vectors: the 1.7.0 set and the 37-case rev. 1.9 set (`vectors-1.9.json`, every case in every listed presentation order) |
+| `suite-vectors/` | NOMOS-SPEC-010 signature-suite vectors (30), and an independent Node verifier |
+| `python/nomos/` | The Python reference, shared by every reference verifier here: JCS, NOMOS-SPEC-010 suites, NOMOS-SPEC-007 rev. 1.9 chain resolution |
 | `spec/drafts/NOMOS-SPEC-008.md` | **Draft.** Act Binding — an action bound to sealed rules, signed testimony and human consents, verified by the relying party that would commit it |
 | `spec/drafts/NOMOS-SPEC-007-rev-1.8.0.md` | **Draft revision.** SPEC-007 1.8.0 — statement keys (witness `claim`, approver `consent` scopes) and target-first chain resolution |
 | `spec/drafts/NOMOS-SPEC-001-amendment-2.2.0.md` | **Draft amendment.** SPEC-001 2.2.0 — unmatched outcome, declared fact sources, consent counts |
-| `act-vectors/` | NOMOS-SPEC-008 reference verifier (`act_verify.py`), deterministic generator, and 30 test vectors |
+| `act-vectors/` | NOMOS-SPEC-008 0.6.0 reference verifier (`act_verify.py`), deterministic generator, 42 test vectors and 1,656 derived mutants with reference verdicts |
 | `examples/lending_policy_v1.nomos` | Example — public lending policy |
 | `examples/healthcare_triage_v1.nomos` | Example — clinical triage protocol |
 | `examples/minimal_v1.nomos` | Minimal valid artifact (structure check only) |

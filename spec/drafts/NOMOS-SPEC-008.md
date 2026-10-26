@@ -1,8 +1,8 @@
 # NOMOS-SPEC-008: Act Binding
 
 **Status:** Draft
-**Version:** 0.5.0
-**Extends:** NOMOS-SPEC-001 v2.2.0, NOMOS-SPEC-007 v1.8.0
+**Version:** 0.6.0
+**Extends:** NOMOS-SPEC-001 v2.2.0 with amendment 2.3.0, NOMOS-SPEC-007 rev. 1.9.0, NOMOS-SPEC-010 0.1.0
 **Proposed:** 2026-09-27
 **Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
 
@@ -42,7 +42,7 @@ The consequence is a different security property from a gateway's. An agent is f
 every NOMOS component. Its act still cannot take effect, because the only system able to make the
 change is the one that demands the proof.
 
-**Status of this document.** Draft, published with a reference implementation and thirty test
+**Status of this document.** Draft, published with a reference implementation and forty-two test
 vectors (§10). Two implementations by the authors pass every vector; promotion from Draft awaits a
 second-party implementation.
 
@@ -151,19 +151,28 @@ verdict.
 }
 ```
 
+`algorithm` is `Ed25519` or `ES256` (NOMOS-SPEC-010), and `signature` is that suite's encoding.
+Any other `algorithm`, or a missing one, makes the Act `MALFORMED` (`bad_testimony`). A witness
+whose key is held in a KMS or HSM signs `ES256`. An ES256 signature MUST be low-S (NOMOS-SPEC-010
+§4): testimony signatures are inside the binding digest (§4.3), so a second encoding of the same
+statement would change the digest without changing a fact.
+
 ### 3.2 Signed payload (normative)
 
 `JCS({ claim, value, about, as_of, valid_until, kid })`, with `about` as `null` when absent.
-`algorithm` and `signature` are not signed.
+`algorithm` and `signature` are not signed. The key's type fixes the suite, so `algorithm` can
+only make a statement fail, never pass.
 
 ### 3.3 Validity (normative)
 
 A relying party MUST reject the Act if any testimony statement:
 
-1. has a `kid` that does not resolve (NOMOS-SPEC-007 rev. 1.8 §4.6) — `TESTIMONY_INVALID`;
-2. is signed by a key whose effective scope does not permit this `claim` (§3.4.1) —
-   `TESTIMONY_OUT_OF_SCOPE`;
-3. has an invalid signature — `TESTIMONY_INVALID`, reason `bad_signature`;
+1. has a `kid` that does not resolve (NOMOS-SPEC-007 rev. 1.9 §4.6) — `TESTIMONY_INVALID`;
+2. is signed by a key whose effective scope does not permit this `claim` under this statement's
+   suite (rev. 1.9 §3.8) — `TESTIMONY_OUT_OF_SCOPE`. A key enrolled as a passkey
+   (`suite:WebAuthn-ES256`) never testifies;
+3. has an invalid signature — `TESTIMONY_INVALID`, with the NOMOS-SPEC-010 reason
+   (`bad_signature`, `bad_encoding`, `high_s`, `suite_key_mismatch`);
 4. is outside `[as_of, valid_until]` at verification time — `TESTIMONY_INVALID`, reason `stale`;
 5. names an `about` different from `action.subject` — `TESTIMONY_INVALID`, reason
    `wrong_subject`.
@@ -193,9 +202,14 @@ the binding digest (§4.3), which covers every testimony statement the Act carri
 }
 ```
 
+`algorithm` is `Ed25519`, `ES256` or `WebAuthn-ES256` (§4.5). Any other value, a missing one, or a
+WebAuthn consent without `authenticator_data`, `client_data_json` and `signature` as strings,
+makes the Act `MALFORMED` (`bad_consent`).
+
 ### 4.2 Signed payload (normative)
 
-`JCS({ binding_digest, role, decision, signed_at, kid })`.
+`JCS({ binding_digest, role, decision, signed_at, kid })`, for every suite. A WebAuthn consent
+signs it indirectly, through the challenge (§4.5).
 
 ### 4.3 The binding digest (normative)
 
@@ -217,17 +231,72 @@ a different digest and invalidates every consent (reason `binding_mismatch`).
 ### 4.4 Counting consents (normative)
 
 When the rules return `ESCALATED` with escalation `E` (§6 step 9), let `role` be
-`E.role_required` and `n` be `E.required_consents` (NOMOS-SPEC-001 v2.2.0 §3.7; default 1). The
-escalation is satisfied when at least `n` consent statements:
+`E.role_required` and `n` be `E.required_consents` (NOMOS-SPEC-001 v2.2.0 §3.7; default 1).
 
-- resolve and are in `consent` scope for `role` (NOMOS-SPEC-007 rev. 1.8 §3.4.1),
-- carry a valid signature and a `binding_digest` equal to this Act's,
-- have `decision: "approve"` and `role` equal to `E.role_required`,
-- and come from **`n` distinct keys**. The same approval presented twice counts once.
+**Who a consent counts for.** The approver key MUST resolve (NOMOS-SPEC-007 rev. 1.9 §4.6) with
+an effective scope that admits `consent` for the statement's `role`, under the statement's suite,
+and that carries an `approver` term (rev. 1.9 §3.7). A path without one is refused on dimension
+`approver`, so a key certified to consent but not tied to a person is `CONSENT_OUT_OF_SCOPE`.
+The consent counts for the person that term names.
+
+**Path independence.** The relying party MUST evaluate every candidate path to the approver key
+that validates and is admitted (rev. 1.9 §4.2a). If they do not all carry the same `approver`,
+the consent is `CONSENT_INVALID` (`approver_ambiguous`). Otherwise the presenter could choose who
+a consent counts for by choosing which certificates to send, and the presenter would become an
+input to the verdict. A pool holds at most 20 certificates (rev. 1.9 §4.5), which bounds the
+number of candidate paths. Each certificate signature needs verifying only once per resolution.
+
+**The count.** The escalation is satisfied when consent statements from **`n` distinct
+approvers** each:
+- resolve as above;
+- carry a valid signature and a `binding_digest` equal to this Act's;
+- have `decision: "approve"` and `role` equal to `E.role_required`.
+
+Two consents from different keys of one person count once. The same approval presented twice
+counts once. An approver who signs from a laptop key and a phone passkey is still one approver.
 
 A consent that fails signature, scope or binding checks rejects the Act (`CONSENT_INVALID`,
 `CONSENT_OUT_OF_SCOPE`) rather than being ignored. A valid consent for a different role is
 ignored.
+
+### 4.5 Consent by passkey (normative)
+
+A consent with `algorithm: "WebAuthn-ES256"` is a WebAuthn assertion:
+
+```jsonc
+{
+  "binding_digest":     "<hex, §4.3>",
+  "role":               "SENIOR_APPROVER",
+  "decision":           "approve",
+  "signed_at":          "2026-10-01T11:59:30.000Z",
+  "kid":                "<the passkey's key id>",
+  "algorithm":          "WebAuthn-ES256",
+  "authenticator_data": "<base64url>",
+  "client_data_json":   "<base64url>",
+  "signature":          "<base64url, DER>"
+}
+```
+
+Let `P` be the §4.2 payload. The relying party MUST accept the statement only if all of these hold:
+1. **Scope.** The key resolves as in §4.4, and its effective scope contains
+   `suite:WebAuthn-ES256` (rev. 1.9 §3.6).
+2. **Client data.** `client_data_json` decodes to UTF-8 JSON whose `type` is `"webauthn.get"`
+   and whose `challenge` is `base64url(SHA-256(P))`, unpadded.
+3. **Authenticator data.** `authenticator_data` is at least 37 bytes, with the user-present and
+   user-verified flags both set.
+4. **Signature.** `signature` verifies under the resolved key over `authenticator_data ‖
+   SHA-256(client_data_json)`.
+
+These are the checks of NOMOS-SPEC-010 §5. A failure is `CONSENT_INVALID`, with that
+specification's reason: `bad_client_data`, `challenge_mismatch`, `user_not_verified`,
+`bad_encoding` or `bad_signature`.
+
+The challenge commits to `P`, so the approval binds the exact Act (through `binding_digest`), the
+role, the decision and the time. The authenticator's signature counter is not checked: approvals
+are single-use through the Act's nonce (§5.2), not through the counter. The passkey's origin
+binding is enforced by the authenticator and the browser, and once the key itself is certified
+the protocol does not depend on it. A relying party SHOULD record `client_data_json.origin` in
+its receipt (§9).
 
 ---
 
@@ -287,6 +356,9 @@ version in force at verification time, from exactly one of two sources:
 }
 ```
 
+   `algorithm` is `Ed25519` or `ES256`, and MUST be a suite the sealing key's effective scope
+   permits.
+
    The signed payload is `JCS({ artifact_id, version, seal_hash, as_of, valid_until, kid })`. It
    is valid only if its `artifact_id`, `version` and `seal_hash` equal the artifact's own, its
    `kid` is the artifact's sealing `kid` and the signature verifies under the key step 5
@@ -308,6 +380,28 @@ A reservation or hold already authorized under the version in force at its own v
 is not undone by a later supersession; a relying party that rechecks before final settlement
 MUST recheck revocation and MUST NOT reject for supersession alone.
 
+### 5.5 Currency policy (normative)
+
+For each authority it accepts, a relying party MUST declare exactly one currency policy, the
+rule by which §5.4 establishes the version in force:
+
+| Policy | Version in force established from | An authority with no record |
+|---|---|---|
+| `record` | The relying party's own record only. An in-force statement is never read. | `VERSION_UNVERIFIED`, reason `not_in_record` |
+| `record_or_statement` | Its record where it keeps one; otherwise an in-force statement (§5.4, source 2) | As §5.4 |
+
+**`record` is RECOMMENDED wherever compromise of the state would be material.** It is the only
+policy under which compromise of an issuer's sealing key cannot authorize anything new. Under
+`record_or_statement`, a stolen sealing key can seal a new version of the rules and sign a
+statement declaring that version in force, and both verify (R-19, Theorem 9.4). Under `record`,
+the forged version is not the one recorded, so it is `SUPERSEDED` or `VERSION_UNVERIFIED`. The
+relying party maintains its record from the issuer's publications through its own process, as it
+maintains its pinned root.
+
+There is no default. A verifier configured without a policy is misconfigured. It does not fall
+back to either policy. An authorized result reports `currency_policy` alongside
+`in_force_source`.
+
 ---
 
 ## 6. Verification at the relying party (normative)
@@ -320,8 +414,9 @@ A relying party MUST perform these steps in order and stop at the first failure:
 | 2 | `relying_party` is this system | `WRONG_RELYING_PARTY` |
 | 3 | Now is inside the window | `NOT_YET_VALID`, `EXPIRED` |
 | 4 | Nonce not already used | `REPLAYED` |
-| 5 | The artifact's sealing key resolves (NOMOS-SPEC-007 rev. 1.8 §4.2a), the seal verifies, the scope admits the artifact, and the sealing key is not a statement key | Any NOMOS-SPEC-007 §4.4 outcome, e.g. `ISSUER_NOT_RECOGNIZED`, `SEAL_INVALID`, `OUT_OF_SCOPE` |
-| 5a | The artifact is not revoked and is the version in force (§5.4) | `ARTIFACT_REVOKED`, `SUPERSEDED`, `VERSION_UNVERIFIED` |
+| 5 | The artifact's sealing key resolves for the artifact (NOMOS-SPEC-007 rev. 1.9 §4.2a, scope admission included, so a statement key cannot seal), then the seal verifies under it (rev. 1.9 §4.7) | Any NOMOS-SPEC-007 rev. 1.9 §4.4 outcome, e.g. `ISSUER_NOT_RECOGNIZED`, `OUT_OF_SCOPE`, `SEAL_INVALID` |
+| 5a | The artifact is not revoked and is the version in force (§5.4), under the declared currency policy (§5.5) | `ARTIFACT_REVOKED`, `SUPERSEDED`, `VERSION_UNVERIFIED` |
+| 5b | The artifact contains no two `escalate` decisions of equal `priority` naming different escalations (NOMOS-SPEC-001 amendment 2.3.0) | `MALFORMED`, `ambiguous_escalation` |
 | 6 | Every testimony statement is valid (§3.3) | `TESTIMONY_INVALID`, `TESTIMONY_OUT_OF_SCOPE` |
 | 7 | Every fact arrived through its declared channel and has its declared type (§7, §7.1) | `FACT_SOURCE_VIOLATION`, `FACT_TYPE_VIOLATION` |
 | 8 | Evaluate the sealed rules over exactly those facts (NOMOS-SPEC-001 §4, including §4.6), three-valued (§6.2) | `INCOMPLETE` |
@@ -490,12 +585,13 @@ A relying party SHOULD append a receipt for every verification to its audit trai
 { "act_id": "act-7f3c…", "act_digest": "<binding digest>", "decision": "AUTHORIZED",
   "rule": "R6", "by_consent": true,
   "verified_at": "2026-10-01T11:59:40.000Z", "committed_at": "2026-10-01T11:59:41.000Z",
-  "relying_party_facts": { "is_first_loan": false }, "in_force_source": "record" }
+  "relying_party_facts": { "is_first_loan": false }, "in_force_source": "record",
+  "currency_policy": "record", "consent_origins": ["https://approve.acme-bank.example"] }
 ```
 
 A receipt MUST record `verified_at`, `relying_party_facts` — the exact relying-party values §6
-evaluated — and `in_force_source` (§5.4), because those are the inputs to the verdict the Act
-does not carry. With them,
+evaluated — `in_force_source` (§5.4) and `currency_policy` (§5.5), because those are the inputs to
+the verdict the Act does not carry. It SHOULD record the `origin` of each passkey consent (§4.5). With them,
 the receipt plus a retained copy of the Act lets any third party re-run §6 later and reach the
 same verdict, given the relying party's pinned root and the revocation statements dated before
 `verified_at` (NOMOS-SPEC-006, NOMOS-SPEC-007 §5). An auditor needs no access to the agent, the
@@ -508,9 +604,9 @@ presenter or any NOMOS service.
 A conformant relying party implements §5–§8 in full. A conformant presenter produces Acts that
 follow §2–§4.
 
-**Reference implementation.** `act-vectors/act_verify.py`: a self-contained Python verifier
-(NOMOS-SPEC-007 rev. 1.8 target-first resolution, statement scope, a Nomos-Expr v1 evaluator, and
-§6 in full).
+**Reference implementation.** `act-vectors/act_verify.py`: the Python verifier (§6 in full and a
+Nomos-Expr v1 evaluator), on the shared `python/nomos` package for NOMOS-SPEC-007 rev. 1.9
+resolution and NOMOS-SPEC-010 suites.
 
 **Test vectors.** `act-vectors/vectors.json`, generated deterministically by
 `act-vectors/generate.py` from published seeds and `act-vectors/pub_lending_v1.nomos`;
@@ -523,8 +619,14 @@ set presented in reverse; a withheld fact that would have denied the action; and
 that would have denied an action two approvers then consented to; an action parameter of the wrong
 type; a withheld witness statement read by `exists()`; and a wrong-typed field inside an
 object-typed parameter; a superseded version presented after supersession; a revoked
-authority; an in-force statement accepted, presented stale, and absent. `check.py` also builds two cases JSON cannot carry, a NaN and an
-infinite amount.
+authority; an in-force statement accepted, presented stale, and absent; an authority with
+equal-priority escalations naming different escalations (refused since 0.6.0); two keys of one
+approver counted once; two approvers counted twice; a consent key not tied to a person; a key
+certified as two people; a passkey consent that authorizes, one whose user was not verified, one
+whose challenge was made for another role, and one from a registration ceremony; an ES256
+witness; a passkey presented as a witness; and record-only currency with and without a record.
+Forty-two cases in all. `check.py` also builds two cases JSON cannot carry, a NaN and an infinite
+amount.
 
 **Known gaps (disclosed).**
 
@@ -605,6 +707,30 @@ design:
 ---
 
 ## Changelog
+
+- **0.6.0** — Act enforcement as infrastructure (RFC-0001 changes 4–7).
+  - **Consents count by person (§4.4).** Consent keys carry an `approver` term (NOMOS-SPEC-007
+    rev. 1.9 §3.7). Escalations need `n` distinct approvers, not `n` distinct keys, because with
+    passkeys one person holds several keys and counting keys would let one person satisfy dual
+    control. The approver is path-independent (`approver_ambiguous`), so the presenter cannot
+    choose who a consent counts for.
+  - **Consent by passkey (§4.5).** A WebAuthn assertion whose challenge commits to the consent
+    payload, user-verified.
+  - **ES256 statements (§3.1, §5.4).** Testimony and in-force statements may be ES256 (NOMOS-SPEC-010).
+  - **Currency policy (§5.5).** `record` or `record_or_statement`, declared, with no default.
+    `record` is RECOMMENDED because it is the only policy that contains issuer-key compromise
+    (R-19 Theorem 9.4).
+  - **Ambiguous escalations are refused (step 5b, NOMOS-SPEC-001 amendment 2.3.0).** Vector 30,
+    `equal_priority_escalation_withheld`, becomes `equal_priority_escalation_refused`:
+    `MALFORMED`, `ambiguous_escalation`. Clause (ii) of §6.2 is unchanged and still governs
+    historical verification.
+  - **Step 5 order.** Scope admission is decided before the seal (rev. 1.9 §4.7).
+  - **Vectors.** Twelve vectors added (31–42). The consent keys of the earlier vectors are
+    re-certified with `approver` terms, and every earlier verdict is unchanged except vector 30's.
+  - **Breaking.**
+    - A 0.5.0 verifier refuses consent keys that carry `approver` (fail closed).
+    - A 0.6.0 verifier refuses consent keys that lack one. Migration: re-certify approver keys
+      before enabling 0.6.0.
 
 - **0.5.0** — Equal-priority escalations (§6.2, clause (ii)). Found while proving the
   specification's omission-safety property, not by the vectors, the mutants or agreement between

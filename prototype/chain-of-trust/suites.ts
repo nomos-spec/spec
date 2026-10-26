@@ -4,7 +4,7 @@
  *   verifySuite(suite, publicKeyPem, payload, proof) -> { ok, reason }
  *
  * Written from the SPEC-010 text; it is the same algorithm as suite-vectors/check.mjs and must
- * pass the same 27 vectors (suite-vectors/check-prototype.ts runs them). Node built-in crypto only.
+ * pass the same vectors (suite-vectors/check-prototype.ts runs them). Node built-in crypto only.
  */
 import * as crypto from "crypto";
 
@@ -18,6 +18,27 @@ export type SuiteReason =
 const N = 0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551n;
 const ED25519_PREFIX = Buffer.from("302a300506032b6570032100", "hex");
 const P256_PREFIX = Buffer.from("3059301306072a8648ce3d020106082a8648ce3d03010703420004", "hex");
+// NOMOS-SPEC-010 0.2.0 §3.1: an Ed25519 key must be canonical, on the curve and not of small order.
+const P = 2n ** 255n - 19n;
+const modpow = (b: bigint, e: bigint, m: bigint): bigint => { let r = 1n; b %= m; while (e > 0n) { if (e & 1n) r = r * b % m; b = b * b % m; e >>= 1n; } return r; };
+const D = (-121665n * modpow(121666n, P - 2n, P)) % P + P;
+const SMALL_ORDER = new Set([
+  "0100000000000000000000000000000000000000000000000000000000000000", "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+  "0000000000000000000000000000000000000000000000000000000000000000", "0000000000000000000000000000000000000000000000000000000000000080",
+  "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05", "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85",
+  "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a", "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa"]);
+function ed25519PointValid(a: Buffer): boolean {
+  if (SMALL_ORDER.has(a.toString("hex"))) return false;
+  const sign = BigInt(a[31] >> 7);
+  const y = BigInt("0x" + Buffer.from(a).reverse().toString("hex")) & ((1n << 255n) - 1n);
+  if (y >= P) return false;
+  const x2 = ((y * y - 1n) % P + P) * modpow((D * y * y + 1n) % P, P - 2n, P) % P;
+  if (x2 === 0n) return sign === 0n;
+  let x = modpow(x2, (P + 3n) / 8n, P);
+  if ((x * x - x2) % P !== 0n) x = x * modpow(2n, (P - 1n) / 4n, P) % P;
+  return (x * x - x2) % P === 0n;
+}
+
 const SUITES_FOR: Record<KeyType, readonly Suite[]> = { "Ed25519": ["Ed25519"], "P-256": ["ES256", "WebAuthn-ES256"] };
 const sha256 = (b: Buffer): Buffer => crypto.createHash("sha256").update(b).digest();
 
@@ -46,7 +67,10 @@ export function loadKey(pem: unknown): { type: KeyType; key: crypto.KeyObject; d
   const der = pemDer(pem);
   if (!der) return { reason: "invalid_key" };
   let type: KeyType;
-  if (der.length === 44 && der.subarray(0, 12).equals(ED25519_PREFIX)) type = "Ed25519";
+  if (der.length === 44 && der.subarray(0, 12).equals(ED25519_PREFIX)) {
+    if (!ed25519PointValid(der.subarray(12))) return { reason: "invalid_key" };
+    type = "Ed25519";
+  }
   else if (der.length === 91 && der.subarray(0, 27).equals(P256_PREFIX)) type = "P-256";
   else return { reason: "invalid_key" };
   try { return { type, key: crypto.createPublicKey({ key: der, format: "der", type: "spki" }), der }; }

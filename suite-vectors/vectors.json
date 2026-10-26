@@ -1,6 +1,6 @@
 {
   "_readme": "NOMOS-SPEC-010 signature suite vectors. For each case, decode payload_b64 to the exact payload bytes and call verify(suite, public_key_pem, payload, proof). The result must equal expected. Keys are derived from published seeds: never use them as trust material.",
-  "spec": "NOMOS-SPEC-010 0.1.0",
+  "spec": "NOMOS-SPEC-010 0.2.0",
   "cases": [
     {
       "name": "ed25519_valid",
@@ -183,6 +183,48 @@
         "reason": "invalid_key"
       },
       "why": "Canonical bytes, but the point is not on the curve."
+    },
+    {
+      "name": "key_ed25519_small_order",
+      "suite": "Ed25519",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "invalid_key"
+      },
+      "why": "The identity point. Under it, R = identity and S = 0 verifies against every message; some libraries accept that (§3.1)."
+    },
+    {
+      "name": "key_ed25519_noncanonical",
+      "suite": "Ed25519",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA7v///////////////////////////////////////38=\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "1Y8Sn3ofbVLKSS8xw7TzQcf/Jq9Qrl7zIYWehlqHBMUMqi0JyBMsEmsvVxjWvMbL1wQI0GuzWz9W0H81bkaRBw=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "invalid_key"
+      },
+      "why": "y = p + 1: a second encoding of the identity's y coordinate."
+    },
+    {
+      "name": "key_ed25519_not_on_curve",
+      "suite": "Ed25519",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\n-----END PUBLIC KEY-----\n",
+      "payload_b64": "eyJhYm91dCI6IkRFUFQtMTciLCJhc19vZiI6IjIwMjYtMTEtMDJUMDk6MDA6MDAuMDAwWiIsImNsYWltIjoiYnVkZ2V0X3JlbWFpbmluZyIsImtpZCI6InRlc3QiLCJ2YWxpZF91bnRpbCI6IjIwMjYtMTEtMDNUMDk6MDA6MDAuMDAwWiIsInZhbHVlIjo0MjAwfQ==",
+      "proof": {
+        "signature": "1Y8Sn3ofbVLKSS8xw7TzQcf/Jq9Qrl7zIYWehlqHBMUMqi0JyBMsEmsvVxjWvMbL1wQI0GuzWz9W0H81bkaRBw=="
+      },
+      "expected": {
+        "ok": false,
+        "reason": "invalid_key"
+      },
+      "why": "y = 2 has no x on the curve."
     },
     {
       "name": "suite_ed25519_on_p256_key",

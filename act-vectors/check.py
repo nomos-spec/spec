@@ -9,6 +9,7 @@ passed = failed = 0
 for c in v["cases"]:
     got = verify_act(c["act"], relying_party_id=v["relying_party_id"], root_pem=v["root_public_key_pem"],
                      now=ts(c["now"]), seen_nonces=set(c["seen_nonces"]), local_facts=v["local_facts"],
+                     currency_policy=c.get("currency_policy", v["currency_policy"]),
                      in_force=v.get("in_force"), revoked_artifacts=set(c.get("revoked_artifacts", [])))
     diffs = {k: (e, got.get(k)) for k, e in c["expected"].items() if got.get(k) != e}
     if diffs:
@@ -24,7 +25,8 @@ base = v["cases"][0]
 for bad in (float("nan"), float("inf")):
     a = copy.deepcopy(base["act"]); a["action"]["params"]["amount"] = bad
     got = verify_act(a, relying_party_id=v["relying_party_id"], root_pem=v["root_public_key_pem"],
-                     now=ts(base["now"]), seen_nonces=set(), local_facts=v["local_facts"], in_force=v.get("in_force"))
+                     now=ts(base["now"]), seen_nonces=set(), local_facts=v["local_facts"], in_force=v.get("in_force"),
+                     currency_policy=v["currency_policy"])
     if got.get("decision") == "MALFORMED" and got.get("reason_code") == "not_canonicalizable":
         passed += 1; print(f"  ok   amount={bad!r:<31s} MALFORMED")
     else:
