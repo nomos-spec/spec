@@ -133,6 +133,15 @@ enforced, by NOMOS-SPEC-008 0.6.0 §4.4 together with the counting rule it serve
 - **Under NOMOS-SPEC-008 0.5.0**, which counts distinct keys, a consent key without an `approver`
   term remains admissible.
 
+**Open for NOMOS-SPEC-008 0.6.0: the approver must not depend on the path.** A key's
+`approver` value is read from its effective scope, which comes from the path chosen. If the same
+key had two admitted paths carrying different `approver` values, the carrier would choose the
+person a consent counts for by choosing which certificates to send. The carrier would then be an
+input to the verdict (RFC-0001 invariant 2). Rev. 1.9 counts no consents, so no verdict here
+depends on it. 0.6.0 MUST make the counted identity path-independent. The proposed rule: a
+consent is `CONSENT_INVALID` (`approver_ambiguous`) when the admitted paths to its key do not all
+carry the same `approver`.
+
 ## §3.8 Effective scope and admission (new)
 
 **Order.** A key's effective scope is an ordered set of terms. A term is placed where its
@@ -251,6 +260,7 @@ count. The root is never staple-coverable and is not counted, and a path with no
 | ES256, P-256 keys | Older verifiers reject them (`MALFORMED` or `ISSUER_NOT_RECOGNIZED`); existing Ed25519 objects are unchanged, and so are their fingerprints |
 | `seal.signature_algorithm` required | A seal without it is `MALFORMED`. The reference platform has always written it. The 1.7.0 vector generator wrote `algorithm` instead, which was non-conformant; it is corrected and its vectors regenerated, with no verdict changed |
 | Check order (§3.3) | New outcomes only where 1.8.0 left the order open: an unparseable child key is now `invalid_key`, previously reported differently by different implementations |
+| Scope before seal (§4.7) | NOMOS-SPEC-008 0.5.0 §6 step 5 lists the seal check before scope admission. Under this revision an artifact that is both out of scope and tampered is `OUT_OF_SCOPE`, not `SEAL_INVALID`. No published vector has both properties; 0.6.0 aligns its step 5 |
 
 ## Relation to RFC-0001 (errata)
 

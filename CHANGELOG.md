@@ -32,9 +32,10 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 - **`approver` dimension (§3.7).** One opaque person identifier, narrowed by equality, admitted
   only on consent keys. NOMOS-SPEC-008 0.6.0 will use it to count consents by person.
 - **`python/nomos/`**, one Python package (`jcs`, `suites`, `chain`) shared by the SPEC-007,
-  SPEC-008 and SPEC-010 references. It replaces three copies of JCS and two of chain resolution.
-  Its JCS number output now follows ECMAScript exactly, cross-checked against Node on 30,000
-  floats.
+  SPEC-008 and SPEC-010 references and the SPEC-001 offline verifier. It replaces four live
+  copies of JCS and two of chain resolution. The frozen evidence scripts under
+  `papers/carried-authority/` keep their own copies, unchanged, so the paper's results stay
+  reproducible as published.
 - **`chain-of-trust-vectors/vectors-1.9.json`**: 37 cases with hand-written expectations, each run
   in every presentation order it lists (91 resolutions). The Python reference and the TypeScript
   prototype, updated from its 1.7.0 walk, pass all of them. On every artifact verdict in both
@@ -42,6 +43,12 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Canonicalization.** `verify/verify.py`, the SPEC-001 offline verifier, had its own copy of JCS.
+  It wrote `4.0` as `4.0` and `1e-7` as `1e-07` and escaped non-ASCII keys, so it computed a
+  different hash from the sealer for any artifact containing such a value, and reported a genuine
+  seal as tampered. This is the class of defect R-19 Theorem 10 names. It now uses
+  `python/nomos/jcs.py`, which matches ECMAScript number output on 30,000 floats. The verdicts on
+  the repository's examples are unchanged.
 - The 1.7.0 vector generator emitted seals with `algorithm` instead of SPEC-001's
   `signature_algorithm`. Fixed at the generator and regenerated; only that field changed.
 - The TypeScript prototype still implemented the 1.7.0 root-first walk, so the 1.8.0 ordering fix

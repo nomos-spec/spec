@@ -18,11 +18,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "python"))
 from nomos import suites as S  # noqa: E402
-
-
-def jcs(obj) -> bytes:
-    """JCS for the simple payloads used here (ASCII strings and integers only)."""
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
+from nomos.jcs import jcs  # noqa: E402
 
 
 def b64(raw: bytes) -> str:
