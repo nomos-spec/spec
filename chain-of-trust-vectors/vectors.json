@@ -17,7 +17,7 @@
           "status": "sealed",
           "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
           "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "k25GdGYvawXqFJrX",
           "signed_by": "vectors:honored"
         }
@@ -68,7 +68,7 @@
           "status": "sealed",
           "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
           "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "k25GdGYvawXqFJrX",
           "signed_by": "vectors:honored"
         }
@@ -118,7 +118,7 @@
           "status": "sealed",
           "hash": "5cbfc17df950ac1d697714b2643e215a1242d78de2e87c4037e4a3c43d61749d",
           "signature": "LgWmJRBiR8hHr+OmDf+zfLs5En8WzWtSGx9FJIUVvrBczu0eS0WK3jVDILslUfkrQnaOGyPbatM0S9v9S4HbDg==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "NugBocBe_MuhevwS",
           "signed_by": "vectors:impostor"
         }
@@ -162,7 +162,7 @@
           "status": "sealed",
           "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
           "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "k25GdGYvawXqFJrX",
           "signed_by": "vectors:honored"
         }
@@ -210,7 +210,7 @@
           "status": "sealed",
           "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
           "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "k25GdGYvawXqFJrX",
           "signed_by": "vectors:honored"
         }
@@ -253,7 +253,7 @@
           "status": "sealed",
           "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
           "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "k25GdGYvawXqFJrX",
           "signed_by": "vectors:honored"
         }
@@ -300,7 +300,7 @@
           "status": "sealed",
           "hash": "c37e4fc682e77863d314f21f3bad4c7ff6cfe201ee1d1fd718144a91b449501a",
           "signature": "tole+IRKGb/Me3xPKNA0ZpN6hZPVkexYkMO4Pq+66YD9HN6Up7vDK/wYJGgRD8rnLgfAL1nGXQ0y9i7QUsmxCA==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "k25GdGYvawXqFJrX",
           "signed_by": "vectors:lending"
         }
@@ -343,7 +343,7 @@
           "status": "sealed",
           "hash": "6a7ba491efe5cd29775556463fb25bca98b3984a9f93ed2d9c8e6b076071f8ec",
           "signature": "MkdXlaC0M3YYLFaz9or61I/wrYzrSIf173AZ8cN+15LjFvGHMf6n61VlU33kwVM+xRRadaEtSyRy4k+D6lQgCA==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "k25GdGYvawXqFJrX",
           "signed_by": "vectors:triage"
         }
@@ -380,7 +380,7 @@
           "status": "sealed",
           "hash": "6e4faa37eaf57b6cb44b37ed45cc3136f945ec669bdd85efcad91d4082835e7e",
           "signature": "NgJnSonPBcs9PJQbtRgkhwvRbjExfEPpB5Dc5k5Opcg0epu92Nz+Cg15sTEd0dgMn/4hwYILOOd6aVwmOt/bAw==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "k25GdGYvawXqFJrX",
           "signed_by": "vectors:undeclared"
         }
@@ -418,7 +418,7 @@
           "status": "sealed",
           "hash": "dd5d440faea35b3ab930fee31e1f9cfc2b7eaf16fa3033a02537b791482b092d",
           "signature": "lIOYFkrvIRyz/8LRAmBFNvMGFuPkD/tfeRHlb9uGoa3vdjkmWsD1Dv/XAQbhSwfgQ8cruk/ZbGoQbcO/acv5Bw==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "k25GdGYvawXqFJrX",
           "signed_by": "vectors:widened"
         }
@@ -475,7 +475,7 @@
           "status": "sealed",
           "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
           "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "k25GdGYvawXqFJrX",
           "signed_by": "vectors:honored"
         }
@@ -523,7 +523,7 @@
           "status": "sealed",
           "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
           "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "k25GdGYvawXqFJrX",
           "signed_by": "vectors:honored"
         }
@@ -592,7 +592,7 @@
           "status": "sealed",
           "hash": "d61aef2924df67e89118795d5273e3061c618ac1645020ef838b116069cc8e30",
           "signature": "N6ivx/ZkgM3mocXQFk+DwneMqC+jzberhdTDvmGm2twYY5lSrtNLpUMM26Sl3bB0cnTn16ilWy0sVO/ShXSKCw==",
-          "algorithm": "Ed25519",
+          "signature_algorithm": "Ed25519",
           "kid": "k25GdGYvawXqFJrX",
           "signed_by": "vectors:honored"
         }

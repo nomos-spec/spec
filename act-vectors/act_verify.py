@@ -20,18 +20,19 @@ Everything is resolved from the Act itself plus the relying party's own configur
 
 Requires: Python 3.9+, `pip install cryptography`.
 """
-import base64
-import hashlib
-import json
 import math
+import os
 import re
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set, Tuple
+import sys
+from datetime import datetime
+from typing import Any, Dict, Optional, Set, Tuple
 
-from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives import serialization
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "python"))
+from nomos import chain, suites  # noqa: E402  (shared: python/nomos)
+from nomos.chain import ts, cert_payload, ScopeError, parse_scope, contains, meta_matches  # noqa: E402,F401
+from nomos.jcs import jcs, jcs_text as _jcs, sha256_hex  # noqa: E402
 
-MAX_CHAIN = 20
+MAX_CHAIN = chain.MAX_CHAIN
 MAX_WINDOW_SECONDS = 300          # SPEC-008 §5.3 RECOMMENDED upper bound on an Act's validity
 MAX_IN_FORCE_SECONDS = 86400      # SPEC-008 §5.4: an in-force statement lives at most one day
 ARTIFACT_DIMS = ("artifact", "industry", "jurisdiction")
@@ -59,45 +60,12 @@ def type_ok(value: Any, spec: dict) -> bool:
     return False        # no type, or one this verifier does not know: fail closed
 
 
-# ── canonical JSON (RFC 8785, sufficient for NOMOS objects) ─────────────────────────────
-def _jcs(v: Any) -> str:
-    if v is None: return "null"
-    if v is True: return "true"
-    if v is False: return "false"
-    if isinstance(v, int): return str(v)
-    if isinstance(v, float):
-        if v != v or v in (float("inf"), float("-inf")): raise ValueError("non-finite")
-        return str(int(v)) if v.is_integer() and abs(v) < 1e21 else repr(v)
-    if isinstance(v, str): return json.dumps(v, ensure_ascii=False)
-    if isinstance(v, list): return "[" + ",".join(_jcs(x) for x in v) + "]"
-    if isinstance(v, dict):
-        ks = sorted(v, key=lambda k: k.encode("utf-16-be"))
-        return "{" + ",".join(json.dumps(k, ensure_ascii=False) + ":" + _jcs(v[k]) for k in ks) + "}"
-    raise TypeError(type(v))
-
-def jcs(o: Any) -> bytes: return _jcs(o).encode("utf-8")
-def sha256_hex(b: bytes) -> str: return hashlib.sha256(b).hexdigest()
-
-
-# ── keys, signatures, time ──────────────────────────────────────────────────────────────
-def compute_kid(pem: str) -> str:
-    der = serialization.load_pem_public_key(pem.encode()).public_bytes(
-        serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
-    return base64.urlsafe_b64encode(hashlib.sha256(der).digest()).decode().rstrip("=")[:16]
-
 def sig_ok(pem: str, msg: bytes, sig_b64: str) -> bool:
-    try:
-        serialization.load_pem_public_key(pem.encode()).verify(base64.b64decode(sig_b64), msg)
-        return True
-    except (InvalidSignature, ValueError, TypeError):
-        return False
-
-def ts(s: str) -> datetime:
-    return datetime.fromisoformat(s.replace("Z", "+00:00")).astimezone(timezone.utc)
+    """SPEC-008 0.5.0 statements are Ed25519 (NOMOS-SPEC-010 §4)."""
+    return suites.verify("Ed25519", pem, msg, {"signature": sig_b64})[0]
 
 
 # ── signed payloads ─────────────────────────────────────────────────────────────────────
-def cert_payload(c): return {k: c.get(k) for k in ("parent_kid", "child_kid", "child_public_key_pem", "issued_at", "expires_at")} | {"scope": c.get("scope")}
 def testimony_payload(t): return {k: t.get(k) for k in ("claim", "value", "about", "as_of", "valid_until", "kid")}
 def consent_payload(c): return {k: c.get(k) for k in ("binding_digest", "role", "decision", "signed_at", "kid")}
 def in_force_payload(s): return {k: s.get(k) for k in ("artifact_id", "version", "seal_hash", "as_of", "valid_until", "kid")}
@@ -116,101 +84,19 @@ def binding_core(act: dict) -> dict:
 def binding_digest(act: dict) -> str: return sha256_hex(jcs(binding_core(act)))
 
 
-# ── scope (SPEC-007 §3.4 + rev. 1.8 §3.4.1) ─────────────────────────────────────────────
-class ScopeError(Exception): pass
+# ── chain resolution: NOMOS-SPEC-007 rev. 1.9, shared (python/nomos/chain.py) ─────────────
+def resolve_statement_key(kind: str, name: str, kid: str, pool: list, root_pem: str, now: datetime,
+                          meta: dict, revoked_kids: Set[str], revoked_certs: Set[str]) -> dict:
+    """§4.6: resolve a witness or approver key for one statement, scope-aware (rev. 1.9 §4.2a)."""
+    return chain.resolve(kid, pool, root_pem, now, chain.for_statement(kind, name, meta, "Ed25519"), revoked_kids, revoked_certs)
 
-def parse_scope(s: Optional[str]) -> List[Tuple[str, str]]:
-    if s is None or not s.strip(): return []
-    out, seen = [], set()
-    for term in s.split():
-        d, sep, v = term.partition(":")
-        if not sep or not d or not v or d in seen: raise ScopeError(term)
-        seen.add(d); out.append((d, v))
-    return out
-
-def _set(v: str) -> Set[str]: return {x for x in v.split(",") if x}
-
-def contains(dim: str, outer: str, inner: str) -> bool:
-    if dim == "artifact": return outer == inner
-    if dim == "industry": return inner == outer or inner.startswith(outer + "/")
-    if dim == "jurisdiction": return inner == outer or (len(outer) == 2 and inner.startswith(outer + "-"))
-    if dim in STATEMENT_DIMS: return _set(inner) <= _set(outer)      # narrowing = subset
-    return False
-
-def meta_matches(dim: str, val: str, meta: dict) -> bool:
-    if dim == "artifact": return meta.get("artifact_id") == val
-    if dim == "industry":
-        ind = meta.get("industry"); return isinstance(ind, str) and bool(ind) and contains("industry", val, ind)
-    if dim == "jurisdiction":
-        cs = meta.get("jurisdiction_codes")
-        if not isinstance(cs, list) or not cs or not all(isinstance(c, str) and ISO_3166.match(c) for c in cs): return False
-        return all(contains("jurisdiction", val, c) for c in cs)
-    return False
-
-
-# ── chain resolution, generalised to any signed statement (SPEC-007 rev. 1.8 §4.6) ──────
-def _fp(c) -> str: return sha256_hex(jcs(cert_payload(c)))
-
-def _paths_to(target: str, root: str, pool: list, seen: frozenset, depth: int = 0):
-    """Target-first path search (SPEC-007 rev. 1.8 §4.2a). Yields root→target certificate
-    lists. Candidates are tried in fingerprint order so the result never depends on the order
-    the pool was presented in, even when the pool is a tree rather than a single chain."""
-    if target == root: yield []; return
-    if depth >= MAX_CHAIN or target in seen: return
-    for c in sorted((c for c in pool if c.get("child_kid") == target), key=_fp):
-        for head in _paths_to(c.get("parent_kid"), root, pool, seen | {target}, depth + 1):
-            yield head + [c]
-
-def _validate_path(path: list, root_pem: str, now: datetime, revoked_kids: Set[str], revoked_certs: Set[str]) -> dict:
-    cur_key = root_pem
-    for cert in path:
-        try: kid_ok = compute_kid(cert["child_public_key_pem"]) == cert["child_kid"]
-        except (ValueError, KeyError): kid_ok = False
-        if not kid_ok: return {"decision": "ISSUER_NOT_RECOGNIZED", "reason_code": "kid_mismatch"}
-        if not sig_ok(cur_key, jcs(cert_payload(cert)), cert.get("signature", "")):
-            return {"decision": "ISSUER_NOT_RECOGNIZED", "reason_code": "bad_signature"}
-        if now > ts(cert["expires_at"]): return {"decision": "ISSUER_NOT_RECOGNIZED", "reason_code": "expired"}
-        if now < ts(cert["issued_at"]): return {"decision": "ISSUER_NOT_RECOGNIZED", "reason_code": "not_yet_valid"}
-        if _fp(cert) in revoked_certs: return {"decision": "CERTIFICATE_REVOKED"}
-        if cert["child_kid"] in revoked_kids: return {"decision": "KEY_REVOKED", "revoked_kid": cert["child_kid"]}
-        cur_key = cert["child_public_key_pem"]
-    return {"decision": "RESOLVED", "key": cur_key}
-
-def resolve_chain(target_kid: str, pool: list, root_pem: str, now: datetime,
-                  revoked_kids: Set[str], revoked_certs: Set[str]) -> dict:
-    root_kid = compute_kid(root_pem)
-    if root_kid in revoked_kids: return {"decision": "KEY_REVOKED", "revoked_kid": root_kid}
-    first_failure = None; hops = None; key = None
-    for path in _paths_to(target_kid, root_kid, pool, frozenset()):
-        r = _validate_path(path, root_pem, now, revoked_kids, revoked_certs)
-        if r["decision"] == "RESOLVED": hops, key = path, r["key"]; break
-        first_failure = first_failure or r
-    if hops is None:
-        if first_failure: return first_failure
-        from_root = any(c.get("parent_kid") == root_kid for c in pool)
-        return {"decision": "ISSUER_NOT_RECOGNIZED", "reason_code": "chain_broken" if from_root else "no_certificate_for_root"}
-    cur_key = key
-    effective: Dict[str, str] = {}
-    for cert in hops:
-        try: terms = parse_scope(cert.get("scope"))
-        except ScopeError: return {"decision": "OUT_OF_SCOPE", "reason_code": "malformed_scope"}
-        for d, v in terms:
-            if d in effective and not contains(d, effective[d], v):
-                return {"decision": "OUT_OF_SCOPE", "dimension": d, "reason_code": "widening"}
-            effective[d] = v
-    return {"decision": "RESOLVED", "key": cur_key, "effective": effective}
-
-def scope_ok_for_statement(effective: dict, kind: str, name: str, meta: dict) -> Tuple[bool, Optional[str]]:
-    """A statement key's scope (§3.4.1): must carry `kind` covering `name`; artifact-matching
-    dimensions are matched against the Act's authority artifact; anything else fails closed."""
-    if kind not in effective or name not in _set(effective[kind]): return False, kind
-    for d, v in effective.items():
-        if d == kind: continue
-        if d in ARTIFACT_DIMS:
-            if not meta_matches(d, v, meta): return False, d
-        else:
-            return False, d        # a claim key presented as a consent key, or an unknown dimension
-    return True, None
+def statement_failure(r: dict, invalid: str, out_of_scope: str, **who) -> dict:
+    """An admission failure (the key is genuine but not permitted this statement) is *_OUT_OF_SCOPE;
+    every other failure of the witness's or approver's chain is *_INVALID (SPEC-007 rev. 1.8 §4.6)."""
+    if r["decision"] == "OUT_OF_SCOPE" and "reason_code" not in r:
+        return {"decision": out_of_scope, **who, "dimension": r["dimension"]}
+    prefix = "witness_" if invalid == "TESTIMONY_INVALID" else "approver_"
+    return {"decision": invalid, **who, "reason_code": prefix + r["decision"].lower()}
 
 
 # ── Nomos-Expr v1 evaluator (SPEC-001 §4.1), three-valued (SPEC-008 §6.2) ──────────────
@@ -404,10 +290,9 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     if not isinstance(action, dict) or not isinstance(action.get("type"), str) or not isinstance(action.get("params", {}), dict):
         return {"decision": "MALFORMED", "reason_code": "bad_action"}
     art, pool = auth.get("artifact"), auth.get("key_certs", [])
-    if not isinstance(pool, list) or len(pool) > MAX_CHAIN: return {"decision": "MALFORMED", "reason_code": "chain_over_length_cap"}
-    seal = (art or {}).get("seal") if isinstance(art, dict) else None
-    if not isinstance(seal, dict) or seal.get("status") != "sealed" or not all(isinstance(seal.get(k), str) for k in ("hash", "signature", "kid")):
-        return {"decision": "MALFORMED", "reason_code": "unsealed_artifact"}
+    bad = chain.check_pool(pool) or chain.check_seal_shape(art)
+    if bad: return {"decision": "MALFORMED", "reason_code": bad}
+    seal = art["seal"]
     try:
         t0, t1 = ts(act["issued_at"]), ts(act["expires_at"])
     except (ValueError, TypeError):
@@ -420,16 +305,13 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     if now > t1: return {"decision": "EXPIRED"}
     if act["nonce"] in seen_nonces: return {"decision": "REPLAYED"}
     # 5. authority: SPEC-007 §4 for the artifact itself
-    r = resolve_chain(seal["kid"], pool, root_pem, now, revoked_kids, revoked_certs)
-    if r["decision"] != "RESOLVED": return r
-    body = {k: v for k, v in art.items() if k not in ("seal", "attestations")}
-    if sha256_hex(jcs(body)) != seal["hash"]: return {"decision": "SEAL_INVALID", "reason_code": "hash_mismatch"}
-    if not sig_ok(r["key"], jcs({"hash": seal["hash"], "signed_by": seal.get("signed_by")}), seal["signature"]):
-        return {"decision": "SEAL_INVALID", "reason_code": "bad_signature"}
+    #    Scope-aware (rev. 1.9 §4.2a): a path whose scope does not admit this artifact is a failed
+    #    candidate. The resolved key is the same on every path, so the seal is checked once, after.
     meta = art.get("meta", {})
-    for d, v in r["effective"].items():
-        if d not in ARTIFACT_DIMS or not meta_matches(d, v, meta):
-            return {"decision": "OUT_OF_SCOPE", "dimension": d}      # incl. a claim/consent key sealing rules
+    r = chain.resolve(seal["kid"], pool, root_pem, now, chain.for_artifact(meta, seal["signature_algorithm"]), revoked_kids, revoked_certs)
+    if r["decision"] != "RESOLVED": return r
+    failure = chain.seal_failure(art, r["key"])
+    if failure: return failure
     # 5a. the authority in force at `now` (§5.4): genuine is not enough, it must also be current.
     #     A superseded version stays valid for verifying past decisions; it cannot authorize new ones.
     art_id = meta.get("artifact_id")
@@ -465,11 +347,9 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     for t in act.get("testimony") or []:
         if not isinstance(t, dict) or not all(k in t for k in ("claim", "value", "as_of", "valid_until", "kid", "signature")):
             return {"decision": "MALFORMED", "reason_code": "bad_testimony"}
-        w = resolve_chain(t["kid"], pool, root_pem, now, revoked_kids, revoked_certs)
+        w = resolve_statement_key("claim", t["claim"], t["kid"], pool, root_pem, now, meta, revoked_kids, revoked_certs)
         if w["decision"] != "RESOLVED":
-            return {"decision": "TESTIMONY_INVALID", "claim": t["claim"], "reason_code": "witness_" + w["decision"].lower()}
-        ok, dim = scope_ok_for_statement(w["effective"], "claim", t["claim"], meta)
-        if not ok: return {"decision": "TESTIMONY_OUT_OF_SCOPE", "claim": t["claim"], "dimension": dim}
+            return statement_failure(w, "TESTIMONY_INVALID", "TESTIMONY_OUT_OF_SCOPE", claim=t["claim"])
         if not sig_ok(w["key"], jcs(testimony_payload(t)), t["signature"]):
             return {"decision": "TESTIMONY_INVALID", "claim": t["claim"], "reason_code": "bad_signature"}
         if now > ts(t["valid_until"]) or now < ts(t["as_of"]):
@@ -517,10 +397,11 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     for c in act.get("consents") or []:
         if not isinstance(c, dict) or not all(k in c for k in ("binding_digest", "role", "decision", "signed_at", "kid", "signature")):
             return {"decision": "MALFORMED", "reason_code": "bad_consent"}
-        k = resolve_chain(c["kid"], pool, root_pem, now, revoked_kids, revoked_certs)
-        if k["decision"] != "RESOLVED": return {"decision": "CONSENT_INVALID", "reason_code": "approver_" + k["decision"].lower()}
-        ok, dim = scope_ok_for_statement(k["effective"], "consent", c["role"], meta)
-        if not ok: return {"decision": "CONSENT_OUT_OF_SCOPE", "role": c["role"], "dimension": dim}
+        k = resolve_statement_key("consent", c["role"], c["kid"], pool, root_pem, now, meta, revoked_kids, revoked_certs)
+        if k["decision"] != "RESOLVED":
+            r = statement_failure(k, "CONSENT_INVALID", "CONSENT_OUT_OF_SCOPE", role=c["role"])
+            if r["decision"] == "CONSENT_INVALID": r.pop("role")
+            return r
         if not sig_ok(k["key"], jcs(consent_payload(c)), c["signature"]): return {"decision": "CONSENT_INVALID", "reason_code": "bad_signature"}
         if c["binding_digest"] != digest: return {"decision": "CONSENT_INVALID", "reason_code": "binding_mismatch"}
         if c["decision"] == "approve" and c["role"] == role: signers.add(c["kid"])

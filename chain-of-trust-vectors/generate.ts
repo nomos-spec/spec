@@ -58,7 +58,7 @@ function sealToyArtifact(signerKid: string, signerPrivateKeyPem: string, label: 
   const hash = crypto.createHash('sha256').update(jcs(unsealed)).digest('hex');
   const signed_by = `vectors:${label}`;
   const signature = crypto.sign(null, jcs({ hash, signed_by }), crypto.createPrivateKey(signerPrivateKeyPem)).toString('base64');
-  return { ...unsealed, seal: { status: 'sealed', hash, signature, algorithm: 'Ed25519', kid: signerKid, signed_by } };
+  return { ...unsealed, seal: { status: 'sealed', hash, signature, signature_algorithm: 'Ed25519', kid: signerKid, signed_by } };
 }
 
 function main() {

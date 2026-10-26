@@ -15,7 +15,9 @@ import sys
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-import nomos_suites as S
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "python"))
+from nomos import suites as S  # noqa: E402
 
 
 def jcs(obj) -> bytes:
