@@ -45,15 +45,16 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 - `submission-vectors/`: `status.json`, a test profile, `run.mjs` (17 HTTP checks against any
   relying party, in any language) and a reference relying party.
 
-### Fixed (SPEC-008 0.6.0, recorded in its changelog)
+### Fixed (SPEC-008 0.6.0 reference verifier)
 
 - **`open_facts` (§6.2)** named a present operand beside an absent one, for example `amount` in
   `amount > approved_limit` when only `approved_limit` was missing. Both implementations did it;
   the text already said otherwise. Found by the SPEC-009 sandbox, not by the vectors, because no
   vector compared two fields. Vector 43, `two_field_rule_names_only_the_absent_fact`, pins it; the
-  42 earlier vectors are byte-identical and the mutants were regenerated (1,693).
-- **Act window (§5.1).** The reference verifier's maximum window is the relying party's own
-  configured maximum (default 300 seconds), so a relying party that commits under human approval
+  42 earlier vectors are byte-identical and the mutants were regenerated (1,693). Recorded in
+  SPEC-008's own changelog.
+- **Act window (§5.1).** `act_verify.py` takes the relying party's own configured maximum window
+  (default 300 seconds), as §5.1 already allowed, so a relying party that commits under human approval
   can leave a person time to approve.
 
 ---
