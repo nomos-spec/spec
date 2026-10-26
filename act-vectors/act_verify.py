@@ -309,7 +309,8 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     in_force = in_force or {}; revoked_artifacts = revoked_artifacts or set()
     # 1. structure
     need = ("act_version", "act_id", "nonce", "issued_at", "expires_at", "relying_party", "action", "authority")
-    if not isinstance(act, dict) or any(k not in act for k in need) or act.get("act_version") != "1":
+    if not isinstance(act, dict) or any(k not in act for k in need) or act.get("act_version") != "1" \
+            or not isinstance(act.get("authority"), dict):
         return {"decision": "MALFORMED", "reason_code": "bad_envelope"}
     try:
         jcs(act)        # an Act RFC 8785 cannot canonicalize (e.g. NaN, Infinity) has no binding digest
@@ -390,8 +391,11 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
             return statement_failure(w, "TESTIMONY_INVALID", "TESTIMONY_OUT_OF_SCOPE", claim=t["claim"])
         ok, why = statement_sig(w["key"], t, testimony_payload(t))
         if not ok: return {"decision": "TESTIMONY_INVALID", "claim": t["claim"], "reason_code": why}
-        if now > ts(t["valid_until"]) or now < ts(t["as_of"]):
-            return {"decision": "TESTIMONY_INVALID", "claim": t["claim"], "reason_code": "stale"}
+        try:
+            fresh = ts(t["as_of"]) <= now <= ts(t["valid_until"])
+        except (ValueError, TypeError, AttributeError):
+            fresh = False                               # an unreadable window is not a current one
+        if not fresh: return {"decision": "TESTIMONY_INVALID", "claim": t["claim"], "reason_code": "stale"}
         if t.get("about") is not None and t.get("about") != subject:
             return {"decision": "TESTIMONY_INVALID", "claim": t["claim"], "reason_code": "wrong_subject"}
         try: put(t["claim"], t["value"], "testimony")
@@ -418,7 +422,10 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
         if not type_ok(value, inputs[name]):
             return {"decision": "FACT_TYPE_VIOLATION", "field": name, "declared": inputs[name].get("type"), "supplied_via": channel[name]}
     # 8. evaluate the sealed rules over exactly these facts
-    ev = evaluate(art, facts)
+    try:
+        ev = evaluate(art, facts)
+    except (ValueError, KeyError, TypeError, IndexError):
+        return {"decision": "MALFORMED", "reason_code": "unevaluable_rules", "commit": False}   # never commit what cannot be evaluated
     digest = binding_digest(act)
     base = {"rule": ev["rule"], "act_digest": digest, "in_force_source": in_force_source, "currency_policy": currency_policy}
     if ev["outcome"] == "undecided":            # §6.2: no consent can stand in for a missing fact
