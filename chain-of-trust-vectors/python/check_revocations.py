@@ -4,7 +4,7 @@
 """
 import json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "python"))
-from nomos.chain import verify_revocation_list, ts  # noqa: E402
+from nomosprotocol.chain import verify_revocation_list, ts  # noqa: E402
 
 vectors = json.load(open(sys.argv[1]))["cases"]
 passed = failed = 0

@@ -10,7 +10,7 @@ themselves carry the hand-written expectations.
 """
 import copy, json, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "python"))
-from nomos.chain import verify_revocation_list, ts  # noqa: E402
+from nomosprotocol.chain import verify_revocation_list, ts  # noqa: E402
 
 def flip(s):
     return (s[:-3] + ("A" if s[-3] != "A" else "B") + s[-2:]) if isinstance(s, str) and len(s) > 3 else s

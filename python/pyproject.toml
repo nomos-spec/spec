@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nomosprotocol"
+version = "0.1.0"
+description = "NOMOS for Python: the reference verifiers for NOMOS-SPEC-007, -008 and -010, and accept(), act() and witness() for NOMOS-SPEC-009. Verify an Act, commit it exactly once, carry one, or sign the facts it needs."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "NOMOS Protocol", email = "hello@nomosprotocol.com" }]
+dependencies = ["cryptography>=42"]
+keywords = ["nomos", "computable-authority", "agents", "authorization", "verifier", "ed25519", "es256", "webauthn"]
+classifiers = ["Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License", "Operating System :: OS Independent", "Topic :: Security :: Cryptography"]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1"]
+
+[project.urls]
+Homepage = "https://www.computableauthority.com"
+Specification = "https://github.com/nomos-spec/spec"
+
+[tool.setuptools]
+packages = ["nomosprotocol"]

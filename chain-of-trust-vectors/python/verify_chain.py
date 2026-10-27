@@ -29,8 +29,8 @@ from datetime import datetime
 from typing import Any, Dict, Optional, Set
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "python"))
-from nomos import chain  # noqa: E402  (the shared reference: python/nomos/chain.py)
-from nomos.chain import ts  # noqa: E402,F401
+from nomosprotocol import chain  # noqa: E402  (the shared reference: python/nomosprotocol/chain.py)
+from nomosprotocol.chain import ts  # noqa: E402,F401
 
 
 def verify_chain(artifact: Any, key_certs: Any, root_pem: str, now: datetime,

@@ -65,7 +65,7 @@ A `.nomos` artifact now moves through four distinct moments:
 | `prototype/chain-of-trust/` | NOMOS-SPEC-007's pure reference implementation — key certificates, chain verification, a CLI verifier, a minimal HTTP receiver/presenter pair |
 | `chain-of-trust-vectors/` | NOMOS-SPEC-007 interop vectors: the 1.7.0 set, the 37-case rev. 1.9 set (`vectors-1.9.json`, every case in every listed presentation order), and the rev. 1.10 revocation-source set (`revocation-vectors-1.10.json`, 22 cases, with 349 derived mutants) |
 | `suite-vectors/` | NOMOS-SPEC-010 signature-suite vectors (30), and an independent Node verifier |
-| `python/nomos/` | The Python reference, shared by every reference verifier here: JCS, NOMOS-SPEC-010 suites, NOMOS-SPEC-007 rev. 1.9 chain resolution |
+| `python/nomosprotocol/` | The Python reference, shared by every reference verifier here (JCS, NOMOS-SPEC-010 suites, NOMOS-SPEC-007 chain resolution and revocation sources, the NOMOS-SPEC-008 Act verifier) and published as the `nomosprotocol` package, with `accept()`, `act()`, `witness()` and `issuer()` for NOMOS-SPEC-009 (`pip install nomosprotocol`) |
 | `spec/drafts/NOMOS-SPEC-008.md` | **Draft.** Act Binding (0.6.0) — an action bound to sealed rules, signed testimony and human consents, verified by the relying party that would commit it |
 | `spec/drafts/NOMOS-SPEC-009.md` | **Draft.** Discovery and Submission (0.2.0) — relying-party, issuer and witness documents (hints, never inputs), statement and approval requests, the HTTP submission binding, and which certificates an Act presents |
 | `spec/drafts/NOMOS-SPEC-010.md` | **Draft.** Signature Suites (0.2.0) — the closed registry: `Ed25519`, `ES256`, `WebAuthn-ES256` |
@@ -400,7 +400,7 @@ Proposed revisions awaiting promotion live in [`spec/drafts/`](spec/drafts/): NO
 
 NOMOS-SPEC-007 through 010 are built and running.
 
-- **SPEC-007 rev. 1.9:** the Python reference (`python/nomos/chain.py`), the TypeScript prototype
+- **SPEC-007 rev. 1.9:** the Python reference (`python/nomosprotocol/chain.py`), the TypeScript prototype
   in [`prototype/chain-of-trust/`](prototype/chain-of-trust/) and `@nomosprotocol/verify`, which
   the hosted platform runs, pass all 37 cases in
   [`chain-of-trust-vectors/vectors-1.9.json`](chain-of-trust-vectors/) in every listed order.

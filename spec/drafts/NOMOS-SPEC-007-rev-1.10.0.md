@@ -200,7 +200,7 @@ relying party's protection against a publisher that stops publishing.
 ## §8.2 Known gaps (updated)
 
 - **Implementations.** Rev. 1.10 has two implementations, both by the authors:
-  `python/nomos/chain.py` and `@nomosprotocol/verify`. Both pass the 22 cases of
+  `python/nomosprotocol/chain.py` and `@nomosprotocol/verify`. Both pass the 22 cases of
   `chain-of-trust-vectors/revocation-vectors-1.10.json`, whose expectations were written by hand,
   and agree on all 349 mutants `mutants_revocations.py` derives from them. A verifier with any one
   rule of §5.1a or §5.3a removed fails cases. An independent implementation is still needed.

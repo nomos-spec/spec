@@ -4,7 +4,7 @@
 (Draft), at [revision 1.9.0](../../spec/drafts/NOMOS-SPEC-007-rev-1.9.0.md). It passes all 14
 vectors in [`vectors.json`](../../chain-of-trust-vectors/vectors.json) and all 37 in
 [`vectors-1.9.json`](../../chain-of-trust-vectors/vectors-1.9.json), in every listed order, and
-agrees field for field with the Python reference (`../../python/nomos/chain.py`).
+agrees field for field with the Python reference (`../../python/nomosprotocol/chain.py`).
 
 Chain resolution is **target-first and scope-aware** (`resolveKey()` in `chain-verify-core.ts`):
 - candidate paths run from the signing key back to the pinned root, tried in fingerprint order;

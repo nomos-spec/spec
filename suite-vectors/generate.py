@@ -17,8 +17,8 @@ from cryptography.hazmat.primitives.asymmetric import ec
 
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "python"))
-from nomos import suites as S  # noqa: E402
-from nomos.jcs import jcs  # noqa: E402
+from nomosprotocol import suites as S  # noqa: E402
+from nomosprotocol.jcs import jcs  # noqa: E402
 
 
 def b64(raw: bytes) -> str:

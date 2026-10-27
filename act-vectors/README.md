@@ -1,7 +1,7 @@
 # NOMOS-SPEC-008 reference implementation and test vectors
 
 `act_verify.py` verifies an Act at the relying party (NOMOS-SPEC-008 0.6.0): audience, window and replay; the rule
-issuer's chain (NOMOS-SPEC-007 rev. 1.9 target-first, scope-aware resolution, shared in `../python/nomos`); every testimony statement
+issuer's chain (NOMOS-SPEC-007 rev. 1.9 target-first, scope-aware resolution, shared in `../python/nomosprotocol`); every testimony statement
 against its witness's `claim` scope; every fact against the channel and type its input declares; the sealed
 rules over exactly those facts; and, for escalations, consents signed over this Act's binding
 digest by distinct *people* (approvers) holding the required role, signed Ed25519, ES256 or by passkey. Rules are evaluated three-valued: a missing fact is

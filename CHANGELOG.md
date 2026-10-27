@@ -7,6 +7,37 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Repository] — 2026-10-27 (The Python reference becomes the `nomosprotocol` package)
+
+### Changed
+
+- **One Python implementation.** `python/nomos/` is renamed `python/nomosprotocol/`, because an
+  unrelated `nomos` project already exists on PyPI. The NOMOS-SPEC-008 verifier moves from
+  `act-vectors/act_verify.py` into `nomosprotocol/act.py`; `act_verify.py` re-exports it, so
+  every script and specification reference keeps working. Every vector file and every generator
+  output is byte-identical after the move: act 45/45, rev. 1.9 37/37, suites 30/30, rev. 1.10
+  22/22, and 1,693 mutants regenerated unchanged.
+
+### Added
+
+- **`python/pyproject.toml`: the `nomosprotocol` package (0.1.0).** It contains the reference
+  verifiers plus a developer layer:
+  - `accept()`: a relying party for WSGI and ASGI, with a memory store and `postgres_store()`;
+  - `act()`: the carrier, standard library only;
+  - `witness()` and `issuer()`;
+  - signing helpers, and NOMOS-SPEC-009 0.2.0 certificate presentation.
+  The behaviour is the same as `@nomosprotocol/sdk`'s, including two properties: a lost race reads
+  its receipt only after its own transaction ends, and revocations that cannot be read are
+  refused with 503.
+- **Tests.**
+  - `python/tests/test_sdk.py` (23): a whole Python world over HTTP, the selection vectors, and 20
+    concurrent duplicates committing exactly once on the memory and Postgres stores.
+  - `python/tests/conformance_rp.py`: the SPEC-009 runner passes 17/17 against it.
+  - `python/tests/interop_sandbox.py`: the Python carrier against the JavaScript sandbox, 5/5,
+    escalation and approval included.
+
+---
+
 ## [NOMOS-SPEC-007 rev. 1.10.0, Draft] — 2026-10-27 (Revocation a relying party can check)
 
 ### Fixed — found building revocation tooling for KMS-held keys
@@ -33,7 +64,7 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
   commit (SPEC-009: 503 and Retry-After), and never reads a failed fetch as "nothing revoked".
 - `chain-of-trust-vectors/revocation-vectors-1.10.json` (22 hand-written cases),
   `mutants_revocations.py` → `revocation-mutants-1.10.json` (349),
-  `python/check_revocations.py`, and `verify_revocation_list` in `python/nomos/chain.py`.
+  `python/check_revocations.py`, and `verify_revocation_list` in `python/nomosprotocol/chain.py`.
 
 ### Migration
 
