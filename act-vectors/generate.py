@@ -10,7 +10,7 @@ Usage:  python3 generate.py <path/to/pub_lending_v1.nomos>  >  vectors.json
 """
 import base64, copy, hashlib, json, sys
 from act_verify import jcs, sha256_hex, cert_payload, testimony_payload, consent_payload, in_force_payload, binding_digest
-from nomos import suites as S
+from nomosprotocol import suites as S
 
 def key(label, kind="Ed25519"):
     seed = b"nomos-spec-008-vector:" + label.encode()

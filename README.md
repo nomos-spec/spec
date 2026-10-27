@@ -63,12 +63,13 @@ A `.nomos` artifact now moves through four distinct moments:
 | `schema/chain-revocation-statement.schema.json` | JSON Schema for a NOMOS-SPEC-007 chain-key revocation statement |
 | `schema/chain-revocation-list.schema.json` | JSON Schema for a NOMOS-SPEC-007 chain-key revocation list |
 | `prototype/chain-of-trust/` | NOMOS-SPEC-007's pure reference implementation — key certificates, chain verification, a CLI verifier, a minimal HTTP receiver/presenter pair |
-| `chain-of-trust-vectors/` | NOMOS-SPEC-007 interop vectors: the 1.7.0 set and the 37-case rev. 1.9 set (`vectors-1.9.json`, every case in every listed presentation order) |
+| `chain-of-trust-vectors/` | NOMOS-SPEC-007 interop vectors: the 1.7.0 set, the 37-case rev. 1.9 set (`vectors-1.9.json`, every case in every listed presentation order), and the rev. 1.10 revocation-source set (`revocation-vectors-1.10.json`, 22 cases, with 349 derived mutants) |
 | `suite-vectors/` | NOMOS-SPEC-010 signature-suite vectors (30), and an independent Node verifier |
-| `python/nomos/` | The Python reference, shared by every reference verifier here: JCS, NOMOS-SPEC-010 suites, NOMOS-SPEC-007 rev. 1.9 chain resolution |
+| `python/nomosprotocol/` | The Python reference, shared by every reference verifier here (JCS, NOMOS-SPEC-010 suites, NOMOS-SPEC-007 chain resolution and revocation sources, the NOMOS-SPEC-008 Act verifier) and published as the `nomosprotocol` package, with `accept()`, `act()`, `witness()` and `issuer()` for NOMOS-SPEC-009 (`pip install nomosprotocol`) |
 | `spec/drafts/NOMOS-SPEC-008.md` | **Draft.** Act Binding (0.6.0) — an action bound to sealed rules, signed testimony and human consents, verified by the relying party that would commit it |
 | `spec/drafts/NOMOS-SPEC-009.md` | **Draft.** Discovery and Submission (0.2.0) — relying-party, issuer and witness documents (hints, never inputs), statement and approval requests, the HTTP submission binding, and which certificates an Act presents |
 | `spec/drafts/NOMOS-SPEC-010.md` | **Draft.** Signature Suites (0.2.0) — the closed registry: `Ed25519`, `ES256`, `WebAuthn-ES256` |
+| `spec/drafts/NOMOS-SPEC-007-rev-1.10.0.md` | **Draft revision.** SPEC-007 1.10.0 — revocation a relying party can check: ES256 and certificate revocations, statements count only from a parent the root reaches, self-checkable lists, fail closed on stale knowledge |
 | `spec/drafts/NOMOS-SPEC-007-rev-1.9.0.md` | **Draft revision.** SPEC-007 1.9.0 — scope-aware path selection, normative check order, `suite` and `approver` dimensions, ES256 |
 | `spec/drafts/NOMOS-SPEC-007-rev-1.8.0.md` | **Draft revision.** SPEC-007 1.8.0 — statement keys (witness `claim`, approver `consent` scopes) and target-first chain resolution |
 | `spec/drafts/NOMOS-SPEC-001-amendment-2.3.0.md` | **Draft amendment.** SPEC-001 2.3.0 — equal-priority escalations naming different escalations cannot be sealed |
@@ -399,7 +400,7 @@ Proposed revisions awaiting promotion live in [`spec/drafts/`](spec/drafts/): NO
 
 NOMOS-SPEC-007 through 010 are built and running.
 
-- **SPEC-007 rev. 1.9:** the Python reference (`python/nomos/chain.py`), the TypeScript prototype
+- **SPEC-007 rev. 1.9:** the Python reference (`python/nomosprotocol/chain.py`), the TypeScript prototype
   in [`prototype/chain-of-trust/`](prototype/chain-of-trust/) and `@nomosprotocol/verify`, which
   the hosted platform runs, pass all 37 cases in
   [`chain-of-trust-vectors/vectors-1.9.json`](chain-of-trust-vectors/) in every listed order.
@@ -417,7 +418,7 @@ All are published as Drafts because a standard is promoted on independent implem
 [§8 of SPEC-007](spec/NOMOS-SPEC-007.md#8-conformance-and-implementation-status) and §10 of
 SPEC-008 set out the conformance requirements.
 
-**Second-party implementations are invited.** If you build agents or the services they call,
+**Second-party implementations are invited.** [`IMPLEMENTING.md`](IMPLEMENTING.md) gives the order to build in, every vector file and runner to check against, and the rules that are easiest to get wrong. If you build agents or the services they call,
 implement any of SPEC-007 to SPEC-010 against the vectors and open an issue, or email
 allan@nomosprotocol.com.
 

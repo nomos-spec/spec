@@ -604,8 +604,8 @@ presenter or any NOMOS service.
 A conformant relying party implements §5–§8 in full. A conformant presenter produces Acts that
 follow §2–§4.
 
-**Reference implementation.** `act-vectors/act_verify.py`: the Python verifier (§6 in full and a
-Nomos-Expr v1 evaluator), on the shared `python/nomos` package for NOMOS-SPEC-007 rev. 1.9
+**Reference implementation.** `act-vectors/act_verify.py` (the `nomosprotocol.act` module of the published `nomosprotocol` package): the Python verifier (§6 in full and a
+Nomos-Expr v1 evaluator), on the shared `python/nomosprotocol` package for NOMOS-SPEC-007 rev. 1.9
 resolution and NOMOS-SPEC-010 suites.
 
 **Test vectors.** `act-vectors/vectors.json`, generated deterministically by

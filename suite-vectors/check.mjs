@@ -1,5 +1,5 @@
 // NOMOS-SPEC-010: a second, independent verifier, written from the specification text alone.
-// Node's built-in crypto only; shares no code with python/nomos/suites.py.
+// Node's built-in crypto only; shares no code with python/nomosprotocol/suites.py.
 //
 //   node check.mjs vectors.json
 import { readFileSync } from 'node:fs';

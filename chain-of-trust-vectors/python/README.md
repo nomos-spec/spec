@@ -10,7 +10,7 @@ It was written from the specification text only, without reading the reference T
 
 ## Rev. 1.9: one shared resolver
 
-Since rev. 1.9, `verify_chain.py` is a thin wrapper over `python/nomos/chain.py`. The NOMOS-SPEC-008
+Since rev. 1.9, `verify_chain.py` is a thin wrapper over `python/nomosprotocol/chain.py`. The NOMOS-SPEC-008
 reference (`act-vectors/act_verify.py`) uses the same resolver, so the Python side has one
 implementation of chain resolution, not two. That module was written by the authors with both
 earlier implementations in view, so the "written from the text alone" description below applies

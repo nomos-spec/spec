@@ -282,7 +282,7 @@ here rather than silently adopted:
 
 - **Implementations.** Rev. 1.9 has two implementations, both written by the authors, so neither
   is independent:
-  - `python/nomos/chain.py`, shared by the SPEC-007 and SPEC-008 Python references;
+  - `python/nomosprotocol/chain.py`, shared by the SPEC-007 and SPEC-008 Python references;
   - the TypeScript prototype (`prototype/chain-of-trust`), updated from its 1.7.0 walk.
 
   Both pass `chain-of-trust-vectors/vectors-1.9.json`: 37 cases, each in every presentation order

@@ -7,6 +7,76 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Repository] — 2026-10-27 (The Python reference becomes the `nomosprotocol` package)
+
+### Changed
+
+- **One Python implementation.** `python/nomos/` is renamed `python/nomosprotocol/`, because an
+  unrelated `nomos` project already exists on PyPI. The NOMOS-SPEC-008 verifier moves from
+  `act-vectors/act_verify.py` into `nomosprotocol/act.py`; `act_verify.py` re-exports it, so
+  every script and specification reference keeps working. Every vector file and every generator
+  output is byte-identical after the move: act 45/45, rev. 1.9 37/37, suites 30/30, rev. 1.10
+  22/22, and 1,693 mutants regenerated unchanged.
+
+### Added
+
+- **`python/pyproject.toml`: the `nomosprotocol` package (0.1.0).** It contains the reference
+  verifiers plus a developer layer:
+  - `accept()`: a relying party for WSGI and ASGI, with a memory store and `postgres_store()`;
+  - `act()`: the carrier, standard library only;
+  - `witness()` and `issuer()`;
+  - signing helpers, and NOMOS-SPEC-009 0.2.0 certificate presentation.
+  Requires `cryptography>=43`: verifying works on 42, but signing needs deterministic ECDSA, which
+  43 added (checked in fresh environments on 42, 43 and 44). `postgres_store(pool.connection)` takes
+  a connection context-manager factory and never closes a pooled connection.
+  The behaviour is the same as `@nomosprotocol/sdk`'s, including two properties: a lost race reads
+  its receipt only after its own transaction ends, and revocations that cannot be read are
+  refused with 503.
+- **Tests.**
+  - `python/tests/test_sdk.py` (23): a whole Python world over HTTP, the selection vectors, and 20
+    concurrent duplicates committing exactly once on the memory and Postgres stores.
+  - `python/tests/conformance_rp.py`: the SPEC-009 runner passes 17/17 against it.
+  - `python/tests/interop_sandbox.py`: the Python carrier against the JavaScript sandbox, 5/5,
+    escalation and approval included.
+
+---
+
+## [NOMOS-SPEC-007 rev. 1.10.0, Draft] — 2026-10-27 (Revocation a relying party can check)
+
+### Fixed — found building revocation tooling for KMS-held keys
+
+- **Forged-parent revocation (security).** §5.1 counted a statement whose signer "certified
+  `revoked_kid` in some certificate the verifier can check". Anyone could mint a key, sign a
+  certificate for someone else's public key, and revoke it. Now (§5.1a) the signer must be reached
+  from the relying party's own root and must really have signed a certificate for what it revokes.
+- **Certificate revocation had no wire form.** §5.4 revoked by fingerprint, but statements had
+  only `revoked_kid`. The reference platform put fingerprints in that field and never published
+  them. `revoked_fingerprint` now has its own field and payload; the key payload is unchanged.
+- **Ed25519 only.** Rev. 1.9 let a P-256 key in a KMS certify keys, but it could never revoke them.
+  Statements and lists may now be `ES256`.
+- **Lists no relying party could authenticate.** A list's date now counts only when its signer is
+  reached from the root and is not itself revoked. Lists carry the certificates that make their
+  statements checkable.
+
+### Added
+
+- §5.1a and §5.3a: one deterministic procedure, with ignored statements reported by reason.
+  Revocations accumulate: a revoked parent's earlier statements keep counting, so no revocation
+  is undone by a later one.
+- §5.6: a relying party whose revocation knowledge is older than its maximum age refuses to
+  commit (SPEC-009: 503 and Retry-After), and never reads a failed fetch as "nothing revoked".
+- `chain-of-trust-vectors/revocation-vectors-1.10.json` (22 hand-written cases),
+  `mutants_revocations.py` → `revocation-mutants-1.10.json` (349),
+  `python/check_revocations.py`, and `verify_revocation_list` in `python/nomosprotocol/chain.py`.
+
+### Migration
+
+- The reference platform must re-sign its certificate revocations as `revoked_fingerprint` and
+  publish them. It should also publish per-issuer lists signed in each issuer's own hierarchy;
+  its platform-key aggregate list keeps its statements but establishes no date for org roots.
+
+---
+
 ## [NOMOS-SPEC-009 0.2.0, Draft] — 2026-10-27 (Certificate presentation)
 
 ### Fixed — found by design review

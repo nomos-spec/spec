@@ -4,7 +4,7 @@
  * The TypeScript reference for §3–§5: target-first, scope-aware resolution (§4.2a) over an
  * unordered certificate set that may be a tree, Ed25519 and ES256 certificates and seals
  * (NOMOS-SPEC-010), the `suite` and `approver` dimensions (§3.6, §3.7). The Python reference is
- * python/nomos/chain.py; both must reproduce chain-of-trust-vectors/vectors.json and
+ * python/nomosprotocol/chain.py; both must reproduce chain-of-trust-vectors/vectors.json and
  * vectors-1.9.json field for field, in every listed presentation order.
  *
  * Two entry points share one resolver, so artifact and statement verification cannot drift:

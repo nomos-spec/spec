@@ -1,6 +1,6 @@
 # NOMOS-SPEC-007 interop test vectors
 
-**Status:** the pure references (`../prototype/chain-of-trust/`, `../python/nomos/chain.py`)
+**Status:** the pure references (`../prototype/chain-of-trust/`, `../python/nomosprotocol/chain.py`)
 and the hosted platform's verifier pass every case in `vectors.json`; the platform does not yet
 implement rev. 1.9 (see below). These vectors are the test a second-party
 implementation runs to show it agrees.

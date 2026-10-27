@@ -20,9 +20,9 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "python"))
-from nomos import suites as S  # noqa: E402
-from nomos.chain import cert_payload, fingerprint  # noqa: E402
-from nomos.jcs import jcs, sha256_hex  # noqa: E402
+from nomosprotocol import suites as S  # noqa: E402
+from nomosprotocol.chain import cert_payload, fingerprint  # noqa: E402
+from nomosprotocol.jcs import jcs, sha256_hex  # noqa: E402
 
 ISS, EXP, CHECK_AT = "2026-01-01T00:00:00.000Z", "2030-01-01T00:00:00.000Z", "2027-01-01T00:00:00.000Z"
 

@@ -12,7 +12,7 @@ node check.mjs vectors.json          # an independent verifier, Node built-in cr
 
 | File | What it is |
 |---|---|
-| `../python/nomos/suites.py` | The reference verifier, and the signers the generator uses (shared with the SPEC-007 and SPEC-008 references) |
+| `../python/nomosprotocol/suites.py` | The reference verifier, and the signers the generator uses (shared with the SPEC-007 and SPEC-008 references) |
 | `generate.py` | Builds `vectors.json` from published seeds |
 | `check.py` | Runs the reference verifier against the vectors |
 | `check.mjs` | A second verifier, written from the specification text alone, sharing no code with the reference |

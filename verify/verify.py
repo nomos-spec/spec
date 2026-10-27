@@ -40,12 +40,12 @@ from typing import Any, Optional
 # RFC 8785 JSON Canonicalization Scheme (JCS) — minimal implementation
 # ---------------------------------------------------------------------------
 
-# The one shared implementation (python/nomos/jcs.py): ECMAScript number output, keys sorted by
+# The one shared implementation (python/nomosprotocol/jcs.py): ECMAScript number output, keys sorted by
 # UTF-16 code unit, strings unescaped. This file used to carry its own copy, which wrote 4.0 as
 # "4.0" and 1e-7 as "1e-07" and escaped non-ASCII keys, so it computed a different hash than the
 # sealer for any artifact containing such a value, and reported a genuine seal as tampered.
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "python"))
-from nomos.jcs import jcs as jcs_canonicalize  # noqa: E402
+from nomosprotocol.jcs import jcs as jcs_canonicalize  # noqa: E402
 
 
 
