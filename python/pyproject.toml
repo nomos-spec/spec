@@ -10,12 +10,12 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "NOMOS Protocol", email = "hello@nomosprotocol.com" }]
-dependencies = ["cryptography>=42"]
+dependencies = ["cryptography>=43"]   # 43 added deterministic (RFC 6979) ECDSA, which signing relies on
 keywords = ["nomos", "computable-authority", "agents", "authorization", "verifier", "ed25519", "es256", "webauthn"]
 classifiers = ["Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License", "Operating System :: OS Independent", "Topic :: Security :: Cryptography"]
 
 [project.optional-dependencies]
-postgres = ["psycopg[binary]>=3.1"]
+postgres = ["psycopg[binary]>=3.1", "psycopg-pool>=3.2"]
 
 [project.urls]
 Homepage = "https://www.computableauthority.com"

@@ -26,6 +26,9 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
   - `act()`: the carrier, standard library only;
   - `witness()` and `issuer()`;
   - signing helpers, and NOMOS-SPEC-009 0.2.0 certificate presentation.
+  Requires `cryptography>=43`: verifying works on 42, but signing needs deterministic ECDSA, which
+  43 added (checked in fresh environments on 42, 43 and 44). `postgres_store(pool.connection)` takes
+  a connection context-manager factory and never closes a pooled connection.
   The behaviour is the same as `@nomosprotocol/sdk`'s, including two properties: a lost race reads
   its receipt only after its own transaction ends, and revocations that cannot be read are
   refused with 503.

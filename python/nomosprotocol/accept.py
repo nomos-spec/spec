@@ -5,7 +5,7 @@
                               "actions": ["purchase"], "currency_policy": "record", "in_force_seal_hash": SEAL_HASH}],
                 local_facts=lambda act, tx=None: {"vendor_blocked": is_blocked(act["action"]["params"]["vendor"])},
                 commit=lambda action, tx, act_id: create_order(tx, action),
-                store=postgres_store(pool))
+                store=postgres_store(pool.connection))     # a psycopg_pool ConnectionPool
     app = rp.wsgi            # Flask, Django, any WSGI server
     app = rp.asgi            # FastAPI/Starlette mount, any ASGI server
 
@@ -83,11 +83,14 @@ class MemoryStore:
             self.nonces |= staged; self.receipts.update(receipts); self.acts.update(acts)   # only if the block completed
 
 
-def postgres_store(connect: Callable[[], Any], table: str = "nomos_acts"):
+def postgres_store(connection: Callable[[], Any], table: str = "nomos_acts"):
     """Nonces, receipts and Acts in your own Postgres, in the same transaction as your change.
-    `connect()` returns a DB-API connection (psycopg 3, psycopg2), e.g. a pool's getconn. `tx` passed
-    to `commit` is that connection, so your writes and the nonce commit together. The nonce is the
-    primary key: any number of concurrent duplicates commit exactly once."""
+
+    `connection()` returns a context manager that yields a DB-API connection and releases it on
+    exit: a psycopg_pool pool's `pool.connection`, or `lambda: psycopg.connect(url)`. This store never
+    closes a connection itself, so a pool keeps its connections. `tx` passed to `commit` is that
+    connection, so your writes and the nonce commit together. The nonce is the primary key: any
+    number of concurrent duplicates commit exactly once."""
     import re
     if not re.match(r"^[a-z_][a-z0-9_]{0,62}$", table): raise ValueError(f'"{table}" is not a plain lower-case table name')
     schema = f"""CREATE TABLE IF NOT EXISTS {table} (
@@ -95,25 +98,21 @@ def postgres_store(connect: Callable[[], Any], table: str = "nomos_acts"):
 
     class PgStore:
         def migrate(self):
-            c = connect()
-            try:
+            with connection() as c:
                 with c.cursor() as cur: cur.execute(schema)
                 c.commit()
-            finally: c.close()
         def _one(self, sql, args):
-            c = connect()
-            try:
+            with connection() as c:
                 with c.cursor() as cur: cur.execute(sql, args); row = cur.fetchone()
                 c.rollback(); return row
-            finally: c.close()
         def has_nonce(self, nonce): return self._one(f"SELECT 1 FROM {table} WHERE nonce = %s", (nonce,)) is not None
         def receipt_for(self, nonce):
             row = self._one(f"SELECT receipt::text FROM {table} WHERE nonce = %s", (nonce,))
             return json.loads(row[0]) if row else None
         @contextmanager
         def transaction(self):
-            c = connect(); claimed = {"nonce": None, "done": False}
-            try:
+            with connection() as c:
+                claimed = {"nonce": None, "done": False}
                 class T:
                     tx = c
                     def claim_nonce(s, n):
@@ -128,13 +127,12 @@ def postgres_store(connect: Callable[[], Any], table: str = "nomos_acts"):
                             cur.execute(f"UPDATE {table} SET act_id = %s, receipt = %s::json, act = %s::json WHERE nonce = %s",
                                         (r["act_id"], json.dumps(r, separators=(",", ":")), json.dumps(a, separators=(",", ":")), n))
                         claimed["done"] = True
-                yield T()
-                if claimed["nonce"] and not claimed["done"]: raise RuntimeError("the transaction claimed a nonce but stored no receipt")
-                c.commit()
-            except BaseException:
-                c.rollback(); raise
-            finally:
-                c.close()
+                try:
+                    yield T()
+                    if claimed["nonce"] and not claimed["done"]: raise RuntimeError("the transaction claimed a nonce but stored no receipt")
+                    c.commit()
+                except BaseException:
+                    c.rollback(); raise
     s = PgStore(); s.schema = schema
     return s
 

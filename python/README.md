@@ -28,7 +28,7 @@ rp = nomos.accept(
                   "actions": ["purchase"], "currency_policy": "record", "in_force_seal_hash": POLICY_SEAL_HASH}],
     local_facts=lambda act, tx=None: {"vendor_blocked": is_blocked(act["action"]["params"]["vendor"])},
     commit=lambda action, tx, act_id: create_order(tx, action),    # your code, on the same transaction
-    store=nomos.postgres_store(lambda: psycopg.connect(DATABASE_URL)),
+    store=nomos.postgres_store(pool.connection),          # a psycopg_pool ConnectionPool
 )
 app = rp.wsgi      # Flask, Django, gunicorn: any WSGI server
 app = rp.asgi      # FastAPI/Starlette mount, uvicorn: any ASGI server

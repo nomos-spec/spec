@@ -133,7 +133,9 @@ url = os.environ.get("NOMOS_TEST_DATABASE_URL")
 if url and urlparse(url).hostname in ("127.0.0.1", "localhost", "::1"):
     import psycopg
     table = f"nomos_acts_pytest_{os.getpid()}"
-    store = nomos.postgres_store(lambda: psycopg.connect(url), table=table)
+    from psycopg_pool import ConnectionPool
+    pool = ConnectionPool(url, min_size=4, max_size=25, open=True)
+    store = nomos.postgres_store(pool.connection, table=table)
     store.migrate(); store.migrate()
     try:
         a = fresh_act()
@@ -152,8 +154,14 @@ if url and urlparse(url).hostname in ("127.0.0.1", "localhost", "::1"):
         with psycopg.connect(url) as c, c.cursor() as cur:
             cur.execute(f"SELECT act::text FROM {table} WHERE nonce = %s", (b["nonce"],)); stored = json.loads(cur.fetchone()[0])
         check(stored == b, "the exact Act is retained beside its receipt", None)
+        check(pool.get_stats().get("pool_size", 0) >= 4 and not pool.closed, "the pool keeps its connections: the store never closes one", pool.get_stats())
+        once = nomos.postgres_store(lambda: psycopg.connect(url), table=table)
+        c = fresh_act(300)
+        s3, _, _ = rp_with(once).handle("POST", "application/nomos-act+json", json.dumps(c).encode())
+        check(s3 == 201 and once.has_nonce(c["nonce"]), "a plain connect-per-call factory works too", s3)
     finally:
         with psycopg.connect(url) as c, c.cursor() as cur: cur.execute(f"DROP TABLE IF EXISTS {table}")
+        pool.close()
 else:
     print("  skip  postgres store (set NOMOS_TEST_DATABASE_URL to a local Postgres)")
 
