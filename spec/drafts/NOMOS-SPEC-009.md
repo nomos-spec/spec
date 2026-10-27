@@ -1,7 +1,7 @@
 # NOMOS-SPEC-009: Discovery and Submission
 
 **Status:** Draft
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Extends:** NOMOS-SPEC-008 0.6.0, NOMOS-SPEC-007 rev. 1.9.0, NOMOS-SPEC-010 0.2.0
 **Proposed:** 2026-10-26
 **Implements:** RFC-0001 change 8
@@ -113,8 +113,12 @@ A **document** is a JSON object served over HTTPS at a well-known path on its ow
 
 - `artifact_url` serves the sealed artifact. Its seal is verified exactly as in the Act, so a
   substituted artifact fails SPEC-008 §6 step 5.
-- `key_certs` is the certificate set a carrier presents as `authority.key_certs`. It is the set
-  NOMOS-SPEC-007 calls a pool: unordered, possibly a tree.
+- `key_certs` is a pool: certificates a carrier selects from (§6.5), unordered, possibly a tree.
+  It MUST contain the certificates that connect the issuer's sealing keys to the roots its
+  relying parties pin. It MAY hold more than the 20 an Act can present (SPEC-008 §6 step 1).
+  An issuer with many witnesses or approvers SHOULD leave their certificates out of the pool and
+  let each witness and approver return its own (§4, §5), so the document stays small however
+  many people the institution certifies.
 - `in_force_url`, when present, serves a current in-force statement (SPEC-008 §5.4) on `GET`.
 
 ### 3.3 Witness — `/.well-known/nomos-witness`
@@ -146,13 +150,18 @@ bring.
 
 | Outcome | Status | Body |
 |---|---|---|
-| Statement issued | 200 | `{ "testimony": <SPEC-008 §3 statement> }` |
+| Statement issued | 200 | `{ "testimony": <SPEC-008 §3 statement>, "key_certs": [ … ] }` |
 | Claim not served, or subject unknown | 404 | `{ "error": "…" }` |
 | Requester not entitled | 401 or 403 | `{ "error": "…" }` |
 
 The witness chooses `as_of` and `valid_until`. `valid_for_seconds` is a request, not a demand. A
 carrier MUST check that the statement it receives names the claim and subject it asked for, and
 SHOULD check that `valid_until` covers the window of the Act it will build (§6.3).
+
+`key_certs` is OPTIONAL: certificates that connect the witness's key toward the roots the issuer's
+relying parties pin, as a TLS server sends its own chain. A carrier adds them to the certificates
+available to it (§6.5). They are verified like every other certificate the Act carries, so a
+witness cannot make a statement count by sending a certificate the relying party would refuse.
 
 ## 5. The approval request (normative)
 
@@ -170,11 +179,13 @@ digest, for that role.
 | Outcome | Status | Body |
 |---|---|---|
 | Request accepted, pending a person | 202 | `{ "approval_id", "status": "pending", "poll_url", "approval_url" }` |
-| Approved at once (an automated approver) | 200 | `{ "status": "approved", "consent": <SPEC-008 §4 statement> }` |
+| Approved at once (an automated approver) | 200 | `{ "status": "approved", "consent": <SPEC-008 §4 statement>, "key_certs": [ … ] }` |
 | Role not served | 404 | `{ "error": "…" }` |
 
 `GET poll_url` returns `{ "status": "pending" | "approved" | "refused" | "expired" }`, with
-`consent` when approved. `approval_url` is a page for the person; a carrier MAY show it to its
+`consent`, and OPTIONALLY `key_certs`, when approved. `key_certs` connects the consenting key
+toward the roots, as in §4: an approver that enrols its people's keys, passkeys included, returns
+each one's chain with the consent it signed, so the issuer document need not list them. `approval_url` is a page for the person; a carrier MAY show it to its
 user. The approver MUST answer `expired` once the Act's `expires_at` has passed.
 
 ## 6. The submission binding (normative)
@@ -229,6 +240,33 @@ On `AUTHORIZED`, a relying party MUST apply SPEC-008 §8 exactly, in one transac
 The code that applies the change MUST receive only the verified `action`. Nothing else from the
 request may reach it.
 
+### 6.5 The certificates an Act presents (normative)
+
+The certificates available to a carrier are the union of the issuer document's `key_certs`
+(§3.2) and every `key_certs` returned with testimony (§4) or consent (§5). A carrier MUST present
+as `authority.key_certs` exactly their **closure** over the keys the Act relies on:
+
+1. The relied-on kids are the artifact's `seal.kid`, the `kid` of every testimony statement and
+   the `kid` of every consent.
+2. Start with the relied-on kids. Add every available certificate whose `child_kid` is in the
+   set, and add its `parent_kid` to the set. Repeat until nothing new is added.
+3. Present exactly the certificates added, in any order. Certificates are the same certificate
+   when their fingerprints (SPEC-007 §5.4) are equal; each is presented once.
+
+The closure is a function of the available certificates and the Act alone. Two carriers with the
+same certificates present the same set, so the verdict does not depend on which carrier
+assembled the Act (carrier indifference, R-19 Definition 1). It includes every certificate that
+reaches a relied-on key, so a relying party evaluates every path to an approver's key, as SPEC-008
+§4.4 requires, and a carrier does not choose among them.
+
+The closure reaches what a relying party can resolve and nothing else: certificates for keys the
+Act does not rely on, and for other people, are not sent. If it holds more than 20 certificates,
+the Act cannot be presented (SPEC-008 §6 step 1). The carrier MUST NOT drop certificates to fit,
+which would choose paths for the relying party, and reports the failure instead.
+
+The binding digest does not cover `authority.key_certs` (SPEC-008 §4.3). A carrier that adds a
+consent recomputes the closure, so the resubmitted Act (§6.3) carries the approver's chain.
+
 ## 7. Planning (non-normative)
 
 A carrier derives what to bring from the authority's own `data_contract`:
@@ -271,8 +309,20 @@ Act needs. Planning is advisory: only the relying party's verdict commits.
   - a tampered action.
 
   It works in any implementation language.
+- **Certificate selection vectors.** `submission-vectors/selection.json`: available certificates
+  and an Act's relied-on kids, with the closure (§6.5) each must produce, as fingerprints. Cases
+  cover a pool far larger than 20, a key certified by two parents, a cycle, chains returned with
+  testimony and consent, and a closure over 20.
 
 ## Changelog
+
+- **0.2.0 (Draft)** — Certificate presentation scales with the institution, not the Act. The
+  issuer document's `key_certs` is a pool that may exceed 20; witnesses and approvers may return
+  their own chains with testimony and consent; a carrier presents exactly the closure over the
+  keys the Act relies on (§6.5). Under 0.1.0 a carrier presented the whole pool, so an issuer
+  that certified more than a few approvers made every Act `MALFORMED` at the 20-certificate
+  bound. Selection vectors added. Relying parties are unchanged: they already verify whatever
+  set is presented.
 
 - **0.1.0 (Draft)** — First version: discovery documents, statement and approval requests, the
   submission binding, idempotency and escalation, the commit, schemas, status vectors and the

@@ -16,6 +16,7 @@ node run.mjs http://localhost:4801    # or your own relying party, configured wi
 | `run.mjs` | The runner. It builds fresh Acts from the published test keys and checks 17 behaviours. |
 | `reference-rp.mjs` | A minimal relying party on `@nomosprotocol/verify` alone, sharing no code with `@nomosprotocol/sdk`. |
 | `status.json` | The status for every SPEC-008 verdict (§6.2). |
+| `selection.json` | Certificate selection (0.2.0 §6.5): for each case, the certificates a carrier has and the kids its Act relies on, and the closure it must present, as sorted fingerprints. `node selection.mjs --check` runs the reference closure against it; `node selection.mjs > selection.json` regenerates it byte for byte. The expected sizes were checked by hand. |
 | `keys.mjs` | The test keys, policy and statement builders shared by the three scripts. |
 
 Two relying parties pass all 17: `reference-rp.mjs`, and `accept()` from `@nomosprotocol/sdk`. They were written separately but share `@nomosprotocol/verify`, so they test the submission binding independently, not the verifier. The keys are
