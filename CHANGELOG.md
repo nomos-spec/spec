@@ -7,6 +7,42 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-007 rev. 1.10.0, Draft] — 2026-10-27 (Revocation a relying party can check)
+
+### Fixed — found building revocation tooling for KMS-held keys
+
+- **Forged-parent revocation (security).** §5.1 counted a statement whose signer "certified
+  `revoked_kid` in some certificate the verifier can check". Anyone could mint a key, sign a
+  certificate for someone else's public key, and revoke it. Now (§5.1a) the signer must be reached
+  from the relying party's own root and must really have signed a certificate for what it revokes.
+- **Certificate revocation had no wire form.** §5.4 revoked by fingerprint, but statements had
+  only `revoked_kid`. The reference platform put fingerprints in that field and never published
+  them. `revoked_fingerprint` now has its own field and payload; the key payload is unchanged.
+- **Ed25519 only.** Rev. 1.9 let a P-256 key in a KMS certify keys, but it could never revoke them.
+  Statements and lists may now be `ES256`.
+- **Lists no relying party could authenticate.** A list's date now counts only when its signer is
+  reached from the root and is not itself revoked. Lists carry the certificates that make their
+  statements checkable.
+
+### Added
+
+- §5.1a and §5.3a: one deterministic procedure, with ignored statements reported by reason.
+  Revocations accumulate: a revoked parent's earlier statements keep counting, so no revocation
+  is undone by a later one.
+- §5.6: a relying party whose revocation knowledge is older than its maximum age refuses to
+  commit (SPEC-009: 503 and Retry-After), and never reads a failed fetch as "nothing revoked".
+- `chain-of-trust-vectors/revocation-vectors-1.10.json` (22 hand-written cases),
+  `mutants_revocations.py` → `revocation-mutants-1.10.json` (349),
+  `python/check_revocations.py`, and `verify_revocation_list` in `python/nomos/chain.py`.
+
+### Migration
+
+- The reference platform must re-sign its certificate revocations as `revoked_fingerprint` and
+  publish them. It should also publish per-issuer lists signed in each issuer's own hierarchy;
+  its platform-key aggregate list keeps its statements but establishes no date for org roots.
+
+---
+
 ## [NOMOS-SPEC-009 0.2.0, Draft] — 2026-10-27 (Certificate presentation)
 
 ### Fixed — found by design review

@@ -1,4 +1,4 @@
-"""NOMOS-SPEC-007 revision 1.9: chain-of-trust resolution.
+"""NOMOS-SPEC-007 revision 1.9 (resolution) and 1.10 (revocation sources).
 
 One resolver for every signed object a relying party accepts: an artifact's seal (§4), and the
 testimony, consent and in-force statements of NOMOS-SPEC-008 (§4.6). Pure: no network, no clock
@@ -312,3 +312,110 @@ def staple_confidence(resolved: Verdict, staples: Optional[list], now: datetime)
                 break
         levels.append("staple" if covered else "unchecked")
     return "unchecked" if not levels or "unchecked" in levels else "staple"
+
+
+# ── revocation sources (rev. 1.10 §5.1, §5.1a, §5.3, §5.3a) ──────────────────────────────────
+REVOCATION_SUITES = ("Ed25519", "ES256")
+MAX_LIST_CERTS = 1000
+_FP = re.compile(r"^[0-9a-f]{64}$")
+
+
+def revocation_payload(st: dict) -> dict:
+    """§5.1: the field name says what is revoked, so one kind can never be read as the other."""
+    if "revoked_fingerprint" in st:
+        return {"revoked_fingerprint": st["revoked_fingerprint"], "reason": st["reason"], "issued_at": st["issued_at"]}
+    return {"revoked_kid": st["revoked_kid"], "reason": st["reason"], "issued_at": st["issued_at"]}
+
+
+def revocation_list_payload(lst: dict) -> dict:
+    return {"generated_at": lst["generated_at"], "statements": lst["statements"]}
+
+
+def for_signing(suite: str) -> Admit:
+    """The purpose of a key that signs a revocation statement or a list: any effective scope that
+    permits the suite (§3.6). Authority to revoke is authority to certify."""
+    def admit(effective: Effective) -> Optional[str]:
+        return None if suite_permitted(effective, suite) else "suite"
+    return admit
+
+
+def _unique(certs: list) -> list:
+    seen, out = set(), []
+    for c in certs:
+        fp = fingerprint(c)
+        if fp not in seen: seen.add(fp); out.append(c)
+    return out
+
+
+def _signer_pem(kid: str, pool: list, root_pem: str, at: datetime, suite: str,
+                revoked_kids: Set[str], revoked_certs: Set[str]) -> Optional[str]:
+    """The signer's key if it is the root or resolves to it (§4.2a) at `at`, else None."""
+    r = resolve(kid, pool, root_pem, at, for_signing(suite), revoked_kids, revoked_certs)
+    return r["key"] if r["decision"] == "RESOLVED" else None
+
+
+def evaluate_statement(st: Any, pool: list, root_pem: str, now: datetime) -> Optional[str]:
+    """§5.1a. None if the statement counts, else the first rule it fails."""
+    if not isinstance(st, dict): return "bad_statement"
+    has_kid, has_fp = "revoked_kid" in st, "revoked_fingerprint" in st
+    if has_kid == has_fp: return "bad_statement"
+    target = st.get("revoked_kid") if has_kid else st.get("revoked_fingerprint")
+    if not isinstance(target, str) or not target: return "bad_statement"
+    if has_fp and not _FP.match(target): return "bad_statement"
+    if not isinstance(st.get("reason"), str): return "bad_statement"
+    if not all(isinstance(st.get(f), str) and st.get(f) for f in ("issued_at", "kid", "algorithm", "signature")): return "bad_statement"
+    if st["algorithm"] not in REVOCATION_SUITES: return "bad_statement"
+    try:
+        issued = ts(st["issued_at"])
+    except (ValueError, TypeError):
+        return "bad_statement"
+    if issued > now: return "bad_statement"
+    # rule 2: the revoked object, certified by this parent
+    certs = [c for c in pool if c.get("parent_kid") == st["kid"] and
+             (c.get("child_kid") == target if has_kid else fingerprint(c) == target)]
+    if not certs: return "no_certificate"
+    # rule 3: the parent is recognized from the root, at issued_at, revocation not consulted
+    parent = _signer_pem(st["kid"], pool, root_pem, issued, st["algorithm"], set(), set())
+    if parent is None: return "signer_not_recognized"
+    # rule 4: the parent made the certificate
+    if not any(suites.verify(c["algorithm"], parent, jcs(cert_payload(c)), {"signature": c["signature"]})[0] for c in certs):
+        return "bad_certificate_signature"
+    # rule 5: the parent signed the statement
+    ok, _ = suites.verify(st["algorithm"], parent, jcs(revocation_payload(st)), {"signature": st["signature"]})
+    return None if ok else "bad_signature"
+
+
+def verify_revocation_list(lst: Any, root_pem: str, now: datetime, own_certs: Optional[list] = None) -> dict:
+    """§5.3a. Returns {decision, revoked_kids, revoked_certs, as_of?, ignored} with sorted lists."""
+    if (not isinstance(lst, dict) or not all(isinstance(lst.get(f), str) for f in ("generated_at", "kid", "algorithm", "signature"))
+            or not isinstance(lst.get("statements"), list)):
+        return {"decision": "MALFORMED", "reason_code": "bad_list"}
+    extra = lst.get("key_certs", [])
+    if not isinstance(extra, list) or len(extra) > MAX_LIST_CERTS: return {"decision": "MALFORMED", "reason_code": "bad_list_certs"}
+    if extra and check_pool_unbounded(extra) is not None: return {"decision": "MALFORMED", "reason_code": "bad_list_certs"}
+    pool = _unique(list(extra) + list(own_certs or []))
+    kids, fps, ignored = set(), set(), []
+    for i, st in enumerate(lst["statements"]):
+        why = evaluate_statement(st, pool, root_pem, now)
+        if why: ignored.append({"index": i, "reason": why}); continue
+        (kids if "revoked_kid" in st else fps).add(st.get("revoked_kid") or st.get("revoked_fingerprint"))
+    out = {"decision": "OK", "revoked_kids": sorted(kids), "revoked_certs": sorted(fps), "ignored": ignored}
+    try:
+        generated = ts(lst["generated_at"])
+    except (ValueError, TypeError):
+        return out
+    if generated > now or lst["algorithm"] not in REVOCATION_SUITES: return out
+    signer = _signer_pem(lst["kid"], pool, root_pem, generated, lst["algorithm"], kids, fps)
+    if signer and suites.verify(lst["algorithm"], signer, jcs(revocation_list_payload(lst)), {"signature": lst["signature"]})[0]:
+        out["as_of"] = lst["generated_at"]
+    return out
+
+
+def check_pool_unbounded(pool: list) -> Optional[str]:
+    """check_pool's shape rules without the 20-certificate presentation bound (a list's own bound
+    is MAX_LIST_CERTS)."""
+    for c in pool:
+        if not isinstance(c, dict) or not all(isinstance(c.get(f), str) and c.get(f) for f in CERT_FIELDS) or c.get("algorithm") not in CERT_SUITES:
+            return "bad_certificate"
+        if c.get("scope") is not None and not isinstance(c.get("scope"), str): return "bad_certificate"
+    return None

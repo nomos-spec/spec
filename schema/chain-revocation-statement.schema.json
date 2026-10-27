@@ -2,9 +2,15 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://nomosprotocol.com/schema/chain-revocation-statement.schema.json",
   "title": "NOMOS Chain Key Revocation Statement",
-  "description": "A detached statement, signed by a key's own PARENT, withdrawing that key's standing to sign at all (NOMOS-SPEC-007 §5). Distinct from NOMOS-SPEC-006's revocation-statement.schema.json, which withdraws an ARTIFACT's validity, signed by the same key that sealed it — this withdraws a KEY's standing, signed by whoever certified it.",
+  "description": "A detached statement, signed by a key's own PARENT, withdrawing that key's standing to sign at all (NOMOS-SPEC-007 §5). Distinct from NOMOS-SPEC-006's revocation-statement.schema.json, which withdraws an ARTIFACT's validity, signed by the same key that sealed it — this withdraws a KEY's standing, signed by whoever certified it. Rev. 1.10: Ed25519 or ES256, and exactly one of revoked_kid (a key) or revoked_fingerprint (one certificate, §5.4).",
   "type": "object",
-  "required": ["revoked_kid", "reason", "algorithm", "kid", "signature", "issued_at"],
+  "required": [
+    "reason",
+    "algorithm",
+    "kid",
+    "signature",
+    "issued_at"
+  ],
   "additionalProperties": false,
   "properties": {
     "revoked_kid": {
@@ -17,21 +23,29 @@
     },
     "algorithm": {
       "type": "string",
-      "const": "Ed25519",
-      "description": "Ed25519 in this version."
+      "enum": [
+        "Ed25519",
+        "ES256"
+      ],
+      "description": "The suite of the parent's signature (NOMOS-SPEC-010), one its effective scope permits."
     },
     "kid": {
       "type": "string",
-      "description": "Key id of the PARENT key that certified revoked_kid — the only key permitted to revoke it (NOMOS-SPEC-007 §5.1). A verifier MUST reject a statement whose kid does not resolve to the actual parent that certified revoked_kid."
+      "description": "Key id of the PARENT key that certified what is revoked. The statement counts only if that parent is reached from the relying party's own root and really signed the certificate (NOMOS-SPEC-007 rev. 1.10 §5.1a)."
     },
     "signature": {
       "type": "string",
-      "description": "base64 Ed25519 signature over JCS({ revoked_kid, reason, issued_at })."
+      "description": "Signature by the parent over JCS({ revoked_kid, reason, issued_at }) or JCS({ revoked_fingerprint, reason, issued_at }), in the suite's encoding."
     },
     "issued_at": {
       "type": "string",
       "format": "date-time",
       "description": "When the statement was signed. Part of the signed payload, same treatment as NOMOS-SPEC-006 §3's issued_at."
+    },
+    "revoked_fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 fingerprint of the one certificate being withdrawn (NOMOS-SPEC-007 §5.4, rev. 1.10 §5.1). Its payload is JCS({ revoked_fingerprint, reason, issued_at })."
     }
   },
   "examples": [
@@ -42,6 +56,28 @@
       "kid": "V3HqL9zM2Nk4pQrT",
       "signature": "MEQCIF…",
       "issued_at": "2026-08-27T00:00:00Z"
+    }
+  ],
+  "oneOf": [
+    {
+      "required": [
+        "revoked_kid"
+      ],
+      "not": {
+        "required": [
+          "revoked_fingerprint"
+        ]
+      }
+    },
+    {
+      "required": [
+        "revoked_fingerprint"
+      ],
+      "not": {
+        "required": [
+          "revoked_kid"
+        ]
+      }
     }
   ]
 }

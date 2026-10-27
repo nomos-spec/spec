@@ -1,0 +1,1231 @@
+{
+  "_readme": "NOMOS-SPEC-007 rev. 1.10 \u00a75.3a: verifying a revocation source. For each case, apply \u00a75.3a to `list` with `root_public_key_pem`, `own_certs` and `now`, and compare with `expected` field for field (revoked_kids and revoked_certs sorted). Expectations are written by hand. Keys come from published seeds: never trust material.",
+  "spec": "NOMOS-SPEC-007 rev. 1.10.0",
+  "cases": [
+    {
+      "name": "key_revocation_ed25519",
+      "description": "An intermediate revokes a key it certified. The list carries both certificates and is signed by the root: the key is revoked and the list is current as of generated_at.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          }
+        ],
+        "signature": "FAEwIrssNGAnQLFqkDB/BU6KHZ6SpyamzZ74oURA2IOx5EpLOcIMQi28n6RhehVw0twADBDyL8U/SvZlAV4NCQ=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [
+          "kQVHKI4TFSa7K52q"
+        ],
+        "revoked_certs": [],
+        "ignored": [],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "key_revocation_es256",
+      "description": "A P-256 intermediate, as held in a KMS, revokes a key with an ES256 statement (1.10 \u00a75.1). Under 1.9 it could certify the key but never revoke it.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "NnDuCcKTjpHbPmbb",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "KDXt7ecqfWdv-gB7",
+            "algorithm": "ES256",
+            "signature": "lEmXT//B0HzmneX11JmDdhxuHTd1ig9NGZIPwOcGaDd9ear337IIakES/7T6Xf3+6SXBy+/7Qv1aPICL/Il32w=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "KDXt7ecqfWdv-gB7",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEx4EvVbA51UsDuYwem0nNCxxQJqy+\nPlRqgwSSstlzjwkIQydKYosh8LTdp2KHrmZ1UZqw2aM5JrOwuabYCmNpdA==\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "aEbB7wTlF89wncL3lNcyCKHeXecTnVUqAIJrzcnwgaWbncpKTbqfnmNxjrARzvqezdgKo5mPJj3NI8LlarQtBQ=="
+          },
+          {
+            "parent_kid": "KDXt7ecqfWdv-gB7",
+            "child_kid": "NnDuCcKTjpHbPmbb",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAV9ix9htSTn/vTgmC/Ln51TD7Et2efZ/4Hoy03hcY/+A=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "ES256",
+            "signature": "pdHPwzgZfLAisXcUU+VOYuPhQAM+qTxbMdzTTQb2w+NhYjJgw9oOow0XSMIJK/eS+BYd/Y2Zq9Gy2Fk4r/wVXQ=="
+          }
+        ],
+        "signature": "o3a4lPcdN9N2si6txhUP634a+THtChu+7SFdBiYBmlbkWMKNwwf0utUAX3n+rOIbuUVhO6T2O5AVpT35RNiBDg=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [
+          "NnDuCcKTjpHbPmbb"
+        ],
+        "revoked_certs": [],
+        "ignored": [],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "certificate_revocation",
+      "description": "The root withdraws one certificate it issued, by fingerprint. Only that delegation is revoked; the key itself is not.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_fingerprint": "cdbdab4b89f28bb730ab616068e14f940d1d5474fabf7c3a6afd0762447c1e05",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "AeNh4o4fZp5pDcXX",
+            "algorithm": "Ed25519",
+            "signature": "kqVVFgCO46OUDdNkypqWq3BW13BjFEGDRYdkJBFkzbWIir4Z4nzaLUv/qvH8GNfidRj0H4dytwcO6EyvHtSJCA=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:credit_score",
+            "algorithm": "Ed25519",
+            "signature": "E1StLRZNO/ltYn1hy+8MMrk//QDvjogAibmI+3ehTyIc0U6r9Ty6TGt2k/SiLPGDBGyjdNDp6vIz4rjxL9b2AA=="
+          },
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          }
+        ],
+        "signature": "NGVPB15HG6Bj/KYA9lRCz9UZISMygt0FNPVucabbuX0zE8IcWHO7J362jEj6/kZi9Hsur51nwo4L+QDtKe9wAQ=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [],
+        "revoked_certs": [
+          "cdbdab4b89f28bb730ab616068e14f940d1d5474fabf7c3a6afd0762447c1e05"
+        ],
+        "ignored": [],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "forged_parent_ignored",
+      "description": "A key the root never certified signs a certificate for K (K's public key is public) and then revokes K. Under 1.7.0 \u00a75.1 that counted; under 1.10 the signer is not recognized and the statement is ignored.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "7O3oyYvxQjHlNFzC",
+            "algorithm": "Ed25519",
+            "signature": "kOKX6zsaOwlMFoZjFPPA+WS0CEuB/wMPjAjqVXgNqAxpQy1Av8ugOwLQa7jdpTQWrV8UkUBLLghodx0t7/hYAg=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "7O3oyYvxQjHlNFzC",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "Mo61Pe/Klp9cCXRqif3eqRFPg9zqmPMbm6BtPEmzmXwHpz/U4AQxhzvY/DQ7SdXuCaxrNgC84FXxbYwGJBdpBA=="
+          },
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          }
+        ],
+        "signature": "Zsq1JqxEpaJ/Dp3TKWvwBc24bpPNio3jlGP5t812n655nFskYkCw8+mIG0ylYUya/uXiyIa+YUY8czMOylHDAg=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [],
+        "revoked_certs": [],
+        "ignored": [
+          {
+            "index": 0,
+            "reason": "signer_not_recognized"
+          }
+        ],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "parent_certificate_missing",
+      "description": "The intermediate revokes K, but no certificate INT\u2192K is available. The statement cannot be checked, so it is ignored, never trusted.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          }
+        ],
+        "signature": "FAEwIrssNGAnQLFqkDB/BU6KHZ6SpyamzZ74oURA2IOx5EpLOcIMQi28n6RhehVw0twADBDyL8U/SvZlAV4NCQ=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [],
+        "revoked_certs": [],
+        "ignored": [
+          {
+            "index": 0,
+            "reason": "no_certificate"
+          }
+        ],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "certificate_not_signed_by_the_parent",
+      "description": "The intermediate is recognized and signs the statement, but the certificate INT\u2192K it relies on was not signed by the intermediate. Without a certificate the parent really made, it has no standing over K (\u00a75.1a rule 4).",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "25DN92Ae+71YZSfRUMVY+b1o5uk54Ny8Fw22nsJZwn9vi/1rOpfqGOo9LkK+CfIq7Kuz8oSgiPYuNYH0FqzIBA=="
+          }
+        ],
+        "signature": "FAEwIrssNGAnQLFqkDB/BU6KHZ6SpyamzZ74oURA2IOx5EpLOcIMQi28n6RhehVw0twADBDyL8U/SvZlAV4NCQ=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [],
+        "revoked_certs": [],
+        "ignored": [
+          {
+            "index": 0,
+            "reason": "bad_certificate_signature"
+          }
+        ],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "statement_signature_invalid",
+      "description": "A statement altered after it was signed.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Altered after signing.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          }
+        ],
+        "signature": "ghCOPxp3iYJlHnViZfVAsVYMpOEgv/yN/AhkA5sISv1I9O5xHhd6Pvk5tXJIekvusBWQ8wZuUJOjXp4wxqnAAw=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [],
+        "revoked_certs": [],
+        "ignored": [
+          {
+            "index": 0,
+            "reason": "bad_signature"
+          }
+        ],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "fingerprint_in_revoked_kid",
+      "description": "The pre-1.10 reference platform signed certificate revocations with the fingerprint in revoked_kid. Read as 1.10 requires, that is a key revocation of a kid no certificate names, so it revokes nothing. It must be re-signed as revoked_fingerprint.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "d10e129a47d136a8559debea22b7dfe67704a088dd3a6adff88e4c3ce1f45569",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "ekra332X1dTUdBtmNQYG4JrFl0fDSqteqPPsYPor1g6fK8Lii4V5mBHEHkZBizegSpByf5sY3SlyTnqzSovcDA=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          }
+        ],
+        "signature": "ezW5Cl4ZpkUoDdIRWc1GqK4h6P+OV1HMNcimDph0j6pdCzdFGLK970NXJGfH5Rv0F6V3V8arxu5MT52jT9+zAQ=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [],
+        "revoked_certs": [],
+        "ignored": [
+          {
+            "index": 0,
+            "reason": "no_certificate"
+          }
+        ],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "both_targets_malformed",
+      "description": "A statement naming a key and a certificate is malformed: exactly one is allowed.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg==",
+            "revoked_fingerprint": "d10e129a47d136a8559debea22b7dfe67704a088dd3a6adff88e4c3ce1f45569"
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          }
+        ],
+        "signature": "cHDcCq1LJOALvqilRFzzNRvE/bspuYzKjqu+Yk2iokeds+AIR8uT0yfCy3i920m1mRYa9XOhN6fSgGko2EShBw=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [],
+        "revoked_certs": [],
+        "ignored": [
+          {
+            "index": 0,
+            "reason": "bad_statement"
+          }
+        ],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "statement_from_the_future",
+      "description": "A statement issued after the relying party's clock is malformed.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2027-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "F6KOjKjYfW0e9H5lcQu5YLxgLjm2FCpMKqHZJVgCEPkeesByk/Uw6H1D/yDlBaTxHhQmbdv6kipDVfWcnwodBA=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          }
+        ],
+        "signature": "C7hhphF4gLgkh4tt5Uw/2SvmKwd+VwCTYBFfxyyK8cfX4w3Ceq4saKORS3cLxiaQ8IgpmTaUqQOf4Q+f/nLABg=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [],
+        "revoked_certs": [],
+        "ignored": [
+          {
+            "index": 0,
+            "reason": "bad_statement"
+          }
+        ],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "passkey_cannot_revoke",
+      "description": "A passkey may sign consents and nothing else (rev. 1.9 \u00a73.6). It signs a certificate and an ES256 revocation anyway: its scope does not permit ES256, so it is not recognized as a signer.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "4FscmiGrl-Ek7Hx4",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "8TTDESjCHo9Rr5gJ",
+            "algorithm": "ES256",
+            "signature": "4b3N14sy/Venx7IKd9Z0yoLB8jmHNrQZi8bd0AqxbSNXyf8shiXoA9OJ4d9NrKf4l2LE+ybPnYxM8wPbKvwSeg=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "8TTDESjCHo9Rr5gJ",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEp/Ae/rnVMno3QWbiE3lbYdhNt24C\nyDzEhKVHkUw1NdNXFvlxgm5WPcjPeub9NJG6VDzpaxShNu6gTetmq5Z2aA==\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "suite:WebAuthn-ES256 consent:MANAGER approver:dana",
+            "algorithm": "Ed25519",
+            "signature": "u0HRTxHjEj3A9EIuCsXfX1GgNK18UORSEg711Mq6vTH9/25QdxVl4gX1TYWzjVPoHbWC0SxxQRmgx17TSENjBw=="
+          },
+          {
+            "parent_kid": "8TTDESjCHo9Rr5gJ",
+            "child_kid": "4FscmiGrl-Ek7Hx4",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAD6AqDq3BcMLGZadeun4yqiEA4MEBPePJRzvfY8I0/eQ=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "ES256",
+            "signature": "gYO2fbv2Rsv+SJyu4+TIjGNGSWyIszZmM0s8fVGFLiYTqgOG8f9o0EnvaaTfcffufdtb8m8OTh+XMu4TVRzdOA=="
+          }
+        ],
+        "signature": "SuxkVbR9wzqw5bFRIIggEzSUsipmOyvF/DZqb0whHISep97ewJ84XIjEaHQVQQ+xKz7DNbTRTAUvcCfOkRKsCw=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [],
+        "revoked_certs": [],
+        "ignored": [
+          {
+            "index": 0,
+            "reason": "signer_not_recognized"
+          }
+        ],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "revoked_parent_still_counts",
+      "description": "The intermediate revoked K, and was later revoked by the root itself. Revocations accumulate (\u00a75.1a): K stays revoked. If a revoked parent's statements stopped counting, K would come back to life on its other path (root\u2192K).",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg=="
+          },
+          {
+            "revoked_kid": "IBaAAI5ZWjMnDwIg",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-10-01T00:00:00.000Z",
+            "kid": "AeNh4o4fZp5pDcXX",
+            "algorithm": "Ed25519",
+            "signature": "GJcvZbCIWrhVXZQcbaQc7CPdx0P3yTb4MsyKNFXSduDkcFGn7P7u/xyAJzHJWaHD77aAVXif/DoIxU0ryvTpDA=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          },
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:credit_score",
+            "algorithm": "Ed25519",
+            "signature": "E1StLRZNO/ltYn1hy+8MMrk//QDvjogAibmI+3ehTyIc0U6r9Ty6TGt2k/SiLPGDBGyjdNDp6vIz4rjxL9b2AA=="
+          }
+        ],
+        "signature": "q3bKGlPKihEfFP/cZe9ZJvv6xv2jEEhM9I+JHZt2MLz1aIbRVK7EaK6pV7aBZTf03D5gj0dB4vrORE/Ky1JfCg=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [
+          "IBaAAI5ZWjMnDwIg",
+          "kQVHKI4TFSa7K52q"
+        ],
+        "revoked_certs": [],
+        "ignored": [],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "statements_reordered",
+      "description": "The previous case with its statements and certificates in reverse order: the same result.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "IBaAAI5ZWjMnDwIg",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-10-01T00:00:00.000Z",
+            "kid": "AeNh4o4fZp5pDcXX",
+            "algorithm": "Ed25519",
+            "signature": "GJcvZbCIWrhVXZQcbaQc7CPdx0P3yTb4MsyKNFXSduDkcFGn7P7u/xyAJzHJWaHD77aAVXif/DoIxU0ryvTpDA=="
+          },
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:credit_score",
+            "algorithm": "Ed25519",
+            "signature": "E1StLRZNO/ltYn1hy+8MMrk//QDvjogAibmI+3ehTyIc0U6r9Ty6TGt2k/SiLPGDBGyjdNDp6vIz4rjxL9b2AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          },
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          }
+        ],
+        "signature": "w6WQXWnhFfCvcBfJyxa10CSW6xoAS66p82xCZskomC1hAziqmSv+M952s2CaOCtgw5XknWhXHFEtKG45j2ZJBg=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [
+          "IBaAAI5ZWjMnDwIg",
+          "kQVHKI4TFSa7K52q"
+        ],
+        "revoked_certs": [],
+        "ignored": [],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "list_signer_outside_the_hierarchy",
+      "description": "A hosting platform's own key signs the list. Its statements count on their own authority, but the root does not reach the platform key, so the list establishes no as_of.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "NWuPOwjTFCp_qohy",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          }
+        ],
+        "signature": "aKAQAvp1PPbfUJqTMZy7eUBleYYmAiabMQbeVOjyBKxotQMoH/fDK2RCvPqMT1qEB7BqeCoE/qFNAfryzaiyBA=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [
+          "kQVHKI4TFSa7K52q"
+        ],
+        "revoked_certs": [],
+        "ignored": []
+      }
+    },
+    {
+      "name": "list_signature_invalid",
+      "description": "The list's date was changed after signing. Its statements still count; it establishes no as_of.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:59:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          }
+        ],
+        "signature": "FAEwIrssNGAnQLFqkDB/BU6KHZ6SpyamzZ74oURA2IOx5EpLOcIMQi28n6RhehVw0twADBDyL8U/SvZlAV4NCQ=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [
+          "kQVHKI4TFSa7K52q"
+        ],
+        "revoked_certs": [],
+        "ignored": []
+      }
+    },
+    {
+      "name": "list_signer_revoked",
+      "description": "A list signer certified by the root, revoked by a statement in this very list. The statement counts; a revoked key cannot vouch that the list is current, so there is no as_of.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "3tbM2Wj8RPkHz-6a",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "3tbM2Wj8RPkHz-6a",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "AeNh4o4fZp5pDcXX",
+            "algorithm": "Ed25519",
+            "signature": "4YvoNB+dRatBQNKdJEgKRMkylQiftaJnw6tCpVeksYAlubN91AzCKnmvlJnwL2W6DOi5CSGlp5fcASA9vg10Ag=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "3tbM2Wj8RPkHz-6a",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEALG8bQGu2m5Uj2/NcIWXUCpQm6a35e2FIW14R8BDKXGg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "artifact:acme-purchasing",
+            "algorithm": "Ed25519",
+            "signature": "RJTUUU/q2IG/7XMMPSd7QJwippSV6bhHdO7ILNIUWiLJWa01d9MmtTU545bqO+qXut8UTX7vpYS9GA8MLpCEDw=="
+          }
+        ],
+        "signature": "LUM3kgmVVKRRDQKW3ATR+AGjR1YFVFPaCm1n9lnzcUcWN4YNQEYCBa/oSlemGEz2AFptPPRY6r5i5o0QpgvMBQ=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [
+          "3tbM2Wj8RPkHz-6a"
+        ],
+        "revoked_certs": [],
+        "ignored": []
+      }
+    },
+    {
+      "name": "list_signer_certified",
+      "description": "The same list signer, unrevoked: the list is current as of generated_at.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "3tbM2Wj8RPkHz-6a",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "3tbM2Wj8RPkHz-6a",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEALG8bQGu2m5Uj2/NcIWXUCpQm6a35e2FIW14R8BDKXGg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "artifact:acme-purchasing",
+            "algorithm": "Ed25519",
+            "signature": "RJTUUU/q2IG/7XMMPSd7QJwippSV6bhHdO7ILNIUWiLJWa01d9MmtTU545bqO+qXut8UTX7vpYS9GA8MLpCEDw=="
+          },
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          }
+        ],
+        "signature": "UOuecBfMYTy4e2bewVQoj9OWrVAwJICHOR0P13bes4/+FO23MxeXIWgiO9Oo3kTWzTfK4/n3RsoUOvV/bz6yBg=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [
+          "kQVHKI4TFSa7K52q"
+        ],
+        "revoked_certs": [],
+        "ignored": [],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "own_certificates_supply_the_parent",
+      "description": "The list carries no certificates. The relying party's own (from the issuer document, say) supply the path.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [
+        {
+          "parent_kid": "AeNh4o4fZp5pDcXX",
+          "child_kid": "IBaAAI5ZWjMnDwIg",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "algorithm": "Ed25519",
+          "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+        },
+        {
+          "parent_kid": "IBaAAI5ZWjMnDwIg",
+          "child_kid": "kQVHKI4TFSa7K52q",
+          "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+          "issued_at": "2026-01-01T00:00:00.000Z",
+          "expires_at": "2030-01-01T00:00:00.000Z",
+          "scope": "claim:budget_remaining",
+          "algorithm": "Ed25519",
+          "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+        }
+      ],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg=="
+          }
+        ],
+        "key_certs": [],
+        "signature": "FAEwIrssNGAnQLFqkDB/BU6KHZ6SpyamzZ74oURA2IOx5EpLOcIMQi28n6RhehVw0twADBDyL8U/SvZlAV4NCQ=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [
+          "kQVHKI4TFSa7K52q"
+        ],
+        "revoked_certs": [],
+        "ignored": [],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "list_from_the_future",
+      "description": "A list dated after the relying party's clock establishes no as_of; its statements still count.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2027-01-02T00:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          }
+        ],
+        "signature": "QxinTtoNBZkfl/Pfzeb8q37rdJ478cYuXR+F6Qa3epkYohKDVJDKtzwmW07Jpap76n0shLiiZc73t4+sH6WfDQ=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [
+          "kQVHKI4TFSa7K52q"
+        ],
+        "revoked_certs": [],
+        "ignored": []
+      }
+    },
+    {
+      "name": "parent_certificate_expired_since",
+      "description": "The intermediate's certificate expired in September. A statement it signed in June still counts: the parent is checked at issued_at. One it signed in October, after expiry, does not.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "HF8umMZE9KQt7fS+Pjh9cxDCmRNnrv8VOZUD2To0jSU1R1BSFmCFqz90ZqJ9hjM6Z5LrdDGVvI/Ygi1kfarvCg=="
+          },
+          {
+            "revoked_kid": "NnDuCcKTjpHbPmbb",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-10-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "Ed25519",
+            "signature": "UT+qINZaitW/2ld28EO532K0nOmoUATDtLwEaL5mQIzOq/6jIY0NklbTRKj8ObT6OMh3jfb7RkLdhMjTxGLOCA=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2026-09-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "PcoWKMhIRRg9ls7kgySHG2Ll8rJgjF8hjWsa2kFg66XRws4MP/4Ki/cNbbgmIYafQG+J/xgfYIGLb2nDrwkxAA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "NnDuCcKTjpHbPmbb",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAV9ix9htSTn/vTgmC/Ln51TD7Et2efZ/4Hoy03hcY/+A=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "Xzw+ME5cGBITkoMwll2vRoqINMk86sJP4SEaseSp9pOpjnAHR1xeK7ar/x8pdOZH9OaWCOd8WTpdAFYZI5zUBg=="
+          }
+        ],
+        "signature": "ddlsiBGOqTzE2JlIPbTbuqhw99kYLY9K9hN9KOPPrgfmAEp39s/uwX0fUToKm+aYhrL4Q2Vvgf8o+yXsevtTDg=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [
+          "kQVHKI4TFSa7K52q"
+        ],
+        "revoked_certs": [],
+        "ignored": [
+          {
+            "index": 1,
+            "reason": "signer_not_recognized"
+          }
+        ],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "wrong_suite_statement",
+      "description": "An Ed25519 parent's statement labelled ES256: the key type fixes the suite, so the signature does not verify.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": [
+          {
+            "revoked_kid": "kQVHKI4TFSa7K52q",
+            "reason": "Withdrawn.",
+            "issued_at": "2026-06-01T00:00:00.000Z",
+            "kid": "IBaAAI5ZWjMnDwIg",
+            "algorithm": "ES256",
+            "signature": "ZBYHgSMRRZorWzbCNuil1sclu++tXD+VURSvd2DDLNpCxNWIRz9Hp66s5wjzc29Jq9cuERtPbJYFYiJipRePhg=="
+          }
+        ],
+        "key_certs": [
+          {
+            "parent_kid": "AeNh4o4fZp5pDcXX",
+            "child_kid": "IBaAAI5ZWjMnDwIg",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4aDdkX+JNU6A/XRh75L7y51NXSxKE5QTO2uKTUOHcV4=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "xe2E42nvSGkstwysy1SBFxyxTOt+S2n4c7gJAoCN5tAIjoBVzIwefYEYya2BdiWN2K70nKhvON9ZrpZo6nb9AA=="
+          },
+          {
+            "parent_kid": "IBaAAI5ZWjMnDwIg",
+            "child_kid": "kQVHKI4TFSa7K52q",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAU6RNfj/90/X5VKdcVxqXou4OgSCG/BWpPA5df5/Y+hg=\n-----END PUBLIC KEY-----\n",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2030-01-01T00:00:00.000Z",
+            "scope": "claim:budget_remaining",
+            "algorithm": "Ed25519",
+            "signature": "/bmKOo0r09JQeGWstCbgllHVaqND9qvm/+fm56HLnN7AFLVhUzmhOHtEKR6EqXmXWv1RdisiQd+PLqCilpkdDw=="
+          }
+        ],
+        "signature": "0yoDg7QYRhRVOaF22F6gRyCCDl1FT+sxzKbDn+sgspkD0ibdrRXrkR5KkVZR4pwGKVlAtnJIYUTPc9hdbqfLDw=="
+      },
+      "expected": {
+        "decision": "OK",
+        "revoked_kids": [],
+        "revoked_certs": [],
+        "ignored": [
+          {
+            "index": 0,
+            "reason": "bad_signature"
+          }
+        ],
+        "as_of": "2026-12-31T23:00:00.000Z"
+      }
+    },
+    {
+      "name": "malformed_list",
+      "description": "statements is not an array: the list is MALFORMED and contributes nothing.",
+      "root_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4LPV5/vRzVyJ9/vw8LziYdCrZh1lOH4m8JHx3Br3XPQ=\n-----END PUBLIC KEY-----\n",
+      "now": "2027-01-01T00:00:00.000Z",
+      "own_certs": [],
+      "list": {
+        "generated_at": "2026-12-31T23:00:00.000Z",
+        "kid": "AeNh4o4fZp5pDcXX",
+        "algorithm": "Ed25519",
+        "statements": {},
+        "signature": "AA=="
+      },
+      "expected": {
+        "decision": "MALFORMED",
+        "reason_code": "bad_list"
+      }
+    }
+  ]
+}
