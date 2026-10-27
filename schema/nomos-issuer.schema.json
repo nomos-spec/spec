@@ -59,7 +59,7 @@
     },
     "key_certs": {
       "type": "array",
-      "maxItems": 20
+      "description": "A pool a carrier selects from (NOMOS-SPEC-009 0.2.0 §6.5). It may hold more than the 20 certificates an Act can present."
     },
     "witnesses": {
       "type": "array",

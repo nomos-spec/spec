@@ -67,14 +67,14 @@ A `.nomos` artifact now moves through four distinct moments:
 | `suite-vectors/` | NOMOS-SPEC-010 signature-suite vectors (30), and an independent Node verifier |
 | `python/nomos/` | The Python reference, shared by every reference verifier here: JCS, NOMOS-SPEC-010 suites, NOMOS-SPEC-007 rev. 1.9 chain resolution |
 | `spec/drafts/NOMOS-SPEC-008.md` | **Draft.** Act Binding (0.6.0) — an action bound to sealed rules, signed testimony and human consents, verified by the relying party that would commit it |
-| `spec/drafts/NOMOS-SPEC-009.md` | **Draft.** Discovery and Submission (0.1.0) — relying-party, issuer and witness documents (hints, never inputs), statement and approval requests, the HTTP submission binding |
+| `spec/drafts/NOMOS-SPEC-009.md` | **Draft.** Discovery and Submission (0.2.0) — relying-party, issuer and witness documents (hints, never inputs), statement and approval requests, the HTTP submission binding, and which certificates an Act presents |
 | `spec/drafts/NOMOS-SPEC-010.md` | **Draft.** Signature Suites (0.2.0) — the closed registry: `Ed25519`, `ES256`, `WebAuthn-ES256` |
 | `spec/drafts/NOMOS-SPEC-007-rev-1.9.0.md` | **Draft revision.** SPEC-007 1.9.0 — scope-aware path selection, normative check order, `suite` and `approver` dimensions, ES256 |
 | `spec/drafts/NOMOS-SPEC-007-rev-1.8.0.md` | **Draft revision.** SPEC-007 1.8.0 — statement keys (witness `claim`, approver `consent` scopes) and target-first chain resolution |
 | `spec/drafts/NOMOS-SPEC-001-amendment-2.3.0.md` | **Draft amendment.** SPEC-001 2.3.0 — equal-priority escalations naming different escalations cannot be sealed |
 | `spec/drafts/NOMOS-SPEC-001-amendment-2.2.0.md` | **Draft amendment.** SPEC-001 2.2.0 — unmatched outcome, declared fact sources, consent counts |
 | `act-vectors/` | NOMOS-SPEC-008 0.6.0 reference verifier (`act_verify.py`), deterministic generator, 43 test vectors and 1,693 derived mutants with reference verdicts |
-| `submission-vectors/` | NOMOS-SPEC-009 relying-party conformance: the status table, a test profile, an HTTP runner (`run.mjs`, 17 checks, any language) and a reference relying party |
+| `submission-vectors/` | NOMOS-SPEC-009 conformance: the status table, a test profile, an HTTP runner for relying parties (`run.mjs`, 17 checks, any language), a reference relying party, and the certificate-selection vectors for carriers (`selection.json`, 7 cases) |
 | `schema/nomos-relying-party.schema.json`, `nomos-issuer.schema.json`, `nomos-witness.schema.json` | JSON Schemas for the NOMOS-SPEC-009 discovery documents |
 | `examples/lending_policy_v1.nomos` | Example — public lending policy |
 | `examples/healthcare_triage_v1.nomos` | Example — clinical triage protocol |

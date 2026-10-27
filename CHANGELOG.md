@@ -7,6 +7,37 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-009 0.2.0, Draft] — 2026-10-27 (Certificate presentation)
+
+### Fixed — found by design review
+
+- **The bug.** Under 0.1.0 a carrier presented the issuer document's whole `key_certs` as
+  `authority.key_certs`. An Act may carry at most 20 certificates (SPEC-007 §4.5, SPEC-008 §6
+  step 1). An institution that certifies a dozen approvers, each with an enrolment key and a
+  passkey, passes 20, and every Act it issues becomes `MALFORMED` (`chain_over_length_cap`). The
+  limit is right; presenting the whole pool was not.
+- **The fix (§6.5).** A carrier presents exactly the closure of its available certificates over
+  the keys the Act relies on: the seal's key, each witness's and each approver's. The closure is
+  a function of the certificates and the Act, so two carriers present the same set (carrier
+  indifference holds). It includes every path to a relied-on key, so a relying party still
+  evaluates all of them (SPEC-008 §4.4). A closure over 20 is reported, never truncated.
+
+### Added
+
+- **Chains with statements (§4, §5).** A witness may return `key_certs` with its testimony, and an
+  approver with its consent. The issuer document no longer needs to list every person the
+  institution certifies; it lists the sealing keys' certificates and may hold more than 20.
+- `schema/nomos-issuer.schema.json`: `key_certs` no longer has `maxItems: 20`, which encoded the
+  0.1.0 assumption that the pool is what an Act presents.
+- `submission-vectors/selection.json` and `selection.mjs`: 7 cases, including a 32-certificate
+  pool, a key with two parents, a cycle, chains returned with statements, and a closure over 20.
+
+### Unchanged
+
+- Relying parties. They verify whatever set is presented, so nothing in SPEC-008 changes.
+
+---
+
 ## [Repository] — 2026-10-26 (Implementation status)
 
 ### Changed

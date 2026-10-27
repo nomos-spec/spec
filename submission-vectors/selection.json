@@ -1,0 +1,943 @@
+{
+  "_readme": "NOMOS-SPEC-009 0.2.0 §6.5 certificate selection. For each case, the certificates available to a carrier (by where they came from) and the kids the Act relies on; `expected` is the closure an implementation must present, as sorted SPEC-007 §5.4 fingerprints, or presentable:false when it exceeds 20. Keys are from published seeds: never trust material.",
+  "spec": "NOMOS-SPEC-009 0.2.0",
+  "cases": [
+    {
+      "name": "large_pool_one_approver",
+      "description": "An issuer pool of 32 certificates, far over 20: the sealing key, one witness, and fifteen people each with an enrolment key and a device key. The Act relies on the seal, the witness and person 7's device. Its closure is 4 certificates.",
+      "available": {
+        "issuer": [
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "iqUZkxnBMaQUWMlt",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEADdwT5hTnTO5sfuoQGrBGL09zRn9Ui+nPjjxWnlgqRBU=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "L4jraURaN4bZuF28ycVAgbVPANFPNAPw9YllCFRKY4yGpKULb7V5kWfpb+LO9XKj61gq3mxjWt9G/8pZiTOmAQ=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "8weMxFC2k5rqz0a6",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA3mW+D6ckLIn9n4E0gBoLj5u5kUN9hb++/EyA9yrWB8s=\n-----END PUBLIC KEY-----\n",
+            "scope": "claim:budget_remaining",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "OGbRXpQlojZBSuWahLFiLcdRCY8nuMtjO2nmQhC5QodGASp2P71jFqNC7N6cqGswU+nKLf37Xg+3vhEESQfmBw=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "suDuk_kyLHjAxhoY",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAC2pXkUsXx/9Uo7w2UTurvBeYzXUPpNUQAXomGrGMH04=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p0",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "Pnpbo5doEterkngYZZpNAJqm/dQwUmzuNJSfyUjdLsHt0R/smN3laQ7PCgO3RwDNj/3aER1s9hiIlPl7yyTHAw=="
+          },
+          {
+            "parent_kid": "suDuk_kyLHjAxhoY",
+            "child_kid": "AuwwpWP4gGZzJOF4",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAr8TypExrMaPxjCEKDckcvsQ/c0HfazWrhBB2FbJcKJU=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p0",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "wokC6rNpspGtxnluR9J3yNNrrG4D+NIZxCp9fPaaUDxighbRctSqA4toCgYEkWTox1aBLYwZKWIYCRxyRfpUCQ=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "s_uFjNsL3LnBzjvi",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATjyQxL2CQO8/PpaqGTCdn1GtVdGg+IIhx1c4VlXO9IY=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p1",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "K1Nxz+b3qLmHOAq2ImvlNGDiGhpHNDCWIPV8b4+xPbj6zhQMq2b4exN3npvlyvA/oMVtVIgZmvvDBv6fe4TFDg=="
+          },
+          {
+            "parent_kid": "s_uFjNsL3LnBzjvi",
+            "child_kid": "4H1bnXzGuLDZOXVj",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAnn5U29wMNJS/9JrFUJ3ilQjYmYNU+orWcaSxeW3QNBw=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p1",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "fFNbTf0DQ5Ia1tQ0iaM7j1hSjdczyelBqzMEDVbcTaCPGdILN/WVKQfBly9poaS0oOUBVsn+38CcVHJUoU60AQ=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "wYxcm6WDvnc0YKJP",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAwH0SmZLGWlHwO2L88MiWMhRaHcdpRfflqZtsBSYiHKI=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p2",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "XEbxok3UYypjlYCy7bDLXz7axJRO7zIHixfhi/07eglzH2SGwswMMnnYyhXVQEldmdsKaRK7VzQGyF52AADUBQ=="
+          },
+          {
+            "parent_kid": "wYxcm6WDvnc0YKJP",
+            "child_kid": "5MMLw0YfhmUKFuRn",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAtXjhdW4DG0GlJ2pwkiHCbqms3B1UpoADpUCKQ+u1j04=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p2",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "kYBnjbCZ/CUPyCK+vxsdmZ/z8atsvhHM0bmxHz4ImECvBsbuqhbSE12w2Dutwjf6f8oM49uwrUWXxo6yj0IZBA=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "dfdagn39ghAZG29Z",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA1nqgieSJWtZNJCgYpT0NiC+AasHyo86H3FbQyzD7uu4=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p3",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "TcopFxZSgRWgkQim0vbk1YKpyVkkMkSyQEfBVyjuWkV3CGbiURk+HkfNEwa26fagbKTkGxbM60xS40pg9bplCQ=="
+          },
+          {
+            "parent_kid": "dfdagn39ghAZG29Z",
+            "child_kid": "vUdzLndm37BNZeOO",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEABmjQMhc0Iz8pSel8CopYGlwYHRN+4tFAJGeFqhJVDvc=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p3",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "jX+vHwyF2SQdmaLpn7k7k9Sgql8JdkC2yeMLHHKuR97JUGLNYmODvXpWnzoPrPUlmZysJmYDNfEZnwj5AhuvBg=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "90rbXb51VUYurFT-",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAliDlTxPNiWqKvoHXxXaAKZMyM7RCzqC4+V7DTUYGQbU=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p4",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "3MYdFD37sCeHMVgP2IRRg2UFLtGKsbgpAwRR/YEXSKY0vj3N/q7XTgAVqNKp0sLPqger0CEL0wh/RZKTzQUgDQ=="
+          },
+          {
+            "parent_kid": "90rbXb51VUYurFT-",
+            "child_kid": "wBGM0fG-EOO1aGb3",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAANH6q1wHTNf+Bg1tM2CwV4Uh2Lw7pSgesj18reuy6fc=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p4",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "YC0CsC64847Tnq0JyQdbEuOLnSAg2foCXHLudgs6GOAvu7p+w3KTuTR5Q006rHDiDRUElFvIsMAL8Ch1Axg/Cw=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "aSWoBiKC3a4N0-OJ",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAnCkt5XgP5dbxe/drotaGLaz59N1NoJUztLZSnt3gLBY=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p5",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "z5MIVwzqW9Dwqj0jaxIv8QcEKTemiPl+glAts8jICEPg60JwTxQKo650TKMGJDPWT1DZV4LWwtLzuRMfgFZxAQ=="
+          },
+          {
+            "parent_kid": "aSWoBiKC3a4N0-OJ",
+            "child_kid": "VtS-jKIJHEtMR_Lv",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4h5oILM/qH/iGHlKfPLrpC4SYTKbMci3Mt9FjnGmNEg=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p5",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "TuCH3mS5O0+duCfS1Ef95Hm68ZthqJuzugPvpx7mGxeO27sn8QZLe5JBb2JnZXEGo5/MzzsvO66O9wC5BNwNBA=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "rRw0EUOCWX2YJNnj",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAnyKE3ByZ6OzS6tAZSYrq8fsfD8pII1yEAifC8Pnj+7U=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p6",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "2HRauzlwLFiDDJx59pi8VOU4hciFWvPz9ccHwsqYtLCo2qhOsf1viGLup3TkwSZ6ZJSA3f87LTGnrBeoqfmEAA=="
+          },
+          {
+            "parent_kid": "rRw0EUOCWX2YJNnj",
+            "child_kid": "lFFTU5uigGlGk487",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA0s2GkotgghuMF82KPGOZNCmJPQPf4bfmUWuFDBEt2P4=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p6",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "bdz7TNeVTNgMX4sa0s+xg3sEfO4OVhQO74lwSvXIce73waJA7orURlJJaCwaNSwGUC5jPI0FEVG+HlnwX8+jAA=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "X8owj63Atfs2aY6F",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAEmz8kH6t54bxSMJFdWsP24yV22RjDwYuTBE0ymmfNc4=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p7",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "afAvWamxNzFM+uCUJP3gI0++JLSwJNATZTzgNt9eXDwJDp7r100pybk/XbawBzmM1Er2L10Ro9my22G0I0ECDg=="
+          },
+          {
+            "parent_kid": "X8owj63Atfs2aY6F",
+            "child_kid": "hA91wBpcsHg-ymGS",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApPK30416jyvdYqe3aQotCHtpc4wUO6zLnqaa6LkCI44=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p7",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "33cCBO0ChbaLIkCZOLos7xj4Ep8YfnHh7VBdcBX3+HA7KwPBz1itkUARwXRLV8uKs6iO+fCHdpEfmczVe1cgCA=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "Tl_1L05JT0Dd_H7H",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4NxVXRabKiHXxoONy9N0XLmZhVkLvp0QVvpRpNbVgZ4=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p8",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "Xzwc1aaVwf1bAXAOwWWj+7TgLrvRZsfAZjfSidb5D5T1Yn4b3MK0TcoSwHi8kqxixgHfCb6QmvLr4NnacCnlBg=="
+          },
+          {
+            "parent_kid": "Tl_1L05JT0Dd_H7H",
+            "child_kid": "YuMzRu5zBnBg6uW6",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAKWmKcMeUGtwm0pDM5g7pMdGk2zzxYsZUAV6b1V42X5k=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p8",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "Qm1M81ltIbh56VxX1Y9I8BoVRcIYbjCPVJE/7/Lt9/Erpuv7XXAXJEvGXJDiNk5w7NwUAlZaUk9bOz3OUHaWCQ=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "oGgyvdyehij2WQMf",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAoC9prafPzjarzpc6EFNMKn4zPBirIpwVvtuV9R3c9Ps=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p9",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "b/XHOkmWd4IiiRZhlleqBTblmFbSspATVT447rAKLqF/nrBt45CErnyLgF2n8X1Eq1Fnvh8Rui9/btDL60XwBQ=="
+          },
+          {
+            "parent_kid": "oGgyvdyehij2WQMf",
+            "child_kid": "ZnL9W3uIXZ3xDwwt",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAK/SZe3ouMqVbOc8d9KL0e6lzGgzo8u1jV/X3f7RnyVo=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p9",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "H/wd6NuTuh49lgKCFJ8bb1E28Dnv7CMceEcNk1V+GolYJHF/mBPnG94gaiRQMFYipdGRJqdEBUFpYOsdiDndBQ=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "c8Jr93ZRKhvqDNnV",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA938bUoy9rHizCUmcWDUfiP6gpAyHd5CGjP0BB5ycUGs=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p10",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "s8xy+93Mvywd3/n+ncGviPY1Ipc4MMKLu21LgN/MAZHwGsFd7mtyH5p9sdVUquz9mh1vTthR9xOF5Jtj0zXaBA=="
+          },
+          {
+            "parent_kid": "c8Jr93ZRKhvqDNnV",
+            "child_kid": "myERmwhWzhZdWcM7",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAj9NdyI7L9ggaw0rOc6vdZvHGVsZtfW2olaxrll+X7Zo=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p10",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "e+/iToIWDtRFW6rYX0AHXrVQKYBt8rU8/Iq67OgK1wBWXqWcQoCMWeM6Z88shtY9Wv+ekVgL9ZI5AGsgOV2FBA=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "gva1xmLhTcRe6ya_",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAREMVvwdBW+pdLp/5HtxzTN/v/hxYQnwOpX8gHww5Vjo=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p11",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "iCr/JvFrUd/U1W0suHVbsGLmaWmfhpF9yhae1t4+PvMkCbkd3l37e/80wtW10CbMycEkbVZFOqoPsOX0r/U+Ag=="
+          },
+          {
+            "parent_kid": "gva1xmLhTcRe6ya_",
+            "child_kid": "4bqstAxb2luOBhOn",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEANSj0JwUs4WzV7OS1Ppa0qd9qFgVVzt49WLShvSEnsrk=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p11",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "UYCOU762Fd9yn+u3zwIgrfOB/lH/9c5ifn8kqhNzzjB1hj3QGOtS/SWJmxDQMocZDy5tBJXvqzw7siXxjmmsDw=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "dzacaTIxIaB_wAPo",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6VUjMfDrfFiuoi2XzHwwJYuNOgWPNeejDXcmY2fl1Fg=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p12",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "A3V2jJ0fpSvbxTQkS1V4pZFMR6CjajlEAU+3iFS0CugEHQdd4PZnH+jfNrsViR/+FiDN2e3dV3q7JBXoHgwdCw=="
+          },
+          {
+            "parent_kid": "dzacaTIxIaB_wAPo",
+            "child_kid": "WFgiMbWUJ0yZ6o-A",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAIwBv4HCyED27zNOv9PVp5gOsijdCb5WygrFwzdtT2OM=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p12",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "oSuJyKatix0k2XzneYk6VkPZ8SR4OkkrwDXGvKb1le4M4jW3EAs/XF6+8jJ1EJJrSADPlShsNei9PCCS6llzCw=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "sEhDLzGew_5bDLKe",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAGsWDGzFJVhQJJN0W54oPmNa/vm7VYODHwrp+IxU5NFM=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p13",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "sM5n/Yw0lfKqAM7+QnjBIPLQgNhXjdGxRvgInpP0qO9xKzsJLpAALzrjcHGLWGbfcoOARXSmcyNS5IxDEuA+Ag=="
+          },
+          {
+            "parent_kid": "sEhDLzGew_5bDLKe",
+            "child_kid": "VChRUoZBtDOLAVH3",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAMhNzaQ7/KuBzZDm92nc6bOxXm0dGVoatXEDCnzowR3Q=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p13",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "ArmcnrkmwY8HIdNcaq7Phj0oGA2UfOuzCKyywHN/0IFySrltcBLeWqN+dfPSMdV08OJCevzJY2435dO+KYG9Cw=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "ikQSpNZTgG5-ciOu",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAaaxZGVYeDUgFILrpfz9WpLPgR6BU9/4G6OtSH3OEgIk=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p14",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "BTgaxobZR/9z8U0+Tm71k/Gs2ERs6ThodPe5//UB8GmwhDVmjlwAtyNkXIWQCmtxLox6eFZ3WdiOA68GPu/XDA=="
+          },
+          {
+            "parent_kid": "ikQSpNZTgG5-ciOu",
+            "child_kid": "4hAj5ywfGtzvk-8P",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAyZ5+jmStkMZCsMzhX5P8jtSrsbvq/Cct4sOSKm/MYEE=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p14",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "bDetn2uqE71duvkJrTM1kvUD+oa/rrnSo8TcVMchatM5OEcWmdubLcle/gDIp33RlrwGWxDvozNsn/pNoYPZAQ=="
+          }
+        ]
+      },
+      "relied_kids": [
+        "iqUZkxnBMaQUWMlt",
+        "8weMxFC2k5rqz0a6",
+        "hA91wBpcsHg-ymGS"
+      ],
+      "expected": {
+        "presentable": true,
+        "size": 4,
+        "fingerprints": [
+          "0811e0059624d8d2b9f1523186e75a32a65927744d170caf9ec655baaeac1e59",
+          "32edf89059a1a00532de3fc55a676b28d94190dde55721e2f3a00a34e364b7f4",
+          "3f5fc9f49fabfa2072867edd220e13019ce319b805cbd44b23a21eeb606cc972",
+          "420349a43daca2566598b6c905f48338d4cc1394f14aa0a7db933f54d7b51c39"
+        ]
+      }
+    },
+    {
+      "name": "key_certified_by_two_parents",
+      "description": "The approver's key is certified twice, by the root and by an intermediate. Both paths are presented, so the relying party evaluates both (SPEC-008 §4.4) and the carrier chooses neither.",
+      "available": {
+        "issuer": [
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "iqUZkxnBMaQUWMlt",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEADdwT5hTnTO5sfuoQGrBGL09zRn9Ui+nPjjxWnlgqRBU=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "L4jraURaN4bZuF28ycVAgbVPANFPNAPw9YllCFRKY4yGpKULb7V5kWfpb+LO9XKj61gq3mxjWt9G/8pZiTOmAQ=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "8weMxFC2k5rqz0a6",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA3mW+D6ckLIn9n4E0gBoLj5u5kUN9hb++/EyA9yrWB8s=\n-----END PUBLIC KEY-----\n",
+            "scope": "claim:budget_remaining",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "OGbRXpQlojZBSuWahLFiLcdRCY8nuMtjO2nmQhC5QodGASp2P71jFqNC7N6cqGswU+nKLf37Xg+3vhEESQfmBw=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "0aruj72qKnsuwT1c",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAQd7T2SQnI6wXoid33rA1t3uoonGtEjddS/jC7VKuHpM=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "8tPnAQNZVnoUofilrlQpQk20lSrjjixbyIdyaBqmY7eJwA/cbbOTlx2pCTCGg4y+YtZ4ttkCliOy+uiShCmNCA=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "rNxEsCfRNDla8nU2",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEALrny/20v29/WGw9TWxkFdU/ul2964idM5xNvD1gzRoc=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:dana",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "/C0rwFA+B/J4wjVwVP0+2flDJmoOjlyUkpfUlIS48f7NTkab38x99Ec8pbTuMGO6Jlg9nKZywDTTGOF2ALp1Dg=="
+          },
+          {
+            "parent_kid": "0aruj72qKnsuwT1c",
+            "child_kid": "rNxEsCfRNDla8nU2",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEALrny/20v29/WGw9TWxkFdU/ul2964idM5xNvD1gzRoc=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:dana",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "i7J4NAeS76uxWSi8HKN44OCcyabaSzpdzTlQY3LZRJUB3h5bJ4mnYUpssXJha23ClySiPI3B6+FbyeND1BQXBg=="
+          }
+        ]
+      },
+      "relied_kids": [
+        "iqUZkxnBMaQUWMlt",
+        "rNxEsCfRNDla8nU2"
+      ],
+      "expected": {
+        "presentable": true,
+        "size": 4,
+        "fingerprints": [
+          "0811e0059624d8d2b9f1523186e75a32a65927744d170caf9ec655baaeac1e59",
+          "4b494a818ec422762b417508afd3db854a4e1c990fe95c67fd69ae045e357314",
+          "5ac315e5c0a18895d6089369df5d778a548e48171cdcdf212152b1525e1377d6",
+          "cb900b0f6ecb83b770940a3895e5a6e795408f632b38e48d9de2867e786bc1c9"
+        ]
+      }
+    },
+    {
+      "name": "cycle_terminates",
+      "description": "A certifies B and B certifies A; the root certifies A. The closure from B takes all three and stops.",
+      "available": {
+        "issuer": [
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "TlXIzBpysXVjYKum",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAdzNekp6CvAcQaEaKla3SmIcB4msY26KsXcpqX2VY/84=\n-----END PUBLIC KEY-----\n",
+            "scope": "claim:x",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "NmTp9lV4zavB8MexjJR4q/AibQzh3UAd+TRE3Z0U3OZJLSAVa3xcvXmJ03WBVjDwXiDQaPyAYF5SChR2eJ1jAg=="
+          },
+          {
+            "parent_kid": "TlXIzBpysXVjYKum",
+            "child_kid": "S0f2Y5ZlDwYiTXRY",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAKO1cUcD/JOUwos92KcYHZnQXqKJXDR7KH4a4SOFeoFU=\n-----END PUBLIC KEY-----\n",
+            "scope": "claim:x",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "qUua40YOIajmuKL3fctqNwJMLhRpb4pv3pQLikHZXYJsXdbz30jqBfRrN4ZK3Dg4OqC2opFvjpaNmA1VJkU4BQ=="
+          },
+          {
+            "parent_kid": "S0f2Y5ZlDwYiTXRY",
+            "child_kid": "TlXIzBpysXVjYKum",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAdzNekp6CvAcQaEaKla3SmIcB4msY26KsXcpqX2VY/84=\n-----END PUBLIC KEY-----\n",
+            "scope": "claim:x",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "NB/5M0NMdID591R5NO3f6WapHJzh0g3YXUWrPIPUTZjHCmUgssDFnHe7lvhRqqBp9yKMXVwo6Oy6tk7CvxdUCw=="
+          }
+        ]
+      },
+      "relied_kids": [
+        "S0f2Y5ZlDwYiTXRY"
+      ],
+      "expected": {
+        "presentable": true,
+        "size": 3,
+        "fingerprints": [
+          "021887fba409775daa4abed4dd81722866d519860c031482cb7dd40c7c687f1a",
+          "1a79c41eaac89ec7c48663f91c3693a8150895d82d180599cd52c469a9af0e51",
+          "9b096bcc26187b977189b0c39e57ecb770dc8ce38cddaba9c22ec4e83bdf8e92"
+        ]
+      }
+    },
+    {
+      "name": "chains_returned_with_statements",
+      "description": "The issuer pool holds only the sealing key's certificate. The witness returns its chain with its testimony and the approver returns hers with her consent (§4, §5). The closure is drawn from all three.",
+      "available": {
+        "issuer": [
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "iqUZkxnBMaQUWMlt",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEADdwT5hTnTO5sfuoQGrBGL09zRn9Ui+nPjjxWnlgqRBU=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "L4jraURaN4bZuF28ycVAgbVPANFPNAPw9YllCFRKY4yGpKULb7V5kWfpb+LO9XKj61gq3mxjWt9G/8pZiTOmAQ=="
+          }
+        ],
+        "testimony": [
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "8weMxFC2k5rqz0a6",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA3mW+D6ckLIn9n4E0gBoLj5u5kUN9hb++/EyA9yrWB8s=\n-----END PUBLIC KEY-----\n",
+            "scope": "claim:budget_remaining",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "OGbRXpQlojZBSuWahLFiLcdRCY8nuMtjO2nmQhC5QodGASp2P71jFqNC7N6cqGswU+nKLf37Xg+3vhEESQfmBw=="
+          }
+        ],
+        "consent": [
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "dfdagn39ghAZG29Z",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA1nqgieSJWtZNJCgYpT0NiC+AasHyo86H3FbQyzD7uu4=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p3",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "TcopFxZSgRWgkQim0vbk1YKpyVkkMkSyQEfBVyjuWkV3CGbiURk+HkfNEwa26fagbKTkGxbM60xS40pg9bplCQ=="
+          },
+          {
+            "parent_kid": "dfdagn39ghAZG29Z",
+            "child_kid": "vUdzLndm37BNZeOO",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEABmjQMhc0Iz8pSel8CopYGlwYHRN+4tFAJGeFqhJVDvc=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p3",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "jX+vHwyF2SQdmaLpn7k7k9Sgql8JdkC2yeMLHHKuR97JUGLNYmODvXpWnzoPrPUlmZysJmYDNfEZnwj5AhuvBg=="
+          }
+        ]
+      },
+      "relied_kids": [
+        "iqUZkxnBMaQUWMlt",
+        "8weMxFC2k5rqz0a6",
+        "vUdzLndm37BNZeOO"
+      ],
+      "expected": {
+        "presentable": true,
+        "size": 4,
+        "fingerprints": [
+          "0811e0059624d8d2b9f1523186e75a32a65927744d170caf9ec655baaeac1e59",
+          "36aec7cf893c8318e302a261894dfd47a214e0ea06d66fa1ecf6f41fb3a3e9d3",
+          "420349a43daca2566598b6c905f48338d4cc1394f14aa0a7db933f54d7b51c39",
+          "63cff27e810103aefb5bd4f45f3343fbc611021db48e836d1a4686241ec3a962"
+        ]
+      }
+    },
+    {
+      "name": "unrelated_certificates_left_out",
+      "description": "Certificates for keys the Act does not rely on, and for other people, are not presented.",
+      "available": {
+        "issuer": [
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "iqUZkxnBMaQUWMlt",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEADdwT5hTnTO5sfuoQGrBGL09zRn9Ui+nPjjxWnlgqRBU=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "L4jraURaN4bZuF28ycVAgbVPANFPNAPw9YllCFRKY4yGpKULb7V5kWfpb+LO9XKj61gq3mxjWt9G/8pZiTOmAQ=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "8weMxFC2k5rqz0a6",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA3mW+D6ckLIn9n4E0gBoLj5u5kUN9hb++/EyA9yrWB8s=\n-----END PUBLIC KEY-----\n",
+            "scope": "claim:budget_remaining",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "OGbRXpQlojZBSuWahLFiLcdRCY8nuMtjO2nmQhC5QodGASp2P71jFqNC7N6cqGswU+nKLf37Xg+3vhEESQfmBw=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "suDuk_kyLHjAxhoY",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAC2pXkUsXx/9Uo7w2UTurvBeYzXUPpNUQAXomGrGMH04=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p0",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "Pnpbo5doEterkngYZZpNAJqm/dQwUmzuNJSfyUjdLsHt0R/smN3laQ7PCgO3RwDNj/3aER1s9hiIlPl7yyTHAw=="
+          },
+          {
+            "parent_kid": "suDuk_kyLHjAxhoY",
+            "child_kid": "AuwwpWP4gGZzJOF4",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAr8TypExrMaPxjCEKDckcvsQ/c0HfazWrhBB2FbJcKJU=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p0",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "wokC6rNpspGtxnluR9J3yNNrrG4D+NIZxCp9fPaaUDxighbRctSqA4toCgYEkWTox1aBLYwZKWIYCRxyRfpUCQ=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "s_uFjNsL3LnBzjvi",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEATjyQxL2CQO8/PpaqGTCdn1GtVdGg+IIhx1c4VlXO9IY=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p1",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "K1Nxz+b3qLmHOAq2ImvlNGDiGhpHNDCWIPV8b4+xPbj6zhQMq2b4exN3npvlyvA/oMVtVIgZmvvDBv6fe4TFDg=="
+          },
+          {
+            "parent_kid": "s_uFjNsL3LnBzjvi",
+            "child_kid": "4H1bnXzGuLDZOXVj",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAnn5U29wMNJS/9JrFUJ3ilQjYmYNU+orWcaSxeW3QNBw=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p1",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "fFNbTf0DQ5Ia1tQ0iaM7j1hSjdczyelBqzMEDVbcTaCPGdILN/WVKQfBly9poaS0oOUBVsn+38CcVHJUoU60AQ=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "wYxcm6WDvnc0YKJP",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAwH0SmZLGWlHwO2L88MiWMhRaHcdpRfflqZtsBSYiHKI=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p2",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "XEbxok3UYypjlYCy7bDLXz7axJRO7zIHixfhi/07eglzH2SGwswMMnnYyhXVQEldmdsKaRK7VzQGyF52AADUBQ=="
+          },
+          {
+            "parent_kid": "wYxcm6WDvnc0YKJP",
+            "child_kid": "5MMLw0YfhmUKFuRn",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAtXjhdW4DG0GlJ2pwkiHCbqms3B1UpoADpUCKQ+u1j04=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p2",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "kYBnjbCZ/CUPyCK+vxsdmZ/z8atsvhHM0bmxHz4ImECvBsbuqhbSE12w2Dutwjf6f8oM49uwrUWXxo6yj0IZBA=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "dfdagn39ghAZG29Z",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA1nqgieSJWtZNJCgYpT0NiC+AasHyo86H3FbQyzD7uu4=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p3",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "TcopFxZSgRWgkQim0vbk1YKpyVkkMkSyQEfBVyjuWkV3CGbiURk+HkfNEwa26fagbKTkGxbM60xS40pg9bplCQ=="
+          },
+          {
+            "parent_kid": "dfdagn39ghAZG29Z",
+            "child_kid": "vUdzLndm37BNZeOO",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEABmjQMhc0Iz8pSel8CopYGlwYHRN+4tFAJGeFqhJVDvc=\n-----END PUBLIC KEY-----\n",
+            "scope": "consent:MANAGER approver:p3",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "jX+vHwyF2SQdmaLpn7k7k9Sgql8JdkC2yeMLHHKuR97JUGLNYmODvXpWnzoPrPUlmZysJmYDNfEZnwj5AhuvBg=="
+          }
+        ]
+      },
+      "relied_kids": [
+        "iqUZkxnBMaQUWMlt"
+      ],
+      "expected": {
+        "presentable": true,
+        "size": 1,
+        "fingerprints": [
+          "0811e0059624d8d2b9f1523186e75a32a65927744d170caf9ec655baaeac1e59"
+        ]
+      }
+    },
+    {
+      "name": "duplicate_presented_once",
+      "description": "The witness returns the same certificate the issuer pool already has. It is presented once.",
+      "available": {
+        "issuer": [
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "iqUZkxnBMaQUWMlt",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEADdwT5hTnTO5sfuoQGrBGL09zRn9Ui+nPjjxWnlgqRBU=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "L4jraURaN4bZuF28ycVAgbVPANFPNAPw9YllCFRKY4yGpKULb7V5kWfpb+LO9XKj61gq3mxjWt9G/8pZiTOmAQ=="
+          },
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "8weMxFC2k5rqz0a6",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA3mW+D6ckLIn9n4E0gBoLj5u5kUN9hb++/EyA9yrWB8s=\n-----END PUBLIC KEY-----\n",
+            "scope": "claim:budget_remaining",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "OGbRXpQlojZBSuWahLFiLcdRCY8nuMtjO2nmQhC5QodGASp2P71jFqNC7N6cqGswU+nKLf37Xg+3vhEESQfmBw=="
+          }
+        ],
+        "testimony": [
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "8weMxFC2k5rqz0a6",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA3mW+D6ckLIn9n4E0gBoLj5u5kUN9hb++/EyA9yrWB8s=\n-----END PUBLIC KEY-----\n",
+            "scope": "claim:budget_remaining",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "OGbRXpQlojZBSuWahLFiLcdRCY8nuMtjO2nmQhC5QodGASp2P71jFqNC7N6cqGswU+nKLf37Xg+3vhEESQfmBw=="
+          }
+        ]
+      },
+      "relied_kids": [
+        "iqUZkxnBMaQUWMlt",
+        "8weMxFC2k5rqz0a6"
+      ],
+      "expected": {
+        "presentable": true,
+        "size": 2,
+        "fingerprints": [
+          "0811e0059624d8d2b9f1523186e75a32a65927744d170caf9ec655baaeac1e59",
+          "420349a43daca2566598b6c905f48338d4cc1394f14aa0a7db933f54d7b51c39"
+        ]
+      }
+    },
+    {
+      "name": "closure_over_twenty_is_not_presentable",
+      "description": "The sealing key sits under 21 intermediates: its closure is 22 certificates. The Act cannot be presented, and the carrier must not drop certificates to fit.",
+      "available": {
+        "issuer": [
+          {
+            "parent_kid": "hfGTM2KkuYNERddJ",
+            "child_kid": "sXLOcHP4ZokKa7WQ",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA5rUYAPItdib9Qbj7cbAGEoGdOFJI6S08ZwIjrqVs5Gg=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "kZ+2yhMXOzBDeR85zXOJQ7UIKaZPmSTkrON/aZ6BlkcdnJ0SosDHLtUr9M4B6nOOelcL37yvfKPDcKi0Lt58Aw=="
+          },
+          {
+            "parent_kid": "sXLOcHP4ZokKa7WQ",
+            "child_kid": "Dr9Y8IVe5KoM7iD8",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAuYh4xdYAB8JFy/jTC+k0fTlNXojNT89gh+3pNKUAb7U=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "VtCMxZujLpRjbKYX6/SAAjWZMJaABiqtU/uZspvtU6TQFcx69JD+PTsDHEvJlSArkGGkW3wWcjXYMrH//CghAA=="
+          },
+          {
+            "parent_kid": "Dr9Y8IVe5KoM7iD8",
+            "child_kid": "QErAUgLgTrq-Vvjn",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAVFGQuZI1BTr9lV+DtPNlw00bKtVV6b7z/nTUNuC0Fas=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "V9L4A9VFGmnaz5NVPQJ6ILcdbI/Hud7EvVQrLIgkX3gJEiot+PsetfRbNqQTOYqmwZO6pkn6gS4WKCR+dkUoAw=="
+          },
+          {
+            "parent_kid": "QErAUgLgTrq-Vvjn",
+            "child_kid": "gfQhSwzHW3qKy8jb",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4hzte/eJsFKREV/B3YHhDCwM6APbit1LTY/dNeKb7dw=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "U4+FDzCAWnLUFGnfsRky/wFsTuldMSQLKd3yCRKTYcm5uKUyw/cmurB90Roi/GnqxIAD0bb6CKeRlNrAcJ5DDg=="
+          },
+          {
+            "parent_kid": "gfQhSwzHW3qKy8jb",
+            "child_kid": "YF7my23KXrL-T5hx",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAkkdinxz2g4c+7LtkpGdi1aff/GEAh/HOs6xFA+oMqjY=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "RWucXUy8uTwxOeMeVZjgQZEfhcOz+63j5hExvwrBtctzPiV55+q0zK77Izb/f4NFhJ1seqkSXtaAPhyfabXbAA=="
+          },
+          {
+            "parent_kid": "YF7my23KXrL-T5hx",
+            "child_kid": "Pn1N-cChJIT2kp-d",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA3zSPExGLncjPi5D2Y1jjQzHNkJYR9xwIdynA9sbRr7A=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "/Uic+K8VhUXKqLx4wlk+2obF+Byk+2zemqfIa0GJSXkawlyVRdllwVos76VPc+QkNk7j+5+1BxCbjMCSTIAJDg=="
+          },
+          {
+            "parent_kid": "Pn1N-cChJIT2kp-d",
+            "child_kid": "DQsTPLDqMrCQyKKo",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA8qf1addAIN9lPGbVlLl//VW5j5n9Dk2We7tJ1K9/2Yk=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "UHc6TsMjKzPHeSZSdndMAdyst8mKFk4WCUsc3K9OLUUQTEpbtqgkG8zxrGmMwRNaPHshWH6SjyC+ogN8PjoxAg=="
+          },
+          {
+            "parent_kid": "DQsTPLDqMrCQyKKo",
+            "child_kid": "2qWTbeZyaH3_etsP",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAzTJHXqCPSp0yV4LirOjukwY5sDuZI873A+2EaFA9Bd0=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "UCrqfS6UYwTBvAW7ntNi7OUH85hxBhjCMINKF7BKAQvX+5++2HgRY9TLQ5RsXTu9W4qZqtsfijMvTzq3HUolCw=="
+          },
+          {
+            "parent_kid": "2qWTbeZyaH3_etsP",
+            "child_kid": "aOVdCm-BuZ9MW-zc",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/dtOjCZW3DD/wcFw4lN4UeYRWzAI5hBypdCCNkX7ugE=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "QJP8M19LHJOhX45OX1NwDQVD+9Av5dlQNeUSfOE7SH/aEDjuVBcVBLgiLo+igBaojFEzwnXx7b7/DUnP2zfeDw=="
+          },
+          {
+            "parent_kid": "aOVdCm-BuZ9MW-zc",
+            "child_kid": "N0oySlAApKg0glzJ",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA+HHzTFJkqIYqNgX4JNhb/sHkNaAQAJjdZThF5b1BEQ4=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "KwAtLC01mZeQ3295vYSmt9EOdSQeeGKVEzcLUMEgg82JkC+MSGvOCYa4dWOX0rmsUbVWs46mMtnyLLhKDNFdBA=="
+          },
+          {
+            "parent_kid": "N0oySlAApKg0glzJ",
+            "child_kid": "_jp6hAqEIuXMFubi",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA0vxgkK+tGE6/Y7zaQKnlhXGcm8zOhNyZ7ZVkGz8L4Sk=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "PuVjEBFyUnKDgETdW+jcEunNIMo4J0e2u5JVp4wqJ0ZU1IY97ExAuXhiHPBIHH6BQgQKG5whb2mBmDCV4FylDg=="
+          },
+          {
+            "parent_kid": "_jp6hAqEIuXMFubi",
+            "child_kid": "TzQz3iVvZG9YlFFq",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAMvm8qxvqkYeeqCQ+wFRIjxLLZWmrJXeBWeaXulfEYAQ=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "4CfMSv2Bx3qMi2W95+YhgD7foi/qGEKREnvC2bdOkiPxVcd7t7yslQwWMDD1dlk69A9iqanygapD7R9YUmYODw=="
+          },
+          {
+            "parent_kid": "TzQz3iVvZG9YlFFq",
+            "child_kid": "YxL6M-klp2x6nU5y",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAa6wOu1xe7F1mThHrBI7ooItHJ9IiA8Z3pH+OKlov8/k=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "JTgbHTVar/HSQ/JT1Hc+jgGXapbqC9hdykJMOSCG44uW2T7vNZ92kLa+t/3L1kRi9zJrjIbJLP91agdgA9orBQ=="
+          },
+          {
+            "parent_kid": "YxL6M-klp2x6nU5y",
+            "child_kid": "7ARxCnXqV9LEc38G",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAK2IHTChj2UCTqDGENL7TkGbHkM+fuEGgsTrK/RbJPBE=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "7IA2hb5T7y4zy6pcpY0hRUyfXPk2YsAxDt9R9eEUBOMa9wnywdTS+Bob9bee2vzNqKXlwjqzpJeAohB/ewLRDw=="
+          },
+          {
+            "parent_kid": "7ARxCnXqV9LEc38G",
+            "child_kid": "qhFc_pAdvqj3kcQC",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAfX1Y8/i9S4zD63UAiDtNSWrCINMf0akr1VA0o2GyvT4=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "WWeCqszPYu3DTXf+oNxa9SPo5YMnwiN+xqrEBz5hB/1JziK9RAfG7dKOC+QS3+eVBIeqkLcr3EWsquXy3liMCA=="
+          },
+          {
+            "parent_kid": "qhFc_pAdvqj3kcQC",
+            "child_kid": "5Ox2atPO9zOjnRtA",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAJRguDgl1ONZLVqwFTcBAl20E0w58L5oQ/fE9dyETKTw=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "+r1ZcAgL+xpDcac9YCt5w9HOKQ3vRIYdswTOC1BFcVOQ87ITd2c+tcpoGfXHdq69E84EDciga0ddY2THTT/ECw=="
+          },
+          {
+            "parent_kid": "5Ox2atPO9zOjnRtA",
+            "child_kid": "xttVgoQEN4mam4IT",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAZAWYew5fB2wz7SiFCXiw339vGKhkFrXDwcFexsInD2A=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "8CDBqrE7/BxE6MAtBncm4aIK4fz08fw0/0Djk9pdJUHDZm30eeCVeCr2heapnD34Kwv6mIZsrIMVyIbUmgovCg=="
+          },
+          {
+            "parent_kid": "xttVgoQEN4mam4IT",
+            "child_kid": "MdRBwVVO7D8fJAJ-",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAyqQ83rhCCcaY28N+x0nGMogeNAI9ZWOWfo+T40r5VCw=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "73ABRT6u81yfk1cLdkMK5Q0DX1AMuDDR+TCXIZxXuwq04JKdXehiFp+hiaybUtPfPtXO1pwV56ChhM3Q2lvTAA=="
+          },
+          {
+            "parent_kid": "MdRBwVVO7D8fJAJ-",
+            "child_kid": "Pv0IGoSHnbXIclGX",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAmXYssHTUaOEBlrvQx1wnJepxjyoOdqm/Y7afKi+OeaU=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "389uH/E5+On9w7RC3a3U2eya6q154hs9BwbW+OaWSQX1ubqQDPULJpSvtg//rBvgaeQ6ZSBVmnEeevihI4MhAA=="
+          },
+          {
+            "parent_kid": "Pv0IGoSHnbXIclGX",
+            "child_kid": "tghyThUVE5Rd9V60",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAEw7GbBYGtwBLd5v96bKLEYQDyQlzkM2h4dl+EbIqg3Q=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "lQ+dpvnjRFfltCh/OEBCskhFKEznRuEqyD+KeaV854my0GR6l9wEmqD56jrKB6QFpqKFxBGIpdWVXAZuAU2zBQ=="
+          },
+          {
+            "parent_kid": "tghyThUVE5Rd9V60",
+            "child_kid": "eL-Ldry8ltqyQf0r",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAdTwArrynt2F5cm+oFB75Al8q+xtj1U5QuQYcdUv3+Xc=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "jvvWOOtESE9IkV9+WBvWBOzLmRz60M/W5kOqQRx4YK1U5DyUf89WpGF5WX7w4hTG/0ztSlF6Le9y7Jo8Sc/8DQ=="
+          },
+          {
+            "parent_kid": "eL-Ldry8ltqyQf0r",
+            "child_kid": "0PeDqFbuDC7LBjwe",
+            "child_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAMK6pAFA+tZC2vPOHypgffLMc5vJbODNuWxXbQU6g+PM=\n-----END PUBLIC KEY-----\n",
+            "scope": "artifact:sel-purchasing",
+            "issued_at": "2026-01-01T00:00:00.000Z",
+            "expires_at": "2036-01-01T00:00:00.000Z",
+            "algorithm": "Ed25519",
+            "signature": "C/rbbYZzXZ9oql80/AoCNfbkXy+JtlanWExevlpMxbIQkElKqItw6RusnO28eotzQeZuC/WytLxzR0SIRsuFDw=="
+          }
+        ]
+      },
+      "relied_kids": [
+        "0PeDqFbuDC7LBjwe"
+      ],
+      "expected": {
+        "presentable": false,
+        "size": 22
+      }
+    }
+  ]
+}
