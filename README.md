@@ -418,7 +418,7 @@ All are published as Drafts because a standard is promoted on independent implem
 [§8 of SPEC-007](spec/NOMOS-SPEC-007.md#8-conformance-and-implementation-status) and §10 of
 SPEC-008 set out the conformance requirements.
 
-**Second-party implementations are invited.** If you build agents or the services they call,
+**Second-party implementations are invited.** [`IMPLEMENTING.md`](IMPLEMENTING.md) gives the order to build in, every vector file and runner to check against, and the rules that are easiest to get wrong. If you build agents or the services they call,
 implement any of SPEC-007 to SPEC-010 against the vectors and open an issue, or email
 allan@nomosprotocol.com.
 
