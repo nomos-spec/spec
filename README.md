@@ -21,7 +21,7 @@ Agents increasingly act on behalf of organisations — a bank, a hospital, a min
 | **Enforcement** | [011](spec/NOMOS-SPEC-011.md)–[012](spec/NOMOS-SPEC-012.md) | Where Acts aren't verifiable yet: which tool argument is which fact the policy reads, and what a gateway or an agent's pre-tool hook must do, from failing closed to approvals bound to one exact call |
 | **The public square** | [013](spec/NOMOS-SPEC-013.md)–[015](spec/NOMOS-SPEC-015.md) | A registry of authorities that publishes what it offers so nobody has to trust it; resolution — *which* authorities govern this act, completely, from registrar logs the carrier cannot influence; issuance proofs — did the institution *decide* this sealing, not just sign it |
 
-Each specification states its own status. Five are Active; the rest are Drafts, and a Draft leaves Draft only when a second, **independent** implementation passes its published vectors — two such implementations are invited now ([#32](https://github.com/nomos-spec/spec/issues/32), [#33](https://github.com/nomos-spec/spec/issues/33)).
+Each specification states its own status. Six are Active; the rest are Drafts, and a Draft leaves Draft only when a second, **independent** implementation passes its published vectors. On 2026-11-13 that happened for the first time: an independent resolver answered [#33](https://github.com/nomos-spec/spec/issues/33) and took SPEC-014 out of Draft. The serious one is still open: an independent SPEC-008 Act verifier ([#32](https://github.com/nomos-spec/spec/issues/32)).
 
 The research behind the discipline is at **[computableauthority.com](https://computableauthority.com)**.
 
@@ -48,7 +48,7 @@ Every specification is in [`spec/`](spec/), whatever its status. Each file state
 | [011](spec/NOMOS-SPEC-011.md) | Tool Bindings: which tool argument is which fact a policy reads | Draft | 0.1.0 | [`binding-vectors/`](binding-vectors/) (31 parse cases, 19 calls) |
 | [012](spec/NOMOS-SPEC-012.md) | Enforcement Points: what a gateway or agent hook must do before a tool call runs | Draft | 0.1.0 | |
 | [013](spec/NOMOS-SPEC-013.md) | Authority Registries: a signed catalogue and a hash-chained public log | Draft | 0.1.0 | |
-| [014](spec/NOMOS-SPEC-014.md) | Resolution: which authorities govern an act, completely, from registrar logs the carrier cannot influence | Draft | 0.3.0 | [`resolution-vectors/`](resolution-vectors/) |
+| [014](spec/NOMOS-SPEC-014.md) | Resolution: which authorities govern an act, completely, from registrar logs the carrier cannot influence | Active | 0.3.0 | [`resolution-vectors/`](resolution-vectors/) |
 | [015](spec/NOMOS-SPEC-015.md) | Issuance Proofs: did the institution, by its own constitution, decide this sealing | Draft | 0.2.0 | [`issuance-vectors/`](issuance-vectors/) |
 
 Proposed amendments and revisions awaiting promotion are in [`spec/drafts/`](spec/drafts/):
@@ -155,7 +155,7 @@ A `.nomos` artifact now moves through four distinct moments:
 | [`nomos-guard`](https://www.npmjs.com/package/nomos-guard) | TypeScript | A SPEC-012 enforcement point for MCP servers and agent hooks, reading SPEC-011 bindings | |
 | [`nomos-spec014-resolver`](https://github.com/SvvBot/nomos-spec014-resolver) | Python | Independent clean-room reference implementation of NOMOS-SPEC-014 Resolution | All 23 resolution vectors (exact `expect`), 8 necessity ablations, graph shuffle invariance, verified pinned SHA256 digest |
 
-Every implementation listed is by the authors. SPEC-007 to 013 stay Drafts until an independent implementation reproduces their verdicts from the text; [`IMPLEMENTING.md`](IMPLEMENTING.md) is written for that. If you build one, open an issue or email allan@nomosprotocol.com, and it will be listed here.
+Every implementation listed is by the authors except the last: `nomos-spec014-resolver` is the first independent implementation, and the one that took SPEC-014 out of Draft (its resolution algorithm is its own; the SPEC-008 condition evaluator beneath it derives from this repository's published Python reference, which is why SPEC-008's exit remains open). SPEC-007 to 013 and 015 stay Drafts until an independent implementation reproduces their verdicts from the text; [`IMPLEMENTING.md`](IMPLEMENTING.md) is written for that. If you build one, open an issue or email allan@nomosprotocol.com, and it will be listed here.
 
 ---
 
@@ -198,7 +198,7 @@ python3 binding-vectors/check.py binding-vectors/vectors.json         # SPEC-011
 
 ## How the specifications change
 
-Each specification is a **Draft** or **Active**, as its own header states. NOMOS-SPEC-007 onward stay Drafts until an independent implementation passes their vectors ([SPEC-007 §8](spec/NOMOS-SPEC-007.md#8-conformance-and-implementation-status), SPEC-008 §10). Within a specification, compatible changes raise the minor version; larger ones may be proposed first as an amendment or revision in [`spec/drafts/`](spec/drafts/). A backward-incompatible change to an Active specification takes a new specification number ([`DEPRECATION.md`](DEPRECATION.md)). Every change is recorded in [`CHANGELOG.md`](CHANGELOG.md).
+Each specification is a **Draft** or **Active**, as its own header states. NOMOS-SPEC-007 onward stay Drafts until an independent implementation passes their vectors ([SPEC-007 §8](spec/NOMOS-SPEC-007.md#8-conformance-and-implementation-status), SPEC-008 §10); NOMOS-SPEC-014 left Draft exactly that way on 2026-11-13. Within a specification, compatible changes raise the minor version; larger ones may be proposed first as an amendment or revision in [`spec/drafts/`](spec/drafts/). A backward-incompatible change to an Active specification takes a new specification number ([`DEPRECATION.md`](DEPRECATION.md)). Every change is recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 To propose a change, report an ambiguity or contribute an implementation, see [`CONTRIBUTING.md`](CONTRIBUTING.md). Security issues: [`SECURITY.md`](SECURITY.md). Conduct: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
