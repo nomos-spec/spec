@@ -66,7 +66,18 @@
         "escalation_id": { "type": "string", "description": "REQUIRED for type: escalate — references governance.escalations[].id (§3.7)" },
         "variable": { "type": "string", "description": "REQUIRED for type: set" },
         "value": { "description": "REQUIRED for type: set" },
-        "action_name": { "type": "string", "description": "REQUIRED for type: action — references execution.actions (§3.8)" }
+        "action_name": { "type": "string", "description": "REQUIRED for type: action — references execution.actions (§3.8)" },
+        "event": { "type": "string", "description": "For type: emit — the event recorded; \"classify\" records a classification (amendment 2.5.0 §4.3)" },
+        "payload": {
+          "type": "object",
+          "description": "For type: emit. With event \"classify\": the classification and its legal relations (amendment 2.5.0 §4.3, §4.7)",
+          "properties": {
+            "variable": { "type": "string" },
+            "value": { "type": "object", "properties": { "lit": { "type": ["string", "number", "boolean"] } } },
+            "definition": { "type": "object", "required": ["scope"], "properties": { "scope": { "type": "string", "minLength": 1 } }, "description": "The provisions within which the classifications of this variable carrying it are every way the status arises; closes the definition (§4.7.3)" },
+            "overrides": { "type": "array", "items": { "type": "string" }, "uniqueItems": true, "description": "Ids of the other classifications of the same variable this one sets aside (§4.7.1)" }
+          }
+        }
       }
     }
   }
