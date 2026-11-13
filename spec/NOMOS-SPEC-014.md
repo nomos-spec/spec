@@ -1,11 +1,11 @@
 # NOMOS-SPEC-014: Resolution
 
 **Status:** Draft
-**Version:** 0.3.0
+**Version:** 0.4.0
 **Proposed:** 2026-11-11
-**Revised:** 2026-11-12 (0.2.0: closure agreement, view age, the C7 attack restated; see §10)
+**Revised:** 2026-11-13 (0.4.0: deferral, and registrars run by the institutions themselves: delegation by recognition, key rotation, per-log heads under either suite, the HTTP binding, discovery by DNS; 0.3.0: context fidelity; see §10)
 **Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
-**Uses:** NOMOS-SPEC-001, NOMOS-SPEC-006, NOMOS-SPEC-007, NOMOS-SPEC-008, NOMOS-SPEC-013
+**Uses:** NOMOS-SPEC-001, NOMOS-SPEC-006, NOMOS-SPEC-007, NOMOS-SPEC-008, NOMOS-SPEC-010, NOMOS-SPEC-013
 
 ---
 
@@ -25,9 +25,12 @@ would refuse — every presented artifact genuine, every prior specification sat
 complete before verification begins. §8 names this attack (*applicability hiding*) and its three
 siblings; each is a published vector in [`resolution-vectors/`](../resolution-vectors/).
 
-Out of scope, deliberately: ordering sovereigns whose claims conflict (surfaced, never settled —
-§5.3), interpretation of what an authority's rules mean, and who may operate shared resolution
-roots (the NOMOS-SPEC-007 §9 governance question, inherited here in stronger form).
+Out of scope, deliberately: ordering sovereigns whose claims conflict (surfaced, never settled by
+a resolver; a registrar may waive its own precedence by recognition, §3.4), interpretation of what
+an authority's rules mean, and who may operate shared resolution roots (the NOMOS-SPEC-007 §9
+governance question, inherited here in stronger form). No party is a root of this specification:
+every registrar is trusted because a relying party pinned it, or because a registrar it pinned
+recognized it, within the scope that recognition names (§2.3).
 
 This specification remains a **Draft** until a second, independent resolver passes every
 published vector. The key words MUST, MUST NOT, SHOULD and MAY are to be read as in RFC 2119.
@@ -51,7 +54,13 @@ published vector. The key words MUST, MUST NOT, SHOULD and MAY are to be read as
 - **View:** the folded registrar record a resolver reads, and the time its log head was signed or
   read (`head_at`). A view read live from the chain has age zero; a mirrored or cached one does not.
 - **Relying party ρ:** as in NOMOS-SPEC-008, extended with a set of **pins**: the registrars
-  whose law it undertakes to honor.
+  whose law it undertakes to honor. A pin is the registrar's id, its log name, its key and its
+  certified scope, all chosen by ρ (§2.3).
+- **Log name:** the string a registrar's head signs (§2.1). A registrar's log name is
+  `nomos-registrar:<id>`; the platform registrar of the reference implementation keeps the name
+  `nomos-exchange-log`, under which its chain began.
+- **Delegate:** a registrar reached through a `recognizes` entry that names its key (§2.3). Its
+  certified scope is derived by the resolver from that entry, never read from the delegate.
 
 ## 2. The registrar log
 
@@ -78,6 +87,101 @@ never from a side channel the chain does not witness.
 
 `exclusive: true` on a claim asserts the registrar's sole precedence over the claim's scope. It
 exists so conflicts are *detectable* (§5); it grants nothing.
+
+### 2.1 The signed head (0.4.0)
+
+A head is `{ log, size, hash, at, algorithm, kid, signature }`. The signature is over the JCS of
+`{ log, size, hash, at }`: the log name binds a head to one log, so a head signed for one
+registrar's log cannot be presented as another's, even under a key both share.
+
+The suite is fixed by the verifying key, never by the head: an Ed25519 key verifies `Ed25519`
+signatures and a P-256 key verifies `ES256` signatures (NOMOS-SPEC-010 §3). A head whose
+`algorithm` names any other suite MUST be refused (`algorithm_mismatch`); a verifier MUST NOT
+choose the verification algorithm from the head. Registrars whose keys live in a hardware
+security module or cloud key service MAY therefore use either suite.
+
+A relying party MUST verify, before folding a log: every entry's hash and the chain from 64
+zeros; that the head names an entry of this chain; that the head's `log` is the log name it
+expects; that the signature verifies under the key in force at the head's size (§2.2); that the
+head is no older than its bound; and, given a head it kept from an earlier read, that today's
+chain extends it. Entries after the head's size are not vouched for and MUST be ignored.
+
+### 2.2 Key rotation (0.4.0)
+
+| `kind` | `name` | `entry` | Meaning |
+| --- | --- | --- | --- |
+| `key` | the new key's kid | `{ public_key_pem, signature }` | from this entry on, heads are signed by this key |
+
+`signature` is made by the key in force before the entry, under that key's suite, over the JCS of
+`{ log, seq, prev_hash, kid, public_key_pem }` (this entry's own `seq` and `prev_hash`, the new
+kid and its public key). The new key MUST be an Ed25519 or P-256 key in the canonical encoding of
+NOMOS-SPEC-010 §3.1 whose kid is `name`.
+
+A verifier walks the vouched entries in order, starting from the pinned key. If a `key` entry
+introduced the pinned key, the walk starts after that entry; otherwise it starts at genesis. At
+each `key` entry it verifies the signature under the key in force and, if it verifies, replaces
+the key in force; a `key` entry that fails is `rotation_invalid` and the log MUST be refused. The
+head is verified under the key in force after its last vouched entry. A rotation is therefore
+an act of the old key, recorded in the chain, and a relying party pinned to the old key follows
+it without changing its configuration. Recovering from a compromised key is not rotation: the
+recognizing registrar, or the relying party, re-pins (a new `recognizes` entry, or a new pin).
+
+### 2.3 Pins, recognition and delegation (0.4.0)
+
+A registrar's **certified scope** (C6) comes from exactly one of two places, both chosen by the
+relying party or by a registrar it trusts:
+
+1. **A pin.** ρ configures the registrar's id, log name, key and certified scope. A resolver MUST
+   NOT default a pinned registrar's certified scope to `always` for any registrar other than one
+   ρ explicitly configures so.
+2. **A recognition entry that names the delegate's key.** A `recognizes` entry MAY carry
+   `{ scope, kid, public_key_pem, url, log? }`: the delegate's key, the base URL of its log
+   (§2.4) and, if it is not `nomos-registrar:<name>`, its log name. A resolver that reaches the
+   recognizing registrar and finds the edge's scope TRUE fetches the delegate's log from `url`,
+   verifies it under `public_key_pem` (§2.1, §2.2) and folds it. The delegate's certified scope
+   is the conjunction of the edge's scope and the recognizing registrar's own certified scope;
+   where several reached edges name the same delegate, it is their disjunction. Delegation can
+   therefore never widen: a delegate contributes law only where its recognizer's certificate
+   also holds (`delegation_never_widens`, papers/resolution/lean).
+
+Nothing a registrar states about itself — in its own log, its head, its HTTP answers or its DNS
+records — enters its certified scope or its key. A later `recognizes` entry for the same delegate
+replaces the earlier one's key, URL and scope from its `at`, which is how a recognizing registrar
+moves a delegate to a new key after a compromise. A `withdrawn` entry naming a recognized id ends
+the recognition.
+
+A resolver MUST bound the walk: at most 8 recognition hops from a pin and at most 32 registrars
+per resolution. A registrar beyond either bound, or whose log cannot be fetched or verified, is
+unreachable (§3.3), naming it. A resolver fetching logs on behalf of others MUST refuse URLs that
+are not `https` or that resolve to private, loopback or link-local addresses.
+
+### 2.4 The HTTP binding (0.4.0)
+
+A registrar's log is served at a base URL `L` over HTTPS:
+
+- `GET L/head` → the signed head (§2.1);
+- `GET L?after=<seq>&limit=<n>` → `{ entries, next }`, entries with `seq > after` in order,
+  at most `n` (a registrar MAY cap `n` at 1000), `next` the `after` for the following page or
+  `null` at the end.
+
+Every response is a copy anyone may serve: integrity comes from the chain and the head, never
+from the server. A resolver reads the head first and the entries second, so the entries read can
+only be longer than the head vouches for.
+
+### 2.5 Discovery by DNS (0.4.0)
+
+A registrar MAY publish where its log is in a TXT record at `_nomos-registrar.<domain>`:
+
+```
+_nomos-registrar.difc.ae.  TXT  "v=nomos1; id=difc; url=https://difc.ae/.well-known/nomos-registrar/difc; kid=<kid>"
+```
+
+DNS is a hint for finding a log, never a source of trust. A resolver that uses it MUST already
+hold the registrar's key from a pin or a recognition entry, and MUST refuse the registrar
+(unreachable, `discovery_mismatch`) if the record's `kid` or `id` differs from the one it holds
+or `url` is not `https`. It MUST NOT fall back to any other copy, and MUST NOT take a key from
+DNS. Records are parsed as `;`-separated `name=value` pairs; `v` MUST be `nomos1`; unknown names
+are ignored; a record missing `id`, `url` or `kid` is not a record.
 
 ## 3. Resolution
 
@@ -127,11 +231,12 @@ registrar's claim, upstream of every law it selects.
 
 ### 3.3 The algorithm (normative)
 
-Starting from the pins, walk registrars breadth-first, following each `recognizes` edge whose
-scope is TRUE on the context (an UNDECIDED edge scope contributes its open facts; a FALSE edge
+Starting from the pins, walk registrars breadth-first, following each `recognizes` edge in force
+at `at` (from its entry's `at` until a later `recognizes` entry for the same registrar, or a
+`withdrawn` entry naming it, in the same log) whose scope is TRUE on the context (an UNDECIDED edge scope contributes its open facts; a FALSE edge
 is not followed and imposes no obligations on its target). For each reached registrar:
 
-1. **C6 — claim authority.** Evaluate the registrar's certified scope on the context. A claim
+1. **C6 — claim authority.** Evaluate the registrar's certified scope (§2.3) on the context. A claim
    contributes a member only if the claim's scope AND the certified scope are both TRUE. A claim
    whose certificate does not cover the context is not a weaker claim; it is no claim.
 2. **C7 — currency.** Skip claims not in force at `at` (window), superseded at `at`, or revoked.
@@ -178,10 +283,20 @@ Exactly one of, with precedence INCOMPLETE > CONFLICT > RESOLVED:
   named. For a consequential act, INCOMPLETE MUST NOT be read as
   permission, and a resolver MUST NOT return the subset it could establish as if it were the
   answer. (Precedence: a missing fact could still dissolve an apparent conflict.)
-- **CONFLICT** — `exclusive` claims from two or more distinct registrars all cover the context.
-  Both chains MUST be surfaced; a resolver MUST NOT order sovereigns by any tie-break of its
-  own. Registrars dissolve conflicts in advance with `recognizes` edges and scope carve-outs —
-  treaties, in machine form — and the log records which conflicts have been so dissolved.
+- **CONFLICT** — `exclusive` claims from two distinct registrars `a` and `b` both cover the
+  context, and neither defers to the other. Both chains MUST be surfaced; a resolver MUST NOT
+  order sovereigns by any tie-break of its own.
+
+  **Deferral (0.4.0).** `a` defers to `b` on a context when `a`'s own log carries a `recognizes`
+  entry naming `b` whose scope is TRUE on that context. Exclusive claims of two registrars one of
+  which defers to the other raise no CONFLICT; the resolution is RESOLVED with both laws, since
+  under §4 every member must be satisfied. Only a registrar's own log can waive its precedence: a
+  third registrar recognizing both changes nothing (`deferral_is_own`). An edge whose scope is
+  UNDECIDED holds the resolution INCOMPLETE, as any undecided scope does
+  (`undecided_edge_incomplete`). Deferral never removes law: with or without it the resolution is
+  the same, except that a CONFLICT may become RESOLVED, with exactly the laws a resolver without
+  deferral would require (`deferral_never_removes_law`). Registrars dissolve conflicts in advance
+  this way and with scope carve-outs — treaties, in machine form — and their logs record it.
 - **RESOLVED(𝒜, π)** — otherwise. 𝒜 is the surviving members; an EMPTY 𝒜 is a valid answer
   ("no pinned law applies"), permitted only under closure. The proof π MUST carry, at minimum:
   the pins, `at`, each consulted registrar's log head, the closure statements relied on, and the
@@ -234,7 +349,7 @@ A resolution query reveals intent. Registrar chains are public by design; querie
 Relying parties SHOULD resolve against locally mirrored chains where query privacy matters;
 private information retrieval is an open direction.
 
-## 8. Security considerations: the four attacks
+## 8. Security considerations: the attacks
 
 Each attack uses only genuine, correctly signed artifacts. Each is a published vector.
 
@@ -277,16 +392,51 @@ exactly what was dropped and when: not prevented, but attributable and permanent
 that separates the key for `closed` entries from the key for other entries makes that a
 two-key act.
 
+Five further attacks, against 0.4.0's registrars, each a published vector in
+[`resolution-vectors/registrar-logs.json`](../resolution-vectors/registrar-logs.json):
+
+- **Self-asserted scope.** A registrar's own log, head or HTTP answer states a wider scope than
+  its pin or recognition gives it. Nothing it states enters its certified scope (§2.3).
+- **Delegated squatting.** A delegate claims law outside the edge that recognized it, or outside
+  its recognizer's certificate. Its certificate is the conjunction (§2.3), so the claim is no
+  claim.
+- **A key from DNS.** A spoofed TXT record names an attacker's key or log. DNS never supplies a
+  key, and a record that disagrees with the held kid refuses the registrar (§2.5).
+- **A head for another log, or under another suite.** A head signed for log A is replayed as log
+  B's, or a head's `algorithm` asks for a weaker check. The log name is signed and the suite is
+  fixed by the key (§2.1).
+- **A forged rotation.** A `key` entry not signed by the key in force, appended to hand the log
+  to a new key. It is `rotation_invalid` and the whole log is refused (§2.2).
+
 ## 9. Open problems
 
 Inherited and stated, not hidden: registrar governance (who may close a scope — the
-NOMOS-SPEC-007 §9 question squared); characterization of context fields beyond the v0
+NOMOS-SPEC-007 §9 question squared; 0.4.0 makes every registrar's standing a choice of its
+relying parties or of a registrar they pinned, and names no root); characterization of context fields beyond the v0
 vocabulary; the witness-class vocabulary and who certifies context witnesses per class (CF's
 residue); private-law resolution (contracts as authorities); freshness economics per scope
 class, now two bounds (closure age and view age); and the Draft-exit condition — a second,
 independent implementation agreeing on every vector.
 
 ## 10. Changes
+
+**0.4.0 (2026-11-13).** Deferral, and registrars run by the institutions themselves:
+
+- The signed head names its log, and the suite is fixed by the verifying key: Ed25519 or ES256,
+  so a registrar key may live in a hardware security module (§2.1).
+- Key rotation by a `key` entry signed by the key it replaces (§2.2).
+- A registrar's certified scope comes only from a pin or from a `recognizes` entry that names the
+  delegate's key and log; a delegate's certificate is the edge's scope AND its recognizer's
+  (§2.3), proved never to widen in Lean (`delegation_never_widens`,
+  `delegation_unknown_incomplete`). Walks are bounded; fetches refuse private addresses.
+- The HTTP binding of a log (§2.4) and discovery by DNS as a hint that never supplies a key
+  (§2.5).
+- §8: five attacks on registrars, each a vector in `registrar-logs.json`.
+- Deferral (§3.4): a registrar that recognizes another over a context raises no CONFLICT with it
+  there. Proved in Lean: deferral never removes law, only a registrar's own log can waive its
+  precedence, and an undecided edge keeps the resolution INCOMPLETE.
+- Vectors: 33 in `vectors.json` (10 new: deferral, recognition windows, delegation); 34 in the new
+  `registrar-logs.json`.
 
 **0.3.0 (2026-11-12).** Context fidelity (CF): the last self-description. C5 stopped the carrier
 choosing the law; the context the scopes evaluate over was still anyone's say-so, and a false

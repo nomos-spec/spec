@@ -95,6 +95,11 @@ jobs:
           python generate_111.py | cmp - vectors-1.11.json
           python mutants_revocations.py revocation-vectors-1.10.json | cmp - revocation-mutants-1.10.json
 
+      - name: SPEC-014 0.4.0 registrar-log vectors (Python reference)
+        run: python resolution-vectors/check_registrar_logs.py resolution-vectors/registrar-logs.json
+      - name: SPEC-014 registrar-log vectors reproduce byte for byte
+        run: python resolution-vectors/generate_registrar_logs.py | cmp - resolution-vectors/registrar-logs.json
+
       - name: SPEC-010 signature-suite vectors
         run: python suite-vectors/check.py suite-vectors/vectors.json
       - name: SPEC-010 vectors reproduce byte for byte

@@ -58,6 +58,7 @@ python3 chain-of-trust-vectors/python/check_19.py chain-of-trust-vectors/vectors
 python3 chain-of-trust-vectors/python/check_revocations.py chain-of-trust-vectors/revocation-vectors-1.10.json   # 22 passed
 python3 act-vectors/check.py act-vectors/vectors.json                                       # 48 passed
 node submission-vectors/selection.mjs --check                                               # 7 passed
+python3 resolution-vectors/check_registrar_logs.py resolution-vectors/registrar-logs.json    # 34 passed
 ```
 
 ## Rules that are easy to get wrong
@@ -91,6 +92,13 @@ implementation passed every vector and was still wrong.
    parent's earlier statements still count.
 10. **Present the closure, not the pool** (SPEC-009 0.2.0 §6.5). An issuer's certificate pool can be
     far larger than the 20 certificates an Act may carry.
+11. **A registrar never certifies itself** (SPEC-014 0.4.0 §2.3). Its certified scope comes from your
+    pin, or from the recognition entry that named its key, ANDed with the recognizer's own. Never
+    read it from the registrar's log, its head, its HTTP answers or its DNS records, and never
+    default a pin to `always`.
+12. **The key fixes the suite, the head names its log** (§2.1). Choose Ed25519 or ES256 from the
+    key's type, never from the head's `algorithm`; verify the head over its log name, so a head for
+    one log cannot pass as another's. Follow `key` entries only when the key in force signed them.
 
 ## The reference implementations
 
