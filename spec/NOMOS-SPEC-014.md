@@ -142,7 +142,9 @@ relying party or by a registrar it trusts:
    is the conjunction of the edge's scope and the recognizing registrar's own certified scope;
    where several reached edges name the same delegate, it is their disjunction. Delegation can
    therefore never widen: a delegate contributes law only where its recognizer's certificate
-   also holds (`delegation_never_widens`, papers/resolution/lean).
+   also holds. Lean proves this for one edge (`delegation_never_widens`,
+   papers/resolution/lean); the disjunction over several edges, and a registrar both pinned and
+   delegated, are tested by the vectors, not proved.
 
 Nothing a registrar states about itself — in its own log, its head, its HTTP answers or its DNS
 records — enters its certified scope or its key. A later `recognizes` entry for the same delegate
@@ -427,8 +429,9 @@ independent implementation agreeing on every vector.
 - Key rotation by a `key` entry signed by the key it replaces (§2.2).
 - A registrar's certified scope comes only from a pin or from a `recognizes` entry that names the
   delegate's key and log; a delegate's certificate is the edge's scope AND its recognizer's
-  (§2.3), proved never to widen in Lean (`delegation_never_widens`,
-  `delegation_unknown_incomplete`). Walks are bounded; fetches refuse private addresses.
+  (§2.3), proved never to widen in Lean for one edge (`delegation_never_widens`,
+  `delegation_unknown_incomplete`; several edges and pinned-and-delegated registrars are tested,
+  not proved). Walks are bounded; fetches refuse private addresses.
 - The HTTP binding of a log (§2.4) and discovery by DNS as a hint that never supplies a key
   (§2.5).
 - §8: five attacks on registrars, each a vector in `registrar-logs.json`.

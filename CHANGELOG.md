@@ -17,8 +17,9 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
   - **§2.2:** key rotation by a `key` entry that the key it replaces signed.
   - **§2.3:** a registrar's certified scope comes only from a relying party's pin, or from a
     `recognizes` entry naming the delegate's key and log. A delegate's certificate is that edge AND
-    the recognizer's own, so delegation never widens (proved in Lean: `delegation_never_widens`,
-    `delegation_unknown_incomplete`). Recognitions run from their entry until replaced or withdrawn.
+    the recognizer's own, so delegation never widens (proved in Lean for one edge:
+    `delegation_never_widens`, `delegation_unknown_incomplete`; several edges are tested, not
+    proved). Recognitions run from their entry until replaced or withdrawn.
     Walks are bounded (8 hops, 32 registrars), and fetches refuse private addresses.
   - **§2.4:** the HTTP binding of a log.
   - **§2.5:** discovery by DNS (`_nomos-registrar.<domain>`) as a hint that never supplies a key.
