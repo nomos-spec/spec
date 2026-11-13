@@ -153,6 +153,7 @@ A `.nomos` artifact now moves through four distinct moments:
 | [`@nomosprotocol/verify`](https://www.npmjs.com/package/@nomosprotocol/verify) | TypeScript, any runtime | SPEC-007 to 010 verification | Every SPEC-007, 008 and 010 vector; agrees with the Python reference on all 1,804 SPEC-008 mutants and 349 revocation mutants |
 | [`@nomosprotocol/sdk`](https://www.npmjs.com/package/@nomosprotocol/sdk), [`@nomosprotocol/cli`](https://www.npmjs.com/package/@nomosprotocol/cli) | TypeScript | `act()`, `accept()`, `issuer()`, `witness()`, `approver()`; `nomos dev` | SPEC-009 `run.mjs` (17) |
 | [`nomos-guard`](https://www.npmjs.com/package/nomos-guard) | TypeScript | A SPEC-012 enforcement point for MCP servers and agent hooks, reading SPEC-011 bindings | |
+| [`nomos-spec014-resolver`](https://github.com/SvvBot/nomos-spec014-resolver) | Python | Independent clean-room reference implementation of NOMOS-SPEC-014 Resolution | All 23 resolution vectors (exact `expect`), 8 necessity ablations, graph shuffle invariance, verified pinned SHA256 digest |
 
 Every implementation listed is by the authors. SPEC-007 to 013 stay Drafts until an independent implementation reproduces their verdicts from the text; [`IMPLEMENTING.md`](IMPLEMENTING.md) is written for that. If you build one, open an issue or email allan@nomosprotocol.com, and it will be listed here.
 
