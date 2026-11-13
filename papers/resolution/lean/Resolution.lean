@@ -1,6 +1,6 @@
 /-
   Computable Authority, Part III ("Resolve the Law, Not the Catalogue") and NOMOS-SPEC-014
-  (Draft 0.1.0 and 0.2.0): a mechanized model of resolution and the combined verdict, following the
+  (Draft 0.1.0 to 0.4.0; 0.3.0's context fidelity is tested, not modelled): a mechanized model of resolution and the combined verdict, following the
   reference resolver (server/lib/resolution.ts, `resolveApplicableSet` / `combineVerdicts`) step
   by step for ONE query (a context and a time t).
 
@@ -46,6 +46,13 @@
       on its age. The fix (a signed head time and a per-scope bound) is NOT proved here: heads
       are not in the model.
   §7  Necessity of C5, C7 (snapshot) and C8 for safety (genuine artifacts only).
+  §8  Deferral (0.4.0): `deferral_never_removes_law` (with or without deferral the resolution is
+      the same, except a CONFLICT may become RESOLVED with exactly the laws required without it),
+      `deferral_is_own`, `undecided_edge_incomplete`.
+  §9  Delegation (0.4.0): `delegation_never_widens` (a delegate's certificate is the edge AND the
+      recognizer's, so its law lies where both hold), `delegation_unknown_incomplete`. Fetching
+      and verifying logs, key rotation and DNS discovery are tested (registrar-logs.json), not
+      modelled.
 -/
 
 set_option linter.deprecated false
@@ -193,6 +200,9 @@ structure Checks where
   currency : Bool := true   -- C7
   closure : Bool := true    -- C8
   agree : Bool := false     -- proposed: a covering closure agrees with the live claims
+  /-- SPEC-014 0.4.0: a registrar that recognizes another over this context does not assert
+      precedence against it (its exclusive claims there raise no CONFLICT with that registrar) -/
+  deferral : Bool := false
   /-- C7 dropped the way the paper's zombie attack drops it: membership judged at an earlier
       time (a snapshot), while closure freshness is still judged at t. -/
   snap : Option Nat := none
@@ -253,10 +263,19 @@ def cands : Option (Rec Reg Auth) → List (Claim Auth)
 def allCands (w : World Reg Auth) (R : List Reg) : List (Reg × Claim Auth) :=
   R.flatMap fun r => (cands ck t (w.view r)).map fun c => (r, c)
 
-/-- CONFLICT: exclusive member claims from two different registrars. -/
+/-- `a` defers to `b` on this context: `a`'s OWN log carries a recognition edge to `b` whose scope
+    is TRUE here. (An undecided edge scope already holds the resolution open via `openR`.) -/
+def defersTo (w : World Reg Auth) (a b : Reg) : Bool :=
+  match w.view a with
+  | none => false
+  | some r => r.edges.any fun e => e.1 == b && e.2 == .t
+
+/-- CONFLICT: exclusive member claims from two different registrars, neither deferring to the
+    other (when deferral is on). -/
 def conflictB (w : World Reg Auth) (R : List Reg) : Bool :=
   (allCands ck t w R).any fun x => x.2.excl &&
-    (allCands ck t w R).any fun y => y.2.excl && x.1 != y.1
+    (allCands ck t w R).any fun y => y.2.excl && x.1 != y.1 &&
+      !(ck.deferral && (defersTo w x.1 y.1 || defersTo w y.1 x.1))
 
 /-- `resolveApplicableSet` over the reached registrars R. Precedence INCOMPLETE > CONFLICT. -/
 def resolve (w : World Reg Auth) (R : List Reg) : Res Auth :=
@@ -373,15 +392,35 @@ theorem full_commit (t : Nat) (ap : E → Prop) (eval : Auth → F → Verdict E
 
 /-! ## §4 Containment: more law is never less safe -/
 
+/-- Deferral under (ck', w') is no wider than under (ck, w). -/
+def DefersNoMore (ck ck' : Checks) (w w' : World Reg Auth) : Prop :=
+  ∀ a b, (ck'.deferral && defersTo w' a b) = true → (ck.deferral && defersTo w a b) = true
+
 theorem conflict_mono {ck ck' : Checks} {t : Nat} {w w' : World Reg Auth} {R R' : List Reg}
     (hsub : ∀ x, x ∈ allCands ck t w R → x ∈ allCands ck' t w' R')
+    (hdef : DefersNoMore ck ck' w w')
     (h : conflictB ck t w R = true) : conflictB ck' t w' R' = true := by
   unfold conflictB at h ⊢
   obtain ⟨x, hx, h⟩ := List.any_eq_true.mp h
   simp only [Bool.and_eq_true] at h
   obtain ⟨y, hy, hy'⟩ := List.any_eq_true.mp h.2
-  exact List.any_eq_true.mpr ⟨x, hsub x hx, by
-    simp only [Bool.and_eq_true]; exact ⟨h.1, List.any_eq_true.mpr ⟨y, hsub y hy, hy'⟩⟩⟩
+  simp only [Bool.and_eq_true, Bool.not_eq_true'] at hy'
+  refine List.any_eq_true.mpr ⟨x, hsub x hx, ?_⟩
+  simp only [Bool.and_eq_true]
+  refine ⟨h.1, List.any_eq_true.mpr ⟨y, hsub y hy, ?_⟩⟩
+  simp only [Bool.and_eq_true, Bool.not_eq_true']
+  refine ⟨hy'.1, ?_⟩
+  cases hc : (ck'.deferral && (defersTo w' x.1 y.1 || defersTo w' y.1 x.1))
+  · rfl
+  · exfalso
+    simp only [Bool.and_eq_true, Bool.or_eq_true] at hc
+    obtain ⟨hd', h2⟩ := hc
+    have key : ∀ a b, defersTo w' a b = true → ck.deferral = true ∧ defersTo w a b = true := fun a b hab => by
+      have := hdef a b (by rw [hd', hab]; rfl)
+      simpa only [Bool.and_eq_true] using this
+    rcases h2 with h2 | h2
+    · obtain ⟨k1, k2⟩ := key _ _ h2; rw [k1, k2] at hy'; simp at hy'
+    · obtain ⟨k1, k2⟩ := key _ _ h2; rw [k1, k2] at hy'; simp at hy'
 
 /-- General containment: if every reason to hold the resolution open under (ck, w, R) is also
     one under (ck', w', R'), and every member there is a member here, a commit there is a commit
@@ -390,6 +429,7 @@ theorem stricter_safe {ck ck' : Checks} {t : Nat} (ap : E → Prop) (eval : Auth
     {w w' : World Reg Auth} {R R' : List Reg} (α : Act Auth F)
     (hbad : (∀ r ∈ R', regBad ck' t (w'.view r) = false) → ∀ r ∈ R, regBad ck t (w.view r) = false)
     (hc : ∀ x, x ∈ allCands ck t w R → x ∈ allCands ck' t w' R')
+    (hdef : DefersNoMore ck ck' w w')
     (h : Commits ap (decideWith ck' t eval w' R' α)) :
     Commits ap (decideWith ck t eval w R α) := by
   obtain ⟨S', _, hb', hx', hall', _, hmem'⟩ := sufficiency ck' t ap eval w' R' α h
@@ -402,7 +442,7 @@ theorem stricter_safe {ck ck' : Checks} {t : Nat} (ap : E → Prop) (eval : Auth
   have hnx : conflictB ck t w R = false := by
     cases hh : conflictB ck t w R
     · rfl
-    · rw [conflict_mono hc hh] at hx'; cases hx'
+    · rw [conflict_mono hc hdef hh] at hx'; cases hx'
   unfold decideWith resolve
   rw [hnb, hnx]
   simp only [Bool.false_eq_true, ↓reduceIte]
@@ -417,7 +457,7 @@ theorem reached_mono (ck : Checks) (t : Nat) (ap : E → Prop) (eval : Auth → 
     (w : World Reg Auth) {R R' : List Reg} (hsub : ∀ r ∈ R, r ∈ R') (α : Act Auth F)
     (h : Commits ap (decideWith ck t eval w R' α)) : Commits ap (decideWith ck t eval w R α) :=
   stricter_safe ap eval α (fun hb r hr => hb r (hsub r hr))
-    (fun x hx => mem_allCands.mpr ⟨hsub _ (mem_allCands.mp hx).1, (mem_allCands.mp hx).2⟩) h
+    (fun x hx => mem_allCands.mpr ⟨hsub _ (mem_allCands.mp hx).1, (mem_allCands.mp hx).2⟩) (fun _ _ h => h) h
 
 def addClaim (w : World Reg Auth) (r₀ : Reg) (c₀ : Claim Auth) : World Reg Auth :=
   { w with view := fun r => if r = r₀ then (w.view r).map fun rec => { rec with claims := rec.claims ++ [c₀] }
@@ -453,7 +493,7 @@ theorem noC6_never_commits_more (t : Nat) (ap : E → Prop) (eval : Auth → F �
     (w : World Reg Auth) (R : List Reg) (α : Act Auth F)
     (h : Commits ap (decideWith { scope := false } t eval w R α)) :
     Commits ap (decideWith Checks.full t eval w R α) := by
-  apply stricter_safe ap eval α _ _ h
+  apply stricter_safe ap eval α _ _ (fun _ _ h => by simp [Checks.full] at h) h
   · intro hb r hr
     have e : regBad Checks.full t (w.view r) = regBad { scope := false } t (w.view r) := by
       cases w.view r <;> rfl
@@ -476,7 +516,7 @@ theorem noC7_never_commits_more (t : Nat) (ap : E → Prop) (eval : Auth → F �
     (w : World Reg Auth) (R : List Reg) (α : Act Auth F)
     (h : Commits ap (decideWith { currency := false } t eval w R α)) :
     Commits ap (decideWith Checks.full t eval w R α) := by
-  apply stricter_safe ap eval α _ _ h
+  apply stricter_safe ap eval α _ _ (fun _ _ h => by simp [Checks.full] at h) h
   · intro hb r hr; have := hb r hr
     cases hrec : w.view r with
     | none => rw [hrec] at this; simpa [regBad, Checks.full] using this
@@ -664,6 +704,108 @@ theorem C8_necessary_stale :
   · show Commits apNone (Verdict.authorized); trivial
   · show ¬ Commits apNone (Verdict.incomplete); exact id
 
+/-! ## §8 Deferral (SPEC-014 0.4.0): a recognition edge dissolves a conflict, and removes nothing -/
+
+/-- The set of required laws does not read `deferral`. -/
+theorem allCands_deferral (ck : Checks) (t : Nat) (w : World Reg Auth) (R : List Reg) :
+    allCands { ck with deferral := true } t w R = allCands { ck with deferral := false } t w R := rfl
+
+theorem regBad_deferral (ck : Checks) (t : Nat) (o : Option (Rec Reg Auth)) :
+    regBad { ck with deferral := true } t o = regBad { ck with deferral := false } t o := by
+  cases o <;> rfl
+
+/-- Deferral never removes a law. With or without it, the resolution is the same, except that a
+    CONFLICT may become RESOLVED, and then with exactly the laws the resolver without deferral
+    would have required. -/
+theorem deferral_never_removes_law (ck : Checks) (t : Nat) (w : World Reg Auth) (R : List Reg) :
+    resolve { ck with deferral := true } t w R = resolve { ck with deferral := false } t w R ∨
+    (resolve { ck with deferral := false } t w R = .conflict ∧
+     resolve { ck with deferral := true } t w R =
+       .resolved ((allCands { ck with deferral := false } t w R).map fun x => x.2.auth)) := by
+  unfold resolve
+  have hb : (R.any fun r => regBad { ck with deferral := true } t (w.view r)) =
+      (R.any fun r => regBad { ck with deferral := false } t (w.view r)) := by
+    congr 1
+  rw [hb, allCands_deferral]
+  by_cases h1 : (R.any fun r => regBad { ck with deferral := false } t (w.view r)) = true
+  · left; simp [h1]
+  · simp only [h1, Bool.false_eq_true, if_false]
+    by_cases h0 : conflictB { ck with deferral := false } t w R = true
+    · by_cases hd : conflictB { ck with deferral := true } t w R = true
+      · left; simp [h0, hd]
+      · right; simp [h0, hd]
+    · have hd : conflictB { ck with deferral := true } t w R = false := by
+        cases hd : conflictB { ck with deferral := true } t w R
+        · rfl
+        · exfalso; apply h0
+          unfold conflictB at hd ⊢
+          rw [allCands_deferral] at hd
+          obtain ⟨x, hx, hx'⟩ := List.any_eq_true.mp hd
+          simp only [Bool.and_eq_true] at hx'
+          obtain ⟨y, hy, hy'⟩ := List.any_eq_true.mp hx'.2
+          simp only [Bool.and_eq_true] at hy'
+          refine List.any_eq_true.mpr ⟨x, hx, ?_⟩
+          simp only [Bool.and_eq_true]
+          refine ⟨hx'.1, List.any_eq_true.mpr ⟨y, hy, ?_⟩⟩
+          simp only [Bool.and_eq_true]
+          exact ⟨⟨hy'.1.1, hy'.1.2⟩, by simp⟩
+      left; simp [h0, hd]
+
+/-- Only a registrar's own log can waive its precedence: whether `a` defers to `b` reads `a`'s
+    record and nothing else. -/
+theorem deferral_is_own (w w' : World Reg Auth) (a b : Reg) (h : w.view a = w'.view a) :
+    defersTo w a b = defersTo w' a b := by
+  unfold defersTo; rw [h]
+
+/-- An unknown fact keeps the conflict open: a reached registrar whose recognition edge has an
+    undecided scope holds the resolution INCOMPLETE, deferral or not. -/
+theorem undecided_edge_incomplete (ck : Checks) (t : Nat) (w : World Reg Auth) (R : List Reg)
+    (r : Reg) (hr : r ∈ R) (rec : Rec Reg Auth) (hv : w.view r = some rec)
+    (e : Reg × K3) (he : e ∈ rec.edges) (hu : e.2 = .u) : resolve ck t w R = .incomplete := by
+  unfold resolve
+  have : (R.any fun r => regBad ck t (w.view r)) = true := by
+    refine List.any_eq_true.mpr ⟨r, hr, ?_⟩
+    rw [hv]; unfold regBad openR
+    have : rec.edges.any (fun e => e.2 == .u) = true := List.any_eq_true.mpr ⟨e, he, by simp [hu]⟩
+    simp [this]
+  simp [this]
+
+/-! ## §9 Delegation (SPEC-014 0.4.0): a recognized registrar holds no more than was delegated -/
+
+/-- Kleene conjunction, the `and` of SPEC-008 conditions. -/
+def K3.and3 : K3 → K3 → K3
+  | .f, _ => .f
+  | _, .f => .f
+  | .t, .t => .t
+  | _, _ => .u
+
+/-- A delegate's certificate, as a resolver derives it from a recognition entry that names the
+    delegate's key: the edge's scope AND the recognizing registrar's own certificate. Nothing the
+    delegate's own log says enters it. -/
+def delegate (parent : Rec Reg Auth) (edge : K3) (child : Rec Reg Auth) : Rec Reg Auth :=
+  { child with cert := K3.and3 edge parent.cert }
+
+/-- Delegation never widens: any law a delegate contributes lies where the recognizing registrar's
+    own certificate holds and where the recognition edge holds. A registrar certified for one place
+    cannot, by recognizing another, import law into a place it does not cover. -/
+theorem delegation_never_widens (ck : Checks) (t : Nat) (parent child : Rec Reg Auth) (edge : K3)
+    (hs : ck.scope = true) (c : Claim Auth) (hc : c ∈ cands ck t (some (delegate parent edge child))) :
+    parent.cert = .t ∧ edge = .t := by
+  unfold cands at hc
+  have h := (List.mem_filter.mp hc).2
+  simp only [certOK, hs, delegate, Bool.not_true, Bool.false_or, Bool.and_eq_true, beq_iff_eq] at h
+  have hk := h.2
+  cases edge <;> cases hp : parent.cert <;> simp_all [K3.and3]
+
+/-- An unknown fact on the delegation keeps the resolution open: if the edge's scope is undecided
+    and the recognizer's certificate does not exclude the context, the delegate holds the
+    resolution INCOMPLETE. -/
+theorem delegation_unknown_incomplete (ck : Checks) (t : Nat) (parent child : Rec Reg Auth)
+    (hp : parent.cert ≠ .f) :
+    regBad ck t (some (delegate parent .u child)) = true := by
+  have hc : K3.and3 .u parent.cert = .u := by cases h : parent.cert <;> simp_all [K3.and3]
+  simp [regBad, openR, delegate, hc]
+
 end Resolution
 
 #print axioms Resolution.sufficiency
@@ -675,4 +817,8 @@ end Resolution
 #print axioms Resolution.withdrawal_hides_law
 #print axioms Resolution.stale_view_commits
 #print axioms Resolution.C7_necessary_snapshot
+#print axioms Resolution.deferral_never_removes_law
+#print axioms Resolution.undecided_edge_incomplete
+#print axioms Resolution.delegation_never_widens
+#print axioms Resolution.delegation_unknown_incomplete
 #print axioms Resolution.Verdict.combAll_perm

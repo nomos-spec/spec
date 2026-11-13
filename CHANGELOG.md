@@ -7,6 +7,41 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-014 0.4.0] — 2026-11-13 (Deferral, and registrars run by the institutions themselves)
+
+SPEC-014 stays Active, as of 0.3.0, on the independent resolver that passed 0.3.0's 23 vectors (entry below). The 0.4.0 additions are Draft until an independent implementation passes the new `vectors.json` (33) and `registrar-logs.json` (34).
+
+### Added
+- **Registrars run by the institutions themselves.** A regulator, free zone or company runs
+  its own registrar with its own key, and nobody, NOMOS included, is a root:
+  - **§2.1:** the signed head names its log, so a head for one log cannot pass as another's. The
+    suite is fixed by the key: Ed25519 or ES256, so registrar keys can live in an HSM.
+  - **§2.2:** key rotation by a `key` entry that the key it replaces signed.
+  - **§2.3:** a registrar's certified scope comes only from a relying party's pin, or from a
+    `recognizes` entry naming the delegate's key and log. A delegate's certificate is that edge AND
+    the recognizer's own, so delegation never widens (proved in Lean for one edge:
+    `delegation_never_widens`, `delegation_unknown_incomplete`; several edges are tested, not
+    proved). Recognitions run from their entry until replaced or withdrawn.
+    Walks are bounded (8 hops, 32 registrars), and fetches refuse private addresses.
+  - **§2.4:** the HTTP binding of a log.
+  - **§2.5:** discovery by DNS (`_nomos-registrar.<domain>`) as a hint that never supplies a key.
+  - **§8:** five attacks on registrars.
+- **Deferral (§3.4).** A registrar whose own log recognizes another over a context raises no
+  CONFLICT with it there. Proved in Lean: deferral never removes law, only a registrar's own log can
+  waive its precedence, and an undecided edge keeps the resolution INCOMPLETE.
+- **Vectors.** `resolution-vectors/vectors.json` has 33 vectors, up from 23:
+  - four for deferral;
+  - two for recognition windows;
+  - four for delegation, including two attacks.
+
+  `resolution-vectors/registrar-logs.json` (34 cases: log, network, discovery) is new, with its
+  generator and checker. CI checks it, and checks that it regenerates byte for byte.
+- **Python reference:** `python/nomosprotocol/registrar.py` (verify, fold, discovery, world
+  assembly), written apart from the TypeScript verifier. Both agree on every case.
+- **Implemented in `@nomosprotocol/verify` 1.6.0**, which also implements 0.3.0's context fidelity.
+
+---
+
 ## [NOMOS-SPEC-001 Amendment 2.5.0, Draft] — 2026-11-13 (Derived values: classifications and their legal relations)
 
 Found by resealing the EU AI Act. Its Article 55 rules read `gpai_systemic_risk`, a status the law itself determines (Art. 51–52), so the person seeking authorisation supplied the fact that decided which duties applied.

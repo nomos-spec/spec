@@ -5,7 +5,7 @@ The verifiers here are the same code the specification's published vectors are g
 checked with, so there is no second implementation to drift from the reference.
 
     verify_act(act, ...)              NOMOS-SPEC-008 0.6.0: may this exact change be committed here?
-    chain.resolve(...)                NOMOS-SPEC-007 rev. 1.9: resolve a key to a pinned root, for a purpose
+    chain.resolve(...)                NOMOS-SPEC-007 rev. 1.11: resolve a key to a pinned root, for a purpose
     chain.verify_revocation_list(...) NOMOS-SPEC-007 rev. 1.10: which revocations count, and since when
     accept(...)                       be the relying party: verify, commit exactly once, receipt (NOMOS-SPEC-009)
     act(...)                          be the carrier: discover, gather testimony, submit, get approval
@@ -14,7 +14,8 @@ checked with, so there is no second implementation to drift from the reference.
     local_signer, generate_signer     keys in this process (development); pass your own Signer for a KMS
 
 Modules: jcs (RFC 8785), suites (NOMOS-SPEC-010), chain (NOMOS-SPEC-007), act (NOMOS-SPEC-008),
-statements, accept, carrier, witness, issuer, bindings (NOMOS-SPEC-011 tool bindings: parse, apply, digest).
+statements, accept, carrier, witness, issuer, bindings (NOMOS-SPEC-011 tool bindings: parse, apply, digest),
+registrar (NOMOS-SPEC-014 0.4.0 registrar logs: verify, fold, DNS discovery, world assembly).
 """
 from .act import verify_act, evaluate, binding_digest
 from .chain import resolve, verify_revocation_list, fingerprint
@@ -28,9 +29,11 @@ from .accept import accept, RelyingParty, MemoryStore, postgres_store, Revocatio
 from .carrier import act, NomosActError, fetch_document
 from .witness import witness, Witness
 from .issuer import issuer, Issuer
+from . import registrar
+from .registrar import verify_registrar_log, fold_registrar_log, load_registrar_world, discover as discover_registrar_log
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 SPECIFICATIONS = {
-    "NOMOS-SPEC-001": "2.2.0 + amendment 2.3.0", "NOMOS-SPEC-007": "rev. 1.10.0", "NOMOS-SPEC-008": "0.6.0",
-    "NOMOS-SPEC-009": "0.2.0", "NOMOS-SPEC-010": "0.2.0",
+    "NOMOS-SPEC-001": "2.2.0 + amendment 2.3.0", "NOMOS-SPEC-007": "rev. 1.11.0", "NOMOS-SPEC-008": "0.6.0",
+    "NOMOS-SPEC-009": "0.2.0", "NOMOS-SPEC-010": "0.2.0", "NOMOS-SPEC-014": "0.4.0 (registrar logs)",
 }

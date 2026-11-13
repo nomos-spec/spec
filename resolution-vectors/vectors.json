@@ -1,6 +1,6 @@
 {
  "spec": "NOMOS-SPEC-014",
- "version": "0.3.0",
+ "version": "0.4.0",
  "note": "Resolution vectors. Each vector is a world (registrars + pins), a query (context + at), and the expected result. Vectors carrying `ablate` are the necessity constructions of the paper's §4: `expect` is the enforced behavior, `expect_ablated` is what an implementation missing exactly that condition answers — the attack succeeding. The C7 ablation judges membership at the vector's `ablate_at` (a stale instant) while closures are still judged at the query time; the C8 ablation reads no closure, no closure contents and no view age. Under any other single ablation an attack vector's `expect_ablated` must NOT be produced. Scope predicates are SPEC-008 conditions; `always` covers everything.",
  "vectors": [
   {
@@ -1203,6 +1203,699 @@
       "fact": "jurisdiction",
       "class": "geo"
      }
+    ]
+   }
+  },
+  {
+   "id": "deferral-dissolves-conflict",
+   "description": "0.4.0 deferral. reg-a's own log recognizes reg-b over trade, so reg-a does not assert precedence against reg-b there: no CONFLICT. RESOLVED with BOTH laws: deferral removes no law, and every member must be satisfied.",
+   "world": {
+    "pins": [
+     "reg-a",
+     "reg-b"
+    ],
+    "registrars": {
+     "reg-a": {
+      "id": "reg-a",
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "law-a",
+        "scope": "sector == \"trade\"",
+        "exclusive": true
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": [
+         "law-a"
+        ]
+       }
+      ],
+      "recognitions": [
+       {
+        "to": "reg-b",
+        "scope": "sector == \"trade\""
+       }
+      ]
+     },
+     "reg-b": {
+      "id": "reg-b",
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "law-b",
+        "scope": "sector == \"trade\"",
+        "exclusive": true
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": [
+         "law-b"
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "query": {
+    "context": {
+     "sector": "trade"
+    },
+    "at": "2026-11-11T00:00:00Z"
+   },
+   "expect": {
+    "status": "RESOLVED",
+    "authorities": [
+     "law-a",
+     "law-b"
+    ]
+   }
+  },
+  {
+   "id": "deferral-other-scope",
+   "description": "0.4.0: deferral is per context. reg-a recognizes reg-b only over finance; on a trade act the two exclusive claims still CONFLICT.",
+   "world": {
+    "pins": [
+     "reg-a",
+     "reg-b"
+    ],
+    "registrars": {
+     "reg-a": {
+      "id": "reg-a",
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "law-a",
+        "scope": "sector == \"trade\"",
+        "exclusive": true
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": [
+         "law-a"
+        ]
+       }
+      ],
+      "recognitions": [
+       {
+        "to": "reg-b",
+        "scope": "sector == \"finance\""
+       }
+      ]
+     },
+     "reg-b": {
+      "id": "reg-b",
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "law-b",
+        "scope": "sector == \"trade\"",
+        "exclusive": true
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": [
+         "law-b"
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "query": {
+    "context": {
+     "sector": "trade"
+    },
+    "at": "2026-11-11T00:00:00Z"
+   },
+   "expect": {
+    "status": "CONFLICT",
+    "conflict_authorities": [
+     "law-a",
+     "law-b"
+    ]
+   }
+  },
+  {
+   "id": "deferral-is-own",
+   "description": "0.4.0: only a registrar's own log can waive its precedence. A third registrar, reg-c, recognizes both reg-a and reg-b; neither defers to the other, so the CONFLICT stands.",
+   "world": {
+    "pins": [
+     "reg-c"
+    ],
+    "registrars": {
+     "reg-c": {
+      "id": "reg-c",
+      "certified_scope": "always",
+      "claims": [],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": []
+       }
+      ],
+      "recognitions": [
+       {
+        "to": "reg-a",
+        "scope": "always"
+       },
+       {
+        "to": "reg-b",
+        "scope": "always"
+       }
+      ]
+     },
+     "reg-a": {
+      "id": "reg-a",
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "law-a",
+        "scope": "sector == \"trade\"",
+        "exclusive": true
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": [
+         "law-a"
+        ]
+       }
+      ]
+     },
+     "reg-b": {
+      "id": "reg-b",
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "law-b",
+        "scope": "sector == \"trade\"",
+        "exclusive": true
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": [
+         "law-b"
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "query": {
+    "context": {
+     "sector": "trade"
+    },
+    "at": "2026-11-11T00:00:00Z"
+   },
+   "expect": {
+    "status": "CONFLICT",
+    "conflict_authorities": [
+     "law-a",
+     "law-b"
+    ]
+   }
+  },
+  {
+   "id": "deferral-undecided-edge",
+   "description": "0.4.0: an edge whose scope reads a fact the context lacks is UNDECIDED: the resolution is INCOMPLETE naming the fact, never a deferral taken on trust.",
+   "world": {
+    "pins": [
+     "reg-a",
+     "reg-b"
+    ],
+    "registrars": {
+     "reg-a": {
+      "id": "reg-a",
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "law-a",
+        "scope": "sector == \"trade\"",
+        "exclusive": true
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": [
+         "law-a"
+        ]
+       }
+      ],
+      "recognitions": [
+       {
+        "to": "reg-b",
+        "scope": "party_role == \"importer\""
+       }
+      ]
+     },
+     "reg-b": {
+      "id": "reg-b",
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "law-b",
+        "scope": "sector == \"trade\"",
+        "exclusive": true
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": [
+         "law-b"
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "query": {
+    "context": {
+     "sector": "trade"
+    },
+    "at": "2026-11-11T00:00:00Z"
+   },
+   "expect": {
+    "status": "INCOMPLETE",
+    "missing_context_facts": [
+     "party_role"
+    ]
+   }
+  },
+  {
+   "id": "recognition-ended",
+   "description": "0.4.0: a recognition is in force from its entry until a later recognition of the same registrar or a withdrawal. Ended on 2026-11-05, the edge is not walked on 2026-11-11, and nothing the former delegate claims is law here.",
+   "world": {
+    "pins": [
+     "platform"
+    ],
+    "registrars": {
+     "platform": {
+      "id": "platform",
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "policy-p",
+        "scope": "always"
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": [
+         "policy-p"
+        ]
+       }
+      ],
+      "recognitions": [
+       {
+        "to": "old-reg",
+        "scope": "always",
+        "from": "2026-10-01T00:00:00Z",
+        "until": "2026-11-05T00:00:00Z"
+       }
+      ]
+     },
+     "old-reg": {
+      "id": "old-reg",
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "old-law",
+        "scope": "always"
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": [
+         "old-law"
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "query": {
+    "context": {
+     "jurisdiction": "AE"
+    },
+    "at": "2026-11-11T00:00:00Z"
+   },
+   "expect": {
+    "status": "RESOLVED",
+    "authorities": [
+     "policy-p"
+    ]
+   }
+  },
+  {
+   "id": "recognition-not-yet",
+   "description": "0.4.0: a recognition signed after the query time does not speak for it: on 2026-11-11 the edge dated 2026-11-20 is not walked.",
+   "world": {
+    "pins": [
+     "platform"
+    ],
+    "registrars": {
+     "platform": {
+      "id": "platform",
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "policy-p",
+        "scope": "always"
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": [
+         "policy-p"
+        ]
+       }
+      ],
+      "recognitions": [
+       {
+        "to": "new-reg",
+        "scope": "always",
+        "from": "2026-11-20T00:00:00Z"
+       }
+      ]
+     },
+     "new-reg": {
+      "id": "new-reg",
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "new-law",
+        "scope": "always"
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "at": "2026-11-01T00:00:00Z",
+        "authorities": [
+         "new-law"
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "query": {
+    "context": {
+     "jurisdiction": "AE"
+    },
+    "at": "2026-11-11T00:00:00Z"
+   },
+   "expect": {
+    "status": "RESOLVED",
+    "authorities": [
+     "policy-p"
+    ]
+   }
+  },
+  {
+   "id": "delegation-resolved",
+   "description": "0.4.0 delegation. The pinned platform registrar recognizes the DIFC's own registrar for acts by DIFC establishments, naming its key. The DIFC registrar's certificate is that edge AND the platform's certificate; on a DIFC act it holds, and the DIFC's own law is resolved.",
+   "world": {
+    "pins": [
+     "platform"
+    ],
+    "registrars": {
+     "platform": {
+      "id": "platform",
+      "certified_scope": "always",
+      "claims": [],
+      "closures": [
+       {
+        "scope": "always",
+        "authorities": [],
+        "at": "2026-11-01T00:00:00Z"
+       }
+      ],
+      "recognitions": [
+       {
+        "to": "difc",
+        "scope": "established_in == \"DIFC\"",
+        "delegates": true
+       }
+      ]
+     },
+     "difc": {
+      "id": "difc",
+      "delegated": true,
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "difc-dpl",
+        "scope": "always"
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "authorities": [
+         "difc-dpl"
+        ],
+        "at": "2026-11-01T00:00:00Z"
+       }
+      ]
+     }
+    }
+   },
+   "query": {
+    "context": {
+     "established_in": "DIFC"
+    },
+    "at": "2026-11-11T00:00:00Z"
+   },
+   "expect": {
+    "status": "RESOLVED",
+    "authorities": [
+     "difc-dpl"
+    ]
+   }
+  },
+  {
+   "id": "attack-delegated-squatting",
+   "description": "0.4.0, C6 through delegation. The platform registrar is certified only for the UAE, yet its edge to the DIFC registrar is TRUE on an act in Qatar by a DIFC establishment. The delegate's certificate is the edge AND the recognizer's, FALSE here, so nothing the DIFC registrar claims is law in Qatar. Without C6 its law is imported into a place its recognizer never covered.",
+   "world": {
+    "pins": [
+     "platform"
+    ],
+    "registrars": {
+     "platform": {
+      "id": "platform",
+      "certified_scope": "jurisdiction == \"AE\"",
+      "claims": [
+       {
+        "authority": "uae-pdpl",
+        "scope": "jurisdiction == \"AE\""
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "authorities": [
+         "uae-pdpl"
+        ],
+        "at": "2026-11-01T00:00:00Z"
+       }
+      ],
+      "recognitions": [
+       {
+        "to": "difc",
+        "scope": "established_in == \"DIFC\"",
+        "delegates": true
+       }
+      ]
+     },
+     "difc": {
+      "id": "difc",
+      "delegated": true,
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "difc-dpl",
+        "scope": "always"
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "authorities": [
+         "difc-dpl"
+        ],
+        "at": "2026-11-01T00:00:00Z"
+       }
+      ]
+     }
+    }
+   },
+   "query": {
+    "context": {
+     "jurisdiction": "QA",
+     "established_in": "DIFC"
+    },
+    "at": "2026-11-11T00:00:00Z"
+   },
+   "expect": {
+    "status": "RESOLVED",
+    "authorities": []
+   },
+   "ablate": "C6",
+   "expect_ablated": {
+    "status": "RESOLVED",
+    "authorities": [
+     "difc-dpl"
+    ]
+   }
+  },
+  {
+   "id": "attack-self-asserted-scope",
+   "description": "0.4.0. A registrar fetched as a delegate states `always` as its own certified scope, but the edge that reaches it names no key, so it is no delegation: its certificate is FALSE and its claims are no claims. Nothing a registrar states about itself enters its certificate.",
+   "world": {
+    "pins": [
+     "platform"
+    ],
+    "registrars": {
+     "platform": {
+      "id": "platform",
+      "certified_scope": "always",
+      "claims": [],
+      "closures": [
+       {
+        "scope": "always",
+        "authorities": [],
+        "at": "2026-11-01T00:00:00Z"
+       }
+      ],
+      "recognitions": [
+       {
+        "to": "difc",
+        "scope": "established_in == \"DIFC\""
+       }
+      ]
+     },
+     "difc": {
+      "id": "difc",
+      "delegated": true,
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "difc-dpl",
+        "scope": "always"
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "authorities": [
+         "difc-dpl"
+        ],
+        "at": "2026-11-01T00:00:00Z"
+       }
+      ]
+     }
+    }
+   },
+   "query": {
+    "context": {
+     "established_in": "DIFC"
+    },
+    "at": "2026-11-11T00:00:00Z"
+   },
+   "expect": {
+    "status": "RESOLVED",
+    "authorities": []
+   }
+  },
+  {
+   "id": "delegation-unknown",
+   "description": "0.4.0. The recognizer's certificate reads a fact the context lacks, so the delegate's certificate is UNDECIDED: INCOMPLETE naming the fact (delegation_unknown_incomplete), never the delegate's law taken or dropped on a guess.",
+   "world": {
+    "pins": [
+     "platform"
+    ],
+    "registrars": {
+     "platform": {
+      "id": "platform",
+      "certified_scope": "jurisdiction == \"AE\"",
+      "claims": [],
+      "closures": [
+       {
+        "scope": "always",
+        "authorities": [],
+        "at": "2026-11-01T00:00:00Z"
+       }
+      ],
+      "recognitions": [
+       {
+        "to": "difc",
+        "scope": "established_in == \"DIFC\"",
+        "delegates": true
+       }
+      ]
+     },
+     "difc": {
+      "id": "difc",
+      "delegated": true,
+      "certified_scope": "always",
+      "claims": [
+       {
+        "authority": "difc-dpl",
+        "scope": "always"
+       }
+      ],
+      "closures": [
+       {
+        "scope": "always",
+        "authorities": [
+         "difc-dpl"
+        ],
+        "at": "2026-11-01T00:00:00Z"
+       }
+      ]
+     }
+    }
+   },
+   "query": {
+    "context": {
+     "established_in": "DIFC"
+    },
+    "at": "2026-11-11T00:00:00Z"
+   },
+   "expect": {
+    "status": "INCOMPLETE",
+    "missing_context_facts": [
+     "jurisdiction"
     ]
    }
   }
