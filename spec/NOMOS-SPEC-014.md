@@ -1,9 +1,10 @@
 # NOMOS-SPEC-014: Resolution
 
-**Status:** Draft
+**Status:** Active
 **Version:** 0.3.0
 **Proposed:** 2026-11-11
 **Revised:** 2026-11-12 (0.2.0: closure agreement, view age, the C7 attack restated; see §10)
+**Active since:** 2026-11-13 — a second, independent resolver passed every published vector (§10)
 **Authors:** Safehaven AI Corp. / NOMOS Protocol Working Group
 **Uses:** NOMOS-SPEC-001, NOMOS-SPEC-006, NOMOS-SPEC-007, NOMOS-SPEC-008, NOMOS-SPEC-013
 
@@ -29,8 +30,11 @@ Out of scope, deliberately: ordering sovereigns whose claims conflict (surfaced,
 §5.3), interpretation of what an authority's rules mean, and who may operate shared resolution
 roots (the NOMOS-SPEC-007 §9 governance question, inherited here in stronger form).
 
-This specification remains a **Draft** until a second, independent resolver passes every
-published vector. The key words MUST, MUST NOT, SHOULD and MAY are to be read as in RFC 2119.
+This specification left Draft on 2026-11-13, when a second, independent resolver —
+[`SvvBot/nomos-spec014-resolver`](https://github.com/SvvBot/nomos-spec014-resolver) (Python,
+standard library only), built from this text and the published vectors with no involvement of
+the authors — passed every published vector and every necessity ablation on its own CI. The key
+words MUST, MUST NOT, SHOULD and MAY are to be read as in RFC 2119.
 
 ## 1. Terminology
 
@@ -283,10 +287,22 @@ Inherited and stated, not hidden: registrar governance (who may close a scope �
 NOMOS-SPEC-007 §9 question squared); characterization of context fields beyond the v0
 vocabulary; the witness-class vocabulary and who certifies context witnesses per class (CF's
 residue); private-law resolution (contracts as authorities); freshness economics per scope
-class, now two bounds (closure age and view age); and the Draft-exit condition — a second,
-independent implementation agreeing on every vector.
+class, now two bounds (closure age and view age). The Draft-exit condition — a second,
+independent implementation agreeing on every vector — was met on 2026-11-13 and is recorded in
+§10.
 
 ## 10. Changes
+
+**Active (2026-11-13).** Status Draft → Active. The exit condition was met by
+[`SvvBot/nomos-spec014-resolver`](https://github.com/SvvBot/nomos-spec014-resolver): an
+independent Python resolver whose test suite pins `resolution-vectors/vectors.json` by SHA-256
+(`7dfd2fca73398f6346c84c7ab90d4076c3b07adf92c4d67b2af6ed7fc7f240bb`), passes all 23 vectors by
+exact `expect` match, reproduces all 8 necessity ablations (C5, C6, C7, C8×4, CF), and holds
+order-independence under shuffling — green on its own CI (`main` @ `8fca15c`, Python 3.10–3.13).
+Scope of the independence claim, stated precisely: the SPEC-014 resolution algorithm is an
+independent construction; the SPEC-008 condition evaluator beneath it derives from this
+repository's published Python reference (`python/nomosprotocol/act.py`), which is why
+NOMOS-SPEC-008's own Draft-exit remains open ([#32](https://github.com/nomos-spec/spec/issues/32)).
 
 **0.3.0 (2026-11-12).** Context fidelity (CF): the last self-description. C5 stopped the carrier
 choosing the law; the context the scopes evaluate over was still anyone's say-so, and a false

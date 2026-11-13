@@ -30,6 +30,15 @@ Found by resealing the EU AI Act. Its Article 55 rules read `gpai_systemic_risk`
 
 No runtime change: sealed conditions remain ordinary `when` strings, and a SPEC-008 verifier ignores the payload relations. Reference tests: `scripts/test-derived-facts.ts` and `scripts/test-eu-legal-answer-key.ts` (a 26-case answer key, unreviewed until a qualified reviewer signs it off) in the reference deployment.
 
+## [NOMOS-SPEC-014 — Active] — 2026-11-13 (The first Draft exit: a stranger's resolver)
+
+### Changed
+- **NOMOS-SPEC-014 Status: Draft → Active.** The house rule — a Draft leaves Draft only when a second, independent implementation passes its published vectors — was met for the first time, two days after the specification was proposed. [`SvvBot/nomos-spec014-resolver`](https://github.com/SvvBot/nomos-spec014-resolver) (Python, standard library only, MIT) pins `resolution-vectors/vectors.json` by SHA-256 (`7dfd2fca…`), passes all 23 vectors by exact `expect` match, reproduces all 8 necessity ablations (C5, C6, C7, C8×4, CF — including context fidelity, published only the day before), and holds order-independence under 10-seed shuffling; green on its own CI (`main` @ `8fca15c`, Python 3.10–3.13). The authors verified independently: vectors byte-identical, implementation read line by line (no answer-matching), architecture distinct from the reference.
+- Scope of the independence claim, on the record: the resolution algorithm is an independent construction from the specification text; the SPEC-008 condition evaluator beneath it derives from this repository's published Python reference (`python/nomosprotocol/act.py`) — attribution requested on [#40](https://github.com/nomos-spec/spec/pull/40). That layer belongs to SPEC-008, whose own Draft-exit therefore remains open ([#32](https://github.com/nomos-spec/spec/issues/32)).
+- Possible errata candidate raised with the implementer: whether a later same-scope closure replaces or accumulates with an earlier one is underdetermined by the current vectors ([#40](https://github.com/nomos-spec/spec/pull/40) discussion); a distinguishing vector is the fix if confirmed.
+
+---
+
 ## [NOMOS-SPEC-014 0.3.0] — 2026-11-12 (Context fidelity: the last self-description)
 
 ### Added
