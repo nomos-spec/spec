@@ -9,6 +9,8 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ## [NOMOS-SPEC-014 0.4.0] — 2026-11-13 (Deferral, and registrars run by the institutions themselves)
 
+SPEC-014 stays Active, as of 0.3.0, on the independent resolver that passed 0.3.0's 23 vectors (entry below). The 0.4.0 additions are Draft until an independent implementation passes the new `vectors.json` (33) and `registrar-logs.json` (34).
+
 ### Added
 - **Registrars run by the institutions themselves.** A regulator, free zone or company runs
   its own registrar with its own key, and nobody, NOMOS included, is a root:
