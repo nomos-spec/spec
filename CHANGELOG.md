@@ -7,6 +7,29 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-001 Amendment 2.5.0, Draft] — 2026-11-13 (Derived values: classifications and their legal relations)
+
+Found by resealing the EU AI Act. Its Article 55 rules read `gpai_systemic_risk`, a status the law itself determines (Art. 51–52), so the person seeking authorisation supplied the fact that decided which duties applied.
+
+### Added
+- **§4.3 classification record**: an `emit` outcome with `event: "classify"` carries `{ variable, value }` and two optional relations:
+  - `overrides`: the classifications of the same variable it sets aside. A derogation names what it derogates from.
+  - `definition.scope`: these classifications are every way the status arises within the scope named.
+- **§4.7 derived values** (producer-side):
+  - Effective classifications and overrides that chain.
+  - A derogation sets aside only what it names, so Art. 6(3) never reaches an Annex I system.
+  - Closed definitions: the law alone decides, and the status is not an input.
+  - Presumptions: a stated value counts where the law does not classify otherwise.
+  - Compilation into ordinary `when` strings. Recompiling is idempotent, and an extension's unchanged inherited decisions are kept as sealed.
+  - What a producer MUST refuse to seal: unrelated disagreeing classifications that can both hold, unknown overrides, and override cycles.
+  - Precedence between classifications is never inferred from `priority`.
+- **`schema/rule.schema.json`**: the `emit` outcome's `event` and `payload`, including the classify relations.
+
+### Changed
+- **§4.1: negation is three-valued.** `not X` holds only when X is false on the facts given. Absent facts beneath a negation are undecided, as under NOMOS-SPEC-008 §6.2. The reference deployment's server read them as false, so an exclusion fired before the fact that decided it was answered. It is fixed there.
+
+No runtime change: sealed conditions remain ordinary `when` strings, and a SPEC-008 verifier ignores the payload relations. Reference tests: `scripts/test-derived-facts.ts` and `scripts/test-eu-legal-answer-key.ts` (a 26-case answer key, unreviewed until a qualified reviewer signs it off) in the reference deployment.
+
 ## [NOMOS-SPEC-014 0.3.0] — 2026-11-12 (Context fidelity: the last self-description)
 
 ### Added

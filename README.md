@@ -58,6 +58,7 @@ Proposed amendments and revisions awaiting promotion are in [`spec/drafts/`](spe
 | [SPEC-001 amendment 2.2.0](spec/drafts/NOMOS-SPEC-001-amendment-2.2.0.md) | 001 | Unmatched outcome, declared fact sources, consent counts |
 | [SPEC-001 amendment 2.3.0](spec/drafts/NOMOS-SPEC-001-amendment-2.3.0.md) | 001 | Equal-priority escalations naming different escalations cannot be sealed |
 | [SPEC-001 amendment 2.4.0](spec/drafts/NOMOS-SPEC-001-amendment-2.4.0.md) | 001 | Comparisons between two fields |
+| [SPEC-001 amendment 2.5.0](spec/drafts/NOMOS-SPEC-001-amendment-2.5.0.md) | 001 | Derived values: a law's classifications decide the rules that read them, by legal relation (overrides, closed definitions); three-valued `not` |
 | [SPEC-007 rev. 1.8.0](spec/drafts/NOMOS-SPEC-007-rev-1.8.0.md) | 007 | Statement keys (witness `claim`, approver `consent` scopes) and target-first chain resolution |
 | [SPEC-007 rev. 1.9.0](spec/drafts/NOMOS-SPEC-007-rev-1.9.0.md) | 007 | Scope-aware path selection, normative check order, `suite` and `approver` dimensions, ES256 |
 | [SPEC-007 rev. 1.10.0](spec/drafts/NOMOS-SPEC-007-rev-1.10.0.md) | 007 | Revocation a relying party can check: ES256 and certificate revocations, statements count only from a parent the root reaches, self-checkable lists, fail closed on stale knowledge |
