@@ -124,8 +124,12 @@ and submit it. It SHOULD do so at most once per action, and SHOULD stop on any o
   digest. `act-vectors/vectors.json` and `act-vectors/mutants.json` are unchanged.
 - A 0.7.0 relying party that receives `further_authorities` ignores a field it does not know and
   evaluates `authority` alone, exactly as it would today: it does not know the act is governed by
-  more than one law. Where consents are needed they do not verify there (the binding digest
-  differs), so such an Act fails closed (`CONSENT_INVALID`, `binding_mismatch`). A relying party
+  more than one law. An Act that supplies a fact only a further authority declares is refused there
+  (`FACT_SOURCE_VIOLATION`, `undeclared_input`); a 0.7.0 verifier run over the Acts of
+  `multi-authority-vectors.json` refuses most of them so. Where the facts pass, consents do not
+  verify (the binding digest differs), so an escalated act fails closed (`CONSENT_INVALID`,
+  `binding_mismatch`). Only an Act whose further
+  authorities add no facts and need no consent is decided by `authority` alone. A relying party
   that resolves the applicable set (NOMOS-SPEC-014) MUST implement this revision.
 
 ## Test
