@@ -7,6 +7,15 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-008 rev. 0.9.0, Draft] — 2026-11-14 (Intake questions in an Act)
+
+A law encoded whole reads hundreds of facts; the DIFC Data Protection Law reads 271. Under 0.8.0 an ordinary act under it was held `INCOMPLETE` on about 200 facts that have nothing to do with it. Its 12 sealed intake questions decide the same act, but only the query path read them.
+
+### Added
+- **`data_contract.gates` defined:** a question, the channel its answer arrives through (`source`), and the facts a "no" settles (`when_false`). A gate named like an input, or covering another gate, is `MALFORMED` (`bad_gates`).
+- **Answering in an Act:** the answer is a boolean fact through the gate's channel. A "no" settles the facts it covers before evaluation; a covered fact supplied with another value is refused (`FACT_SOURCE_VIOLATION`, `contradicts_gate`). `INCOMPLETE` names the unanswered questions that would settle its open facts (`open_gates`). Under several laws each law applies its own questions; a name declared as a gate must be declared identically by every carried law that declares it.
+- **`act-vectors/gate-vectors.json`** (14 checks, `generate_gates.py`), in CI. `check.py` takes a case's own `local_facts`. The Python reference implements the revision; `vectors.json`, `mutants.json` and `multi-authority-vectors.json` are unchanged.
+
 ## [NOMOS-SPEC-008 rev. 0.8.0, Draft] — 2026-11-14 (An Act under several laws)
 
 Under 0.7.0 an Act carries one authority, so an act that NOMOS-SPEC-014 resolves as governed by two laws (a DIFC firm acting in mainland Dubai, under DIFC and UAE data protection law) could be refused but never authorized.
