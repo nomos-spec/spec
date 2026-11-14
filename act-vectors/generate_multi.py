@@ -126,6 +126,10 @@ def main():
         {"decision": "INCOMPLETE", "commit": False, "reason_code": "laws_not_presented", "laws": [PID]},
         "Both laws govern the act; the Act carries only the lending policy. Nothing commits, and the missing law is named.",
         evaluate_only=[LID, PID])
+    add("resolution_before_an_undeclared_input", G.act(113, {**small, "data_shared_with_third_party": True}, G.good_profile(768, 0.22), lending, pool=POOL),
+        {"decision": "INCOMPLETE", "commit": False, "reason_code": "laws_not_presented", "laws": [PID]},
+        "The Act carries only the lending policy, and supplies data_shared_with_third_party, which only the data protection law declares. Both laws govern, so the missing law is named rather than the input refused.",
+        evaluate_only=[LID, PID])
 
     out = {"_readme": "NOMOS-SPEC-008 rev. 0.8.0 vectors: an Act under several laws. Verify each case's act as for vectors.json (root_public_key_pem, relying_party_id, local_facts, currency_policy, in_force); where a case carries evaluate_only, pass it as the artifact ids of the resolved applicable set (rev. 0.8.0 §6.4). Compare every field `expected` names; `laws` is compared as a list, in the order the Act carries its authorities.",
            "spec": "NOMOS-SPEC-008 rev. 0.8.0",

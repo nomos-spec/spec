@@ -15,7 +15,7 @@ Under 0.7.0 an Act carries one authority, so an act that NOMOS-SPEC-014 resolves
 - **`further_authorities`** (optional): further sealed authorities one Act acts under; testimony, consents and the certificate pool stay shared. The binding digest gains `artifact_hashes` only when it is present, so a one-law Act and every 0.7.0 vector and mutant are unchanged.
 - **§6.3 verification under several authorities:** each authority checked as today; each reads only the facts it declares; a fact no authority declares, or two declare differently, is refused; consents counted per authority's own escalation; any deny denies, a missing fact holds the act, a yes needs every law.
 - **§6.4 under a resolution:** exactly the governing authorities are evaluated (a carried law that does not govern, and its facts, are ignored); a governing law not carried holds the act (`laws_not_presented`); one the relying party cannot verify is its own gap (`law_not_accepted`).
-- **`act-vectors/multi-authority-vectors.json`** (14 checks, `generate_multi.py`), in CI. The Python reference (`nomosprotocol.act`) implements the revision.
+- **`act-vectors/multi-authority-vectors.json`** (15 checks, `generate_multi.py`), in CI. The Python reference (`nomosprotocol.act`) implements the revision.
 
 ## [NOMOS-SPEC-014 0.4.0] — 2026-11-13 (Deferral, and registrars run by the institutions themselves)
 

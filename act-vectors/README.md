@@ -105,5 +105,5 @@ law that does not govern ignored, and a governing law not carried named. `vector
 
 ```
 python3 generate_multi.py pub_lending_v1.nomos > multi-authority-vectors.json   # deterministic
-python3 check.py multi-authority-vectors.json                                    # 14 passed
+python3 check.py multi-authority-vectors.json                                    # 15 passed
 ```
