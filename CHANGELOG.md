@@ -65,6 +65,14 @@ Found by resealing the EU AI Act. Its Article 55 rules read `gpai_systemic_risk`
 
 No runtime change: sealed conditions remain ordinary `when` strings, and a SPEC-008 verifier ignores the payload relations. Reference tests: `scripts/test-derived-facts.ts` and `scripts/test-eu-legal-answer-key.ts` (a 26-case answer key, unreviewed until a qualified reviewer signs it off) in the reference deployment.
 
+## [SPEC-014 mutant corpus] — 2026-11-14 (Thickening the bar)
+
+### Added
+- **`resolution-vectors/mutants.json`** — 773 derived mutants of the 33 vector worlds (22 mutation operators + second-order stacks), each with the expected outcome computed by the reference resolver; self-contained (world, query, expect), pinned to `vectors.json` by SHA-256. Derived, not normative: it tests agreement in bulk, the SPEC-008 mutants pattern, answering the fair criticism that 23–33 hand-written vectors is a thin conformance bar. The 40 `reclose-narrower` mutants operationalize errata [#44](https://github.com/nomos-spec/spec/issues/44)(1): a later same-scope closure narrowing its enumeration — the reference's replacement reading versus accumulation, which no hand-written vector tested.
+- Errata issue [#44](https://github.com/nomos-spec/spec/issues/44) opened from the first independent implementation's review cycle, crediting the finders: closure replacement untested by any vector (@SvvBot), "same scope" equality semantics unstated, and conduct on a structurally malformed world unspecified (independent fuzz review, ~20,000 mutated worlds).
+
+---
+
 ## [NOMOS-SPEC-014 — Active] — 2026-11-13 (The first Draft exit: a stranger's resolver)
 
 ### Changed

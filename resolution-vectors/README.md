@@ -1,4 +1,4 @@
-# Resolution vectors (NOMOS-SPEC-014, Draft 0.4.0)
+# Resolution vectors (NOMOS-SPEC-014, Active; 0.4.0 additions Draft)
 
 The conformance vectors for [NOMOS-SPEC-014](../spec/NOMOS-SPEC-014.md): which authorities
 govern an act in a context at a time, with evidence that the enumeration is complete relative
@@ -72,3 +72,23 @@ necessity table (each attack succeeds under exactly its own ablation and under n
 the shuffle check in CI. The resolver is also mechanized step by step in Lean 4:
 [`papers/resolution/lean/`](../papers/resolution/lean/). **An independent implementation that passes this file is the condition
 for NOMOS-SPEC-014 leaving Draft** — see [IMPLEMENTING.md](../IMPLEMENTING.md). We invite one.
+
+## Derived mutant corpus (`mutants.json`)
+
+`mutants.json` thickens the bar the way SPEC-008's mutants do: **773 mechanical mutations** of
+the 33 vector worlds (22 operators — dropped and altered context facts, shifted query times,
+removed, aged, re-signed and narrowed closures, ended, future-dated, superseded and revoked
+claims, starved pins, narrowed and widened certificates, witness grants and wrong classes, and
+second-order stacks of two operators), each with the expected outcome computed by the reference
+resolver (`@nomosprotocol/verify`). Self-contained: world, query and `expect` per mutant, in the
+same shape as `vectors.json`; `generated_from.sha256` pins the vector file it was derived from.
+
+Status: **derived, not normative.** The hand-written `vectors.json` is the conformance suite a
+person reviewed case by case; the corpus tests *agreement in bulk*. A divergence is a
+reportable finding either way — in the implementation under test, or in the reference — and is
+credited errata. Notably, the 40 `reclose-narrower` mutants distinguish the specification's
+closure-replacement rule from closure accumulation, which no hand-written vector yet tests
+([#44](https://github.com/nomos-spec/spec/issues/44)).
+
+Generator: `scripts/gen-resolution-mutants.ts` in the platform repository, seeded and
+deterministic (two runs byte-identical, self-checked before output).
