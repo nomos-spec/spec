@@ -1,33 +1,19 @@
 {
-  "name": "nomos-spec-tools",
-  "private": true,
-  "version": "1.1.0",
-  "description": "Tools for the NOMOS specification repository: the reference CLI (validate, verify, exec, diff, lint) and the repository checks. Not published; the published CLI is @nomosprotocol/cli.",
-  "license": "CC-BY-4.0",
-  "bin": {
-    "nomos": "./cli/nomos.ts"
-  },
+  "name": "@nomos-independent/verifier",
+  "version": "1.0.0",
+  "description": "Independent implementation of NOMOS-SPEC-008",
+  "main": "dist/index.js",
   "scripts": {
-    "nomos": "tsx cli/nomos.ts",
-    "verify": "tsx verify/verify.ts",
-    "verify:all": "for f in examples/*.nomos; do npx tsx verify/verify.ts \"$f\" --key deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef; done",
-    "check:links": "node scripts/check-links.mjs",
-    "check:index": "node scripts/check-spec-index.mjs",
-    "seal-example": "node scripts/seal-example.mjs"
+    "test": "ts-node src/runner.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@noble/ed25519": "^2.0.0",
+    "jose": "^5.2.0"
   },
   "devDependencies": {
-    "tsx": "^4.7.0",
-    "@types/node": "^20.0.0"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nomos-spec/spec.git"
-  },
-  "homepage": "https://nomosprotocol.com/spec",
-  "bugs": {
-    "url": "https://github.com/nomos-spec/spec/issues"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.0"
   }
 }
