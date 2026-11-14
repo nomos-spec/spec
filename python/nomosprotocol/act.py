@@ -305,6 +305,46 @@ def evaluate(artifact: dict, facts: dict) -> dict:
     return ev
 
 
+# ── rev. 0.9.0: intake questions (gates) ────────────────────────────────────────────────────
+def gates_of(art: dict):
+    """The authority's sealed intake questions, `data_contract.gates`: (gates, None) or (None, reason).
+    A gate is answered through the channel it declares and is never a fact the rules read."""
+    dc = art.get("data_contract") or {}
+    g = dc.get("gates")
+    if g is None: return {}, None
+    inputs = dc.get("inputs") or {}
+    if not isinstance(g, dict): return None, "bad_gates"
+    for f, v in g.items():
+        if not isinstance(v, dict) or not isinstance(v.get("when_false"), dict) or f in inputs or f == "action_type" \
+                or any(k in g for k in v["when_false"]):
+            return None, "bad_gates"
+    return g, None
+
+def declarations(art: dict, gates: dict) -> dict:
+    """Every name an Act may supply: the declared inputs, and each gate as a boolean answered
+    through the source it declares."""
+    out = dict(art.get("data_contract", {}).get("inputs", {}) or {})
+    for f, g in gates.items(): out[f] = {"type": "boolean", "source": g.get("source"), "gate": True}
+    return out
+
+def apply_gates(gates: dict, facts: dict):
+    """§6.5: every gate answered false settles the facts it covers. A covered fact supplied with
+    another value contradicts the answer. Returns (facts the rules read, failure or None)."""
+    out = {k: v for k, v in facts.items() if k not in gates}
+    for gf in sorted(gates):
+        if facts.get(gf) is not False: continue
+        for f, v in gates[gf]["when_false"].items():
+            if out.get(f) is not None and jcs(out[f]) != jcs(v):
+                return None, {"decision": "FACT_SOURCE_VIOLATION", "field": f, "reason_code": "contradicts_gate", "gate": gf}
+            out[f] = v
+    return out, None
+
+def open_gates(gates: dict, facts: dict, open_facts: list) -> list:
+    """The questions left unanswered that would settle at least one open fact."""
+    need = set(open_facts)
+    return sorted(gf for gf, g in gates.items() if facts.get(gf) is None and need & set(g["when_false"]))
+
+
 # ── the Act verifier (SPEC-008 §6) ──────────────────────────────────────────────────────
 def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
                seen_nonces: Set[str], currency_policy: str, local_facts: Optional[dict] = None,
@@ -396,6 +436,8 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
         in_force_source = "statement"
     # 5b. an authority whose verdict would depend on listing order cannot authorize (SPEC-001 2.3.0)
     if ambiguous_escalation(art): return {"decision": "MALFORMED", "reason_code": "ambiguous_escalation"}
+    gates, bad_g = gates_of(art)
+    if bad_g: return {"decision": "MALFORMED", "reason_code": bad_g}
     # 6. testimony
     facts: Dict[str, Any] = {}; channel: Dict[str, str] = {}
     def put(name, value, src):
@@ -428,7 +470,7 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
         for k, v in local_facts.items(): put(k, v, "relying_party")
     except KeyError as e:
         return {"decision": "FACT_SOURCE_VIOLATION", "field": e.args[0], "reason_code": "duplicate"}
-    inputs = art.get("data_contract", {}).get("inputs", {})
+    inputs = declarations(art, gates)
     for name, src in channel.items():
         if name == "action_type": continue
         declared = (inputs.get(name) or {}).get("source")
@@ -441,6 +483,10 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
         if name == "action_type" or value is None: continue
         if not type_ok(value, inputs[name]):
             return {"decision": "FACT_TYPE_VIOLATION", "field": name, "declared": inputs[name].get("type"), "supplied_via": channel[name]}
+    # 7c. rev. 0.9.0 §6.5: an intake question answered "no" settles the facts it covers
+    answers = facts
+    facts, contradiction = apply_gates(gates, facts)
+    if contradiction: return contradiction
     # 8. evaluate the sealed rules over exactly these facts
     try:
         ev = evaluate(art, facts)
@@ -449,8 +495,10 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     digest = binding_digest(act)
     base = {"rule": ev["rule"], "act_digest": digest, "in_force_source": in_force_source, "currency_policy": currency_policy}
     if ev["outcome"] == "undecided":            # §6.2: no consent can stand in for a missing fact
-        return {"decision": "INCOMPLETE", "commit": False, "reason_code": "undecided_rules",
-                "open_rules": ev["open_rules"], "open_facts": ev["open_facts"], **base}
+        out = {"decision": "INCOMPLETE", "commit": False, "reason_code": "undecided_rules",
+               "open_rules": ev["open_rules"], "open_facts": ev["open_facts"], **base}
+        if gates: out["open_gates"] = open_gates(gates, answers, ev["open_facts"])
+        return out
     if ev.get("reason_code"): base["reason_code"] = ev["reason_code"]
     if ev["outcome"] == "allow": return {"decision": "AUTHORIZED", "commit": True, **base}
     if ev["outcome"] == "block": return {"decision": "DENIED", "commit": False, **base}
@@ -519,7 +567,9 @@ def _check_authority(entry: dict, pool: list, root_pem: str, now: datetime, curr
         if now < sa or now > su: return unverified("stale")
         source = "statement"
     if ambiguous_escalation(art): return {"decision": "MALFORMED", "reason_code": "ambiguous_escalation", "artifact_id": art_id}, None
-    return None, {"artifact": art, "meta": meta, "artifact_id": art_id, "inputs": art.get("data_contract", {}).get("inputs", {}), "in_force_source": source}
+    gates, bad_g = gates_of(art)
+    if bad_g: return {"decision": "MALFORMED", "reason_code": bad_g, "artifact_id": art_id}, None
+    return None, {"artifact": art, "meta": meta, "artifact_id": art_id, "gates": gates, "inputs": declarations(art, gates), "in_force_source": source}
 
 
 def verify_act_multi(act: Any, *, relying_party_id: str, root_pem: str, now: datetime, seen_nonces: Set[str],
@@ -580,10 +630,13 @@ def verify_act_multi(act: Any, *, relying_party_id: str, root_pem: str, now: dat
         if failure: return failure
         laws.append(rec)
     def declaring(name): return [l for l in laws if name in l["inputs"]]
+    def gate_of(l, name): return l["gates"].get(name)
     # §6.4.1: a fact or statement only a carried, non-governing authority declares is not read at all
     ignored_inputs = set()
     for e in carried:
-        if e not in active_entries: ignored_inputs |= set(((e["artifact"].get("data_contract") or {}).get("inputs") or {}).keys())
+        if e not in active_entries:
+            dc = e["artifact"].get("data_contract") or {}
+            ignored_inputs |= set((dc.get("inputs") or {}).keys()) | set((dc.get("gates") or {}).keys() if isinstance(dc.get("gates"), dict) else ())
     def only_ignored(name): return not declaring(name) and name in ignored_inputs
     # §6.3.3: testimony once; its key admitted under every authority that declares the claim
     facts: Dict[str, Any] = {}; channel: Dict[str, str] = {}
@@ -627,7 +680,7 @@ def verify_act_multi(act: Any, *, relying_party_id: str, root_pem: str, now: dat
         if name == "action_type": continue
         decl = [l["inputs"][name] for l in declaring(name)]
         if not decl: return {"decision": "FACT_SOURCE_VIOLATION", "field": name, "reason_code": "undeclared_input"}
-        if len({(d.get("source"), d.get("type")) for d in decl}) > 1:
+        if len({(d.get("source"), d.get("type"), jcs(gate_of(l, name)) if d.get("gate") else None) for l, d in zip(declaring(name), decl)}) > 1:
             return {"decision": "FACT_SOURCE_VIOLATION", "field": name, "reason_code": "conflicting_declarations"}
         if decl[0].get("source") != src:
             return {"decision": "FACT_SOURCE_VIOLATION", "field": name, "declared": decl[0].get("source"), "supplied_via": src}
@@ -640,11 +693,14 @@ def verify_act_multi(act: Any, *, relying_party_id: str, root_pem: str, now: dat
     digest = binding_digest(act)
     results = []
     for l in laws:
-        mine = {k: v for k, v in facts.items() if k == "action_type" or k in l["inputs"]}
+        answers = {k: v for k, v in facts.items() if k == "action_type" or k in l["inputs"]}
+        mine, contradiction = apply_gates(l["gates"], answers)       # rev. 0.9.0 §6.5, each law its own questions
+        if contradiction: return {**contradiction, "artifact_id": l["artifact_id"]}
         try:
             ev = evaluate(l["artifact"], mine)
         except (ValueError, KeyError, TypeError, IndexError):
             return {"decision": "MALFORMED", "reason_code": "unevaluable_rules", "commit": False, "artifact_id": l["artifact_id"]}
+        if ev["outcome"] == "undecided" and l["gates"]: ev = {**ev, "open_gates": open_gates(l["gates"], answers, ev["open_facts"])}
         results.append((l, ev))
     # §6.3.5: every consent validated under the authorities whose escalation needs its role
     esc_of = {}
@@ -675,7 +731,9 @@ def verify_act_multi(act: Any, *, relying_party_id: str, root_pem: str, now: dat
     per = []
     for l, ev in results:
         row = {"artifact_id": l["artifact_id"], "rule": ev["rule"]}
-        if ev["outcome"] == "undecided": row.update(decision="INCOMPLETE", open_rules=ev["open_rules"], open_facts=ev["open_facts"])
+        if ev["outcome"] == "undecided":
+            row.update(decision="INCOMPLETE", open_rules=ev["open_rules"], open_facts=ev["open_facts"])
+            if "open_gates" in ev: row["open_gates"] = ev["open_gates"]
         elif ev["outcome"] == "allow": row.update(decision="AUTHORIZED")
         elif ev["outcome"] == "block": row.update(decision="DENIED")
         else:

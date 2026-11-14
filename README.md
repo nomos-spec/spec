@@ -60,6 +60,7 @@ Proposed amendments and revisions awaiting promotion are in [`spec/drafts/`](spe
 | [SPEC-001 amendment 2.4.0](spec/drafts/NOMOS-SPEC-001-amendment-2.4.0.md) | 001 | Comparisons between two fields |
 | [SPEC-001 amendment 2.5.0](spec/drafts/NOMOS-SPEC-001-amendment-2.5.0.md) | 001 | Derived values: a law's classifications decide the rules that read them, by legal relation (overrides, closed definitions); three-valued `not` |
 | [SPEC-008 rev. 0.8.0](spec/drafts/NOMOS-SPEC-008-rev-0.8.0.md) | 008 | An Act under several laws: `further_authorities`, per-law evaluation and consents, and what a relying party does under a SPEC-014 resolution |
+| [SPEC-008 rev. 0.9.0](spec/drafts/NOMOS-SPEC-008-rev-0.9.0.md) | 008 | Intake questions in an Act: `data_contract.gates` defined, answered through a declared channel; a "no" settles the facts it covers; `open_gates` names what to answer |
 | [SPEC-007 rev. 1.8.0](spec/drafts/NOMOS-SPEC-007-rev-1.8.0.md) | 007 | Statement keys (witness `claim`, approver `consent` scopes) and target-first chain resolution |
 | [SPEC-007 rev. 1.9.0](spec/drafts/NOMOS-SPEC-007-rev-1.9.0.md) | 007 | Scope-aware path selection, normative check order, `suite` and `approver` dimensions, ES256 |
 | [SPEC-007 rev. 1.10.0](spec/drafts/NOMOS-SPEC-007-rev-1.10.0.md) | 007 | Revocation a relying party can check: ES256 and certificate revocations, statements count only from a parent the root reaches, self-checkable lists, fail closed on stale knowledge |
