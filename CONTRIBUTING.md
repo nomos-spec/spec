@@ -8,6 +8,7 @@ The NOMOS Protocol is maintained by the **NOMOS Protocol Working Group**, curren
 administered by SafeHaven LLC. The spec is open for community input via GitHub
 Issues and Pull Requests. Major changes (new spec versions, breaking changes to
 the artifact format) require Working Group approval.
+Who holds a seat, what it means and how to request one: [GOVERNANCE.md](GOVERNANCE.md).
 
 ## Types of contributions
 
