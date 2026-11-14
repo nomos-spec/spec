@@ -83,6 +83,11 @@ jobs:
         run: |
           python generate.py pub_lending_v1.nomos | cmp - vectors.json
           python mutants.py vectors.json | cmp - mutants.json
+      - name: SPEC-008 rev. 0.8.0 vectors (an Act under several laws), checked and reproduced byte for byte
+        working-directory: act-vectors
+        run: |
+          python check.py multi-authority-vectors.json
+          python generate_multi.py pub_lending_v1.nomos | cmp - multi-authority-vectors.json
 
       - name: SPEC-007 rev. 1.11 chain vectors (every listed order)
         run: python chain-of-trust-vectors/python/check_19.py chain-of-trust-vectors/vectors-1.11.json

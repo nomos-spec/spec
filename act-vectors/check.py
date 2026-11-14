@@ -10,7 +10,8 @@ for c in v["cases"]:
     got = verify_act(c["act"], relying_party_id=v["relying_party_id"], root_pem=v["root_public_key_pem"],
                      now=ts(c["now"]), seen_nonces=set(c["seen_nonces"]), local_facts=v["local_facts"],
                      currency_policy=c.get("currency_policy", v["currency_policy"]),
-                     in_force=v.get("in_force"), revoked_artifacts=set(c.get("revoked_artifacts", [])))
+                     in_force=v.get("in_force"), revoked_artifacts=set(c.get("revoked_artifacts", [])),
+                     **({"evaluate_only": set(c["evaluate_only"])} if "evaluate_only" in c else {}))
     diffs = {k: (e, got.get(k)) for k, e in c["expected"].items() if got.get(k) != e}
     if diffs:
         failed += 1
