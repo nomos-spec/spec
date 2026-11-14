@@ -7,6 +7,16 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [NOMOS-SPEC-008 rev. 0.8.0, Draft] — 2026-11-14 (An Act under several laws)
+
+Under 0.7.0 an Act carries one authority, so an act that NOMOS-SPEC-014 resolves as governed by two laws (a DIFC firm acting in mainland Dubai, under DIFC and UAE data protection law) could be refused but never authorized.
+
+### Added
+- **`further_authorities`** (optional): further sealed authorities one Act acts under; testimony, consents and the certificate pool stay shared. The binding digest gains `artifact_hashes` only when it is present, so a one-law Act and every 0.7.0 vector and mutant are unchanged.
+- **§6.3 verification under several authorities:** each authority checked as today; each reads only the facts it declares; a fact no authority declares, or two declare differently, is refused; consents counted per authority's own escalation; any deny denies, a missing fact holds the act, a yes needs every law.
+- **§6.4 under a resolution:** exactly the governing authorities are evaluated (a carried law that does not govern, and its facts, are ignored); a governing law not carried holds the act (`laws_not_presented`); one the relying party cannot verify is its own gap (`law_not_accepted`).
+- **`act-vectors/multi-authority-vectors.json`** (14 checks, `generate_multi.py`), in CI. The Python reference (`nomosprotocol.act`) implements the revision.
+
 ## [NOMOS-SPEC-014 0.4.0] — 2026-11-13 (Deferral, and registrars run by the institutions themselves)
 
 SPEC-014 stays Active, as of 0.3.0, on the independent resolver that passed 0.3.0's 23 vectors (entry below). The 0.4.0 additions are Draft until an independent implementation passes the new `vectors.json` (33) and `registrar-logs.json` (34).

@@ -97,6 +97,10 @@ def binding_core(act: dict) -> dict:
         "relying_party": act.get("relying_party"), "action": act.get("action"),
         "artifact_hash": (art.get("seal") or {}).get("hash"),
         "testimony_digest": sha256_hex(jcs(sorted((act.get("testimony") or []), key=lambda t: _jcs(t)))),
+        # rev. 0.8.0 §4.3: an Act under several laws binds the exact set; a one-law Act is unchanged
+        **({"artifact_hashes": sorted(((a.get("artifact") or {}).get("seal") or {}).get("hash")
+                                      for a in [act.get("authority") or {}] + list(act.get("further_authorities") or []))}
+           if act.get("further_authorities") else {}),
     }
 
 def binding_digest(act: dict) -> str: return sha256_hex(jcs(binding_core(act)))
@@ -306,14 +310,21 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
                seen_nonces: Set[str], currency_policy: str, local_facts: Optional[dict] = None,
                revoked_kids: Optional[Set[str]] = None, revoked_certs: Optional[Set[str]] = None,
                in_force: Optional[Dict[str, str]] = None, revoked_artifacts: Optional[Set[str]] = None,
-               max_window_seconds: int = MAX_WINDOW_SECONDS) -> dict:
-    """`in_force` is the relying party's own record of the version in force, artifact_id -> seal hash
+               max_window_seconds: int = MAX_WINDOW_SECONDS, evaluate_only: Optional[Set[str]] = None) -> dict:
+    """`evaluate_only` (rev. 0.8.0 §6.4): the artifact ids of the resolved applicable set; carried
+    authorities outside it are not evaluated. None (no resolution) evaluates every carried authority.
+    `in_force` is the relying party's own record of the version in force, artifact_id -> seal hash
     (§5.4); `revoked_artifacts` the seal hashes its revocation source lists (NOMOS-SPEC-006);
     `currency_policy` the policy it declares for establishing currency (§5.5): "record" or
     "record_or_statement". There is no default: the choice is the relying party's to declare.
     `max_window_seconds` is the relying party's own maximum Act window (§5.1), 300 unless it
     configures otherwise, for example to leave a human time to approve (NOMOS-SPEC-009 §6.3)."""
     if currency_policy not in CURRENCY_POLICIES: raise ValueError(f"currency_policy must be one of {CURRENCY_POLICIES}")
+    if isinstance(act, dict) and ("further_authorities" in act or evaluate_only is not None):
+        return verify_act_multi(act, relying_party_id=relying_party_id, root_pem=root_pem, now=now, seen_nonces=seen_nonces,
+                                currency_policy=currency_policy, local_facts=local_facts, revoked_kids=revoked_kids,
+                                revoked_certs=revoked_certs, in_force=in_force, revoked_artifacts=revoked_artifacts,
+                                max_window_seconds=max_window_seconds, evaluate_only=evaluate_only)
     revoked_kids = revoked_kids or set(); revoked_certs = revoked_certs or set(); local_facts = local_facts or {}
     in_force = in_force or {}; revoked_artifacts = revoked_artifacts or set()
     # 1. structure
@@ -468,3 +479,213 @@ def verify_act(act: Any, *, relying_party_id: str, root_pem: str, now: datetime,
     if len(approvers) >= need_n:
         return {"decision": "AUTHORIZED", "commit": True, "by_consent": True, "escalation_id": ev["escalation_id"], "consents_valid": len(approvers), "consents_required": need_n, **base}
     return {"decision": "ESCALATED", "commit": False, "escalation_id": ev["escalation_id"], "consents_valid": len(approvers), "consents_required": need_n, **base}
+
+
+# ── rev. 0.8.0: an Act under several laws (§6.3, §6.4) ─────────────────────────────────────────
+MAX_FURTHER_AUTHORITIES = 7
+
+def _check_authority(entry: dict, pool: list, root_pem: str, now: datetime, currency_policy: str,
+                     in_force: Dict[str, str], revoked_artifacts: Set[str], revoked_kids: Set[str], revoked_certs: Set[str]):
+    """§6 step 5, §5.4-5.5 and SPEC-001 2.3.0 for one carried authority: (failure, None) or (None, its record)."""
+    art = entry["artifact"]; seal = art["seal"]; meta = art.get("meta", {}); art_id = meta.get("artifact_id")
+    r = chain.resolve(seal["kid"], pool, root_pem, now, chain.for_artifact(meta, seal["signature_algorithm"]), revoked_kids, revoked_certs)
+    if r["decision"] != "RESOLVED": return {**r, "artifact_id": art_id}, None
+    failure = chain.seal_failure(art, r["key"])
+    if failure: return {**failure, "artifact_id": art_id}, None
+    if seal["hash"] in revoked_artifacts: return {"decision": "ARTIFACT_REVOKED", "artifact_id": art_id}, None
+    def unverified(reason): return {"decision": "VERSION_UNVERIFIED", "artifact_id": art_id, "reason_code": reason}, None
+    if art_id in in_force:
+        if in_force[art_id] != seal["hash"]:
+            return {"decision": "SUPERSEDED", "artifact_id": art_id, "in_force_seal_hash": in_force[art_id]}, None
+        source = "record"
+    elif currency_policy == "record":
+        return unverified("not_in_record")
+    else:
+        st = entry.get("in_force")
+        if st is None: return unverified("no_in_force_evidence")
+        if not isinstance(st, dict) or not all(isinstance(st.get(k), str) for k in ("artifact_id", "version", "seal_hash", "as_of", "valid_until", "kid", "signature")) \
+                or st.get("algorithm") not in TESTIMONY_SUITES:
+            return unverified("bad_statement")
+        if st["artifact_id"] != art_id or st["seal_hash"] != seal["hash"] or st["version"] != meta.get("version"):
+            return unverified("statement_mismatch")
+        if st["kid"] != seal["kid"] or not chain.suite_permitted(r["effective"], st["algorithm"]) \
+                or not statement_sig(r["key"], st, in_force_payload(st))[0]:
+            return unverified("bad_signature")
+        try:
+            sa, su = ts(st["as_of"]), ts(st["valid_until"])
+        except (ValueError, TypeError):
+            return unverified("bad_statement")
+        if (su - sa).total_seconds() > MAX_IN_FORCE_SECONDS or su <= sa: return unverified("statement_window")
+        if now < sa or now > su: return unverified("stale")
+        source = "statement"
+    if ambiguous_escalation(art): return {"decision": "MALFORMED", "reason_code": "ambiguous_escalation", "artifact_id": art_id}, None
+    return None, {"artifact": art, "meta": meta, "artifact_id": art_id, "inputs": art.get("data_contract", {}).get("inputs", {}), "in_force_source": source}
+
+
+def verify_act_multi(act: Any, *, relying_party_id: str, root_pem: str, now: datetime, seen_nonces: Set[str],
+                     currency_policy: str, local_facts: Optional[dict] = None, revoked_kids: Optional[Set[str]] = None,
+                     revoked_certs: Optional[Set[str]] = None, in_force: Optional[Dict[str, str]] = None,
+                     revoked_artifacts: Optional[Set[str]] = None, max_window_seconds: int = MAX_WINDOW_SECONDS,
+                     evaluate_only: Optional[Set[str]] = None) -> dict:
+    """rev. 0.8.0 §6.3-6.4: an Act carrying `further_authorities`, or verified under a resolution."""
+    revoked_kids = revoked_kids or set(); revoked_certs = revoked_certs or set(); local_facts = local_facts or {}
+    in_force = in_force or {}; revoked_artifacts = revoked_artifacts or set()
+    need = ("act_version", "act_id", "nonce", "issued_at", "expires_at", "relying_party", "action", "authority")
+    if not isinstance(act, dict) or any(k not in act for k in need) or act.get("act_version") != "1" \
+            or not isinstance(act.get("authority"), dict):
+        return {"decision": "MALFORMED", "reason_code": "bad_envelope"}
+    try:
+        jcs(act)
+    except (ValueError, TypeError):
+        return {"decision": "MALFORMED", "reason_code": "not_canonicalizable"}
+    action, auth = act["action"], act["authority"]
+    if not isinstance(action, dict) or not isinstance(action.get("type"), str) or not isinstance(action.get("params", {}), dict):
+        return {"decision": "MALFORMED", "reason_code": "bad_action"}
+    further = act.get("further_authorities", [])
+    if "further_authorities" in act and (not isinstance(further, list) or not 1 <= len(further) <= MAX_FURTHER_AUTHORITIES
+                                         or not all(isinstance(f, dict) and isinstance(f.get("artifact"), dict) for f in further)):
+        return {"decision": "MALFORMED", "reason_code": "bad_envelope"}
+    pool = auth.get("key_certs", [])
+    carried = [auth] + list(further)
+    bad = chain.check_pool(pool)
+    for entry in carried:
+        bad = bad or chain.check_seal_shape(entry.get("artifact"))
+    if bad: return {"decision": "MALFORMED", "reason_code": bad}
+    hashes = [e["artifact"]["seal"]["hash"] for e in carried]
+    ids = [e["artifact"].get("meta", {}).get("artifact_id") for e in carried]
+    if len(set(hashes)) != len(hashes) or len(set(ids)) != len(ids):
+        return {"decision": "MALFORMED", "reason_code": "duplicate_authority"}
+    try:
+        t0, t1 = ts(act["issued_at"]), ts(act["expires_at"])
+    except (ValueError, TypeError):
+        return {"decision": "MALFORMED", "reason_code": "bad_time"}
+    if (t1 - t0).total_seconds() > max_window_seconds or t1 <= t0:
+        return {"decision": "MALFORMED", "reason_code": "validity_window"}
+    if act["relying_party"] != relying_party_id: return {"decision": "WRONG_RELYING_PARTY"}
+    if now < t0: return {"decision": "NOT_YET_VALID"}
+    if now > t1: return {"decision": "EXPIRED"}
+    if act["nonce"] in seen_nonces: return {"decision": "REPLAYED"}
+    # §6.4.2: a member of the applicable set that is not carried holds the Act
+    if evaluate_only is not None:
+        missing = sorted(set(evaluate_only) - set(ids))
+        if missing: return {"decision": "INCOMPLETE", "commit": False, "reason_code": "laws_not_presented", "laws": missing}
+    # §6.4.1: under a resolution, only the carried members of the applicable set are evaluated
+    active_entries = [e for e in carried if evaluate_only is None or e["artifact"].get("meta", {}).get("artifact_id") in evaluate_only]
+    if not active_entries:
+        return {"decision": "INCOMPLETE", "commit": False, "reason_code": "laws_not_presented", "laws": sorted(evaluate_only or [])}
+    # §6.3.1: each carried authority, in order; the first failure decides
+    laws = []
+    for entry in active_entries:
+        failure, rec = _check_authority(entry, pool, root_pem, now, currency_policy, in_force, revoked_artifacts, revoked_kids, revoked_certs)
+        if failure: return failure
+        laws.append(rec)
+    def declaring(name): return [l for l in laws if name in l["inputs"]]
+    # §6.4.1: a fact or statement only a carried, non-governing authority declares is not read at all
+    ignored_inputs = set()
+    for e in carried:
+        if e not in active_entries: ignored_inputs |= set(((e["artifact"].get("data_contract") or {}).get("inputs") or {}).keys())
+    def only_ignored(name): return not declaring(name) and name in ignored_inputs
+    # §6.3.3: testimony once; its key admitted under every authority that declares the claim
+    facts: Dict[str, Any] = {}; channel: Dict[str, str] = {}
+    def put(name, value, src):
+        if name in channel: raise KeyError(name)
+        facts[name] = value; channel[name] = src
+    subject = action.get("subject")
+    for t in act.get("testimony") or []:
+        if not isinstance(t, dict) or not all(k in t for k in ("claim", "value", "as_of", "valid_until", "kid", "signature")) \
+                or t.get("algorithm") not in TESTIMONY_SUITES:
+            return {"decision": "MALFORMED", "reason_code": "bad_testimony"}
+        if only_ignored(t["claim"]): continue
+        key_pem = None
+        for l in (declaring(t["claim"]) or laws[:1]):
+            w = resolve_statement_key("claim", t["claim"], t, pool, root_pem, now, l["meta"], revoked_kids, revoked_certs)
+            if w["decision"] != "RESOLVED":
+                return {**statement_failure(w, "TESTIMONY_INVALID", "TESTIMONY_OUT_OF_SCOPE", claim=t["claim"]), "artifact_id": l["artifact_id"]}
+            key_pem = w["key"]
+        ok, why = statement_sig(key_pem, t, testimony_payload(t))
+        if not ok: return {"decision": "TESTIMONY_INVALID", "claim": t["claim"], "reason_code": why}
+        try:
+            fresh = ts(t["as_of"]) <= now <= ts(t["valid_until"])
+        except (ValueError, TypeError, AttributeError):
+            fresh = False
+        if not fresh: return {"decision": "TESTIMONY_INVALID", "claim": t["claim"], "reason_code": "stale"}
+        if t.get("about") is not None and t.get("about") != subject:
+            return {"decision": "TESTIMONY_INVALID", "claim": t["claim"], "reason_code": "wrong_subject"}
+        try: put(t["claim"], t["value"], "testimony")
+        except KeyError: return {"decision": "FACT_SOURCE_VIOLATION", "field": t["claim"], "reason_code": "duplicate"}
+    try:
+        put("action_type", action["type"], "action")
+        for k, v in (action.get("params") or {}).items(): put(k, v, "action")
+        for k, v in (act.get("presenter_facts") or {}).items(): put(k, v, "presenter")
+        for k, v in local_facts.items(): put(k, v, "relying_party")
+    except KeyError as e:
+        return {"decision": "FACT_SOURCE_VIOLATION", "field": e.args[0], "reason_code": "duplicate"}
+    # §6.3.2: every supplied fact declared by at least one authority, the same way by all that declare it
+    for name in [n for n in channel if n != "action_type" and only_ignored(n)]:
+        facts.pop(name); channel.pop(name)
+    for name, src in channel.items():
+        if name == "action_type": continue
+        decl = [l["inputs"][name] for l in declaring(name)]
+        if not decl: return {"decision": "FACT_SOURCE_VIOLATION", "field": name, "reason_code": "undeclared_input"}
+        if len({(d.get("source"), d.get("type")) for d in decl}) > 1:
+            return {"decision": "FACT_SOURCE_VIOLATION", "field": name, "reason_code": "conflicting_declarations"}
+        if decl[0].get("source") != src:
+            return {"decision": "FACT_SOURCE_VIOLATION", "field": name, "declared": decl[0].get("source"), "supplied_via": src}
+    for name, value in facts.items():
+        if name == "action_type" or value is None: continue
+        d = declaring(name)[0]["inputs"][name]
+        if not type_ok(value, d):
+            return {"decision": "FACT_TYPE_VIOLATION", "field": name, "declared": d.get("type"), "supplied_via": channel[name]}
+    # §6.3.4: each authority over exactly the facts it declares
+    digest = binding_digest(act)
+    results = []
+    for l in laws:
+        mine = {k: v for k, v in facts.items() if k == "action_type" or k in l["inputs"]}
+        try:
+            ev = evaluate(l["artifact"], mine)
+        except (ValueError, KeyError, TypeError, IndexError):
+            return {"decision": "MALFORMED", "reason_code": "unevaluable_rules", "commit": False, "artifact_id": l["artifact_id"]}
+        results.append((l, ev))
+    # §6.3.5: every consent validated under the authorities whose escalation needs its role
+    esc_of = {}
+    for l, ev in results:
+        if ev["outcome"] == "escalate":
+            e = next((x for x in l["artifact"].get("governance", {}).get("escalations", []) if x.get("id") == ev["escalation_id"]), None)
+            esc_of[l["artifact_id"]] = e
+    approvers: Dict[str, Set[str]] = {aid: set() for aid in esc_of}
+    for c in act.get("consents") or []:
+        if not isinstance(c, dict) or not all(isinstance(c.get(k), str) for k in ("binding_digest", "role", "decision", "signed_at", "kid", "signature")) \
+                or c.get("algorithm") not in CONSENT_SUITES \
+                or (c["algorithm"] == "WebAuthn-ES256" and not all(isinstance(c.get(k), str) for k in WEBAUTHN_FIELDS)):
+            return {"decision": "MALFORMED", "reason_code": "bad_consent"}
+        under = [l for l, ev in results if esc_of.get(l["artifact_id"]) and esc_of[l["artifact_id"]].get("role_required") == c["role"]] or laws[:1]
+        for l in under:
+            k = resolve_statement_key("consent", c["role"], c, pool, root_pem, now, l["meta"], revoked_kids, revoked_certs)
+            if k["decision"] != "RESOLVED":
+                r = statement_failure(k, "CONSENT_INVALID", "CONSENT_OUT_OF_SCOPE", role=c["role"])
+                if r["decision"] == "CONSENT_INVALID": r.pop("role")
+                return {**r, "artifact_id": l["artifact_id"]}
+            if len({e["approver"] for e in k["admitted"]}) > 1: return {"decision": "CONSENT_INVALID", "reason_code": "approver_ambiguous"}
+            ok, why = statement_sig(k["key"], c, consent_payload(c))
+            if not ok: return {"decision": "CONSENT_INVALID", "reason_code": why}
+            if c["binding_digest"] != digest: return {"decision": "CONSENT_INVALID", "reason_code": "binding_mismatch"}
+            e = esc_of.get(l["artifact_id"])
+            if e and c["decision"] == "approve" and c["role"] == e.get("role_required"): approvers[l["artifact_id"]].add(k["effective"]["approver"])
+    # §6.3.6: combine — any deny denies; a missing fact is incomplete; a yes needs every law
+    per = []
+    for l, ev in results:
+        row = {"artifact_id": l["artifact_id"], "rule": ev["rule"]}
+        if ev["outcome"] == "undecided": row.update(decision="INCOMPLETE", open_rules=ev["open_rules"], open_facts=ev["open_facts"])
+        elif ev["outcome"] == "allow": row.update(decision="AUTHORIZED")
+        elif ev["outcome"] == "block": row.update(decision="DENIED")
+        else:
+            e = esc_of.get(l["artifact_id"]); n = int((e or {}).get("required_consents", 1)) if e else None
+            got = len(approvers.get(l["artifact_id"], set()))
+            ok = e is not None and got >= n
+            row.update(decision="AUTHORIZED" if ok else "ESCALATED", by_consent=ok, escalation_id=ev["escalation_id"], consents_valid=got, consents_required=n)
+        per.append(row)
+    decisions = [p["decision"] for p in per]
+    overall = "DENIED" if "DENIED" in decisions else "INCOMPLETE" if "INCOMPLETE" in decisions else "ESCALATED" if "ESCALATED" in decisions else "AUTHORIZED"
+    out = {"decision": overall, "commit": overall == "AUTHORIZED", "act_digest": digest, "laws": per, "currency_policy": currency_policy}
+    if overall == "INCOMPLETE": out["reason_code"] = "undecided_rules"
+    return out
