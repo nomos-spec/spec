@@ -7,6 +7,17 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Papers: the oracle reads the rules itself; an unevaluable artifact is refused whatever the facts] — 2026-11-24
+
+### Added
+- **`papers/oracle/OracleExpr.lean`:** the oracle now reads each artifact's own `when` strings (tokenizer, recursive-descent parser, printer, comparison primitives), so it and an implementation read the same text. The generator no longer emits a parallel condition tree; the 5,000 published verdicts were reproduced byte for byte before the generator changed.
+- **`papers/oracle/ParsePrint.lean`:** `parse_print`, the parser inverts the printer: every well-formed condition, printed, parses back to itself. Standard axioms. The tokenizer and primitives stay unproved.
+- **`oracle-vectors/laws.py`:** fact sets for real sealed authorities. 3,700 over eight authorities (seven sealed Exchange authorities and the EU AI Act Article 5 draft) agree with the model in both references.
+
+### Fixed
+- **Python reference (`nomosprotocol.act.evaluate`):** an artifact with a `set` ruling or an undeclared action is refused before evaluation (SPEC-008 §6.0 already required `MALFORMED`, `unevaluable_rules`, whatever the facts). It was refused only when such a rule was reached; the 851-rule EU AI Act listing got a verdict for 48 of 200 fact sets. `act-vectors/mutants.json` regenerated: one derived mutant of `undeclared_action_is_unevaluable` now expects `MALFORMED` (was `DENIED`). No vector, and no specification text, changes.
+- **`oracle-vectors/vectors.json`** regenerated: 174 of 5,000 cases are now unevaluable artifacts that must be refused.
+
 ## [Papers: the Lean model as test oracle] — 2026-11-24
 
 The proofs are about a Lean model; until now the implementations were checked against each other and the published vectors, never against the model. A bug both shared would pass.

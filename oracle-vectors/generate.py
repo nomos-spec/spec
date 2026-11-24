@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """Random authorities and fact sets for the Lean oracle (papers/oracle).
 
-Each case carries the same authority twice: as the model reads it (`decisions`, `default`,
-`tie`, `auth`; conditions as trees) and as an implementation reads it (`artifact`, with `when`
-strings). The oracle computes the model's verdict; check.py and the TypeScript test compare an
-implementation's `evaluate(artifact, facts)` with it.
+Each case is an artifact and a fact set. The oracle reads the artifact's own `when` strings and
+computes the model's verdict; check.py and the TypeScript test compare an implementation's
+`evaluate(artifact, facts)` with it.
 
     python3 generate.py N SEED > cases.jsonl
 
 Deterministic for a given N and SEED. Covers what implementations treat specially: ties at equal
 priority under all three tie orders; a default (with and without an escalation id) when nothing
 matches; obligation rules (`emit`, a declared `action`), which take no part in resolution; exists()
-on inputs whose absence is and is not authoritative; facts absent, present, and of the wrong kind.
+on inputs whose absence is and is not authoritative; facts absent, present, and of the wrong kind;
+and artifacts with a ruling no evaluator may read, which must be refused whatever the facts.
 """
 import json
 import random
@@ -93,6 +93,12 @@ def gen_case(i, r):
         _, when = gen_cond(inputs, r, 1)
         then = r.choice([{"type": "emit", "event": "e%d" % k}, {"type": "action", "action_name": "notify"}])
         rules.insert(r.randint(0, len(rules)), {"id": "o%d" % k, "when": when, "then": [then], "priority": r.randint(0, 5)})
+    # now and then a ruling no evaluator may read: a `set`, or an action the artifact does not
+    # declare. The whole artifact is then unevaluable, whatever the facts (SPEC-008 §6.0).
+    if r.random() < 0.04:
+        _, when = gen_cond(inputs, r, 1)
+        then = r.choice([{"type": "set", "variable": "v", "value": {"lit": 1}}, {"type": "action", "action_name": "route_to"}])
+        rules.insert(r.randint(0, len(rules)), {"id": "u0", "when": when, "then": [then], "priority": r.randint(0, 5)})
     dkind = r.choice(["allow", "block", "escalate", None])
     resolution = {"tie_breaker": tie, "conflict_policy": "highest_priority"}
     if dkind is not None:
@@ -115,10 +121,6 @@ def gen_case(i, r):
     }
     return {
         "id": "case-%d" % i,
-        "tie": tie,
-        "default": {"kind": dkind or "block", "esc": desc},
-        "auth": sorted(x for x, s in inputs.items() if s["source"] in SOURCES_AUTH),
-        "decisions": decisions,
         "facts": facts,
         "artifact": artifact,
     }
