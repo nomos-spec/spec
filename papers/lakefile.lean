@@ -43,6 +43,12 @@ lean_lib Containment where
 lean_lib OracleCore where
   srcDir := "oracle"
 
+lean_lib OracleExpr where
+  srcDir := "oracle"
+
+lean_lib ParsePrint where
+  srcDir := "oracle"
+
 lean_exe oracle where
   srcDir := "oracle"
   root := `Main

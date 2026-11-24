@@ -4,7 +4,8 @@
     python3 check.py vectors.json            # the published corpus
     python3 check.py cases.jsonl expected.jsonl   # any generated run
 
-A case agrees when the verdict, the deciding rule and the escalation are the same.
+A case agrees when the verdict, the deciding rule and the escalation are the same, or when the
+oracle cannot evaluate the artifact and neither can the implementation.
 """
 import json
 import os
@@ -26,14 +27,20 @@ def load(argv):
     return list(zip(cases, exp))
 
 
-def observed(case):
-    ev = evaluate(case["artifact"], case["facts"])
+def observed(case, by_rule):
+    try:
+        ev = evaluate(case["artifact"], case["facts"])
+    except Exception as e:  # noqa: BLE001 - an artifact the evaluator refuses
+        return {"error": True}
     rule = ev.get("rule")
     got = {
         "verdict": VERDICT[ev["outcome"]],
-        "decider": int(rule[1:]) if rule else None,
         "escalation": ev.get("escalation_id") if ev["outcome"] == "escalate" else None,
     }
+    if by_rule:
+        got["rule"] = rule
+    else:
+        got["decider"] = int(rule[1:]) if rule else None
     return got
 
 
@@ -41,8 +48,12 @@ def main(argv):
     pairs = load(argv)
     bad = 0
     for case, want in pairs:
-        got = observed(case)
-        exp = {k: want[k] for k in ("verdict", "decider", "escalation")}
+        by_rule = "rule" in want or "error" in want or "unevaluable" in want
+        got = observed(case, by_rule)
+        if "error" in want or want.get("unevaluable"):
+            exp = {"error": True}
+        else:
+            exp = {k: want[k] for k in ("verdict", "rule" if by_rule else "decider", "escalation")}
         if got != exp:
             bad += 1
             if bad <= 10:

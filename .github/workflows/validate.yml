@@ -193,9 +193,9 @@ jobs:
       - name: Every proof checks
         working-directory: papers
         run: lake build
-      - name: Build the oracle
+      - name: Build the oracle, and the proof that its parser inverts its printer
         working-directory: papers
-        run: lake build oracle
+        run: lake build oracle ParsePrint
       - name: The oracle reproduces the published vectors byte for byte
         working-directory: oracle-vectors
         run: |

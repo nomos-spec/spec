@@ -273,6 +273,11 @@ def evaluate(artifact: dict, facts: dict) -> dict:
         t = ((d.get("then") or [{}])[0] or {})
         return t.get("type") == "emit" or (t.get("type") == "action" and t.get("action_name") in declared)
     rulings = [d for d in logic["decisions"] if not is_obligation(d)]
+    # §6.0: any other kind of decision makes the whole artifact unevaluable, whatever the facts —
+    # checked before evaluation, not only when such a rule happens to be reached.
+    for d in rulings:
+        if ((d.get("then") or [{}])[0] or {}).get("type") not in order:
+            raise ValueError("unevaluable rule %r" % d.get("id"))
     detail = [(d, *eval_when_detail(d["when"], facts, decided_absent)) for d in rulings]
     results = [(d, r) for d, r, _ in detail]
     undecided_by = {d["id"]: u for d, _, u in detail}

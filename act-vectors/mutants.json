@@ -14651,13 +14651,9 @@
    "base": "undeclared_action_is_unevaluable",
    "currency_policy": "record_or_statement",
    "expected": {
-    "act_digest": "4a9d2f0b01a668db59677d7ef7fb37b7e5122bc59c1275124b8a24774f507718",
     "commit": false,
-    "currency_policy": "record_or_statement",
-    "decision": "DENIED",
-    "in_force_source": "record",
-    "reason_code": "no_matching_rule",
-    "rule": null
+    "decision": "MALFORMED",
+    "reason_code": "unevaluable_rules"
    },
    "mutant": "drop_param_amount",
    "now": "2026-10-01T12:00:00.000Z",
