@@ -25,4 +25,17 @@ python3 check.py cases.local.jsonl expected.local.jsonl
 
 The TypeScript verifier (`@nomosprotocol/verify`) checks the same file in its conformance suite, and has a runner for generated batches (`test/lean-oracle-run.ts`).
 
-Checked on 24 November 2026: 5,000 published cases and 200,000 generated ones (seed 9431), Python and TypeScript both agree with the model on every case. Removing gate clause (ii) from the TypeScript evaluator makes 46 of the 5,000 published cases fail.
+Checked on 24 November 2026: 5,000 published cases and 200,000 generated ones (seed 9431), Python and TypeScript both agree with the model on every case.
+
+The corpus catches each of these faults, introduced one at a time into the TypeScript evaluator (published cases that then fail, of 5,000):
+
+| Fault | Cases that fail |
+|---|---|
+| gate clause (ii) dropped (the 0.4.0 gap) | 46 |
+| gate clause (i) dropped | 1,113 |
+| absence never authoritative (exists() on the action or relying party's state) | 35 |
+| a later rule wins a full tie (position ignored) | 196 |
+| the tie order ignored (always deny_wins) | 244 |
+| the default outcome ignored | 868 |
+| the default escalation id dropped | 78 |
+| a fact of the wrong kind read as false, not undecided | 357 |

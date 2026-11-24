@@ -13,7 +13,7 @@ The proofs are about a Lean model; until now the implementations were checked ag
 
 ### Added
 - **`papers/oracle`:** the model's verdict as an executable. The deciding rule is `pick` (proved the decider) and the gate a Boolean function proved equal to `GateFires` (`gateB_iff`, `verdict_is_model`); standard axioms only. JSON reading and the comparison primitives, which the model leaves abstract, are unproved glue outside the core-only proof libraries.
-- **`oracle-vectors/`:** 5,000 random authorities and fact sets with the model's verdict (`generate.py 5000 2026`), the Python reference checked against them, and a generator for any number more. Both references agree on every published case and on 200,000 generated ones; removing gate clause (ii) from the TypeScript evaluator fails 46 published cases.
+- **`oracle-vectors/`:** 5,000 random authorities and fact sets with the model's verdict (`generate.py 5000 2026`), the Python reference checked against them, and a generator for any number more. Both references agree on every published case and on 200,000 generated ones; eight faults introduced one at a time into the TypeScript evaluator (gate clauses, authoritative absence, tie position and order, defaults, wrong-kind facts) each fail between 35 and 1,113 published cases (table in `oracle-vectors/README.md`).
 - **CI:** a Lean job builds every proof and the oracle, and regenerates `oracle-vectors/vectors.json` byte for byte; the Python job checks it.
 
 No specification text changes.
