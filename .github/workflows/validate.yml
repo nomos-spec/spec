@@ -110,6 +110,9 @@ jobs:
       - name: SPEC-014 registrar-log vectors reproduce byte for byte
         run: python resolution-vectors/generate_registrar_logs.py | cmp - resolution-vectors/registrar-logs.json
 
+      - name: Lean-oracle vectors through the Python reference
+        run: python oracle-vectors/check.py oracle-vectors/vectors.json
+
       - name: SPEC-010 signature-suite vectors
         run: python suite-vectors/check.py suite-vectors/vectors.json
       - name: SPEC-010 vectors reproduce byte for byte
@@ -177,3 +180,25 @@ jobs:
           node reference-rp.mjs 4801 &
           for i in $(seq 1 30); do curl -s -o /dev/null http://localhost:4801/ && break; sleep 0.5; done
           node run.mjs http://localhost:4801
+
+  lean:
+    name: Lean proofs, and the oracle reproduces its vectors
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install elan (the toolchain comes from papers/lean-toolchain)
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Every proof checks
+        working-directory: papers
+        run: lake build
+      - name: Build the oracle
+        working-directory: papers
+        run: lake build oracle
+      - name: The oracle reproduces the published vectors byte for byte
+        working-directory: oracle-vectors
+        run: |
+          python3 generate.py 5000 2026 > cases.jsonl
+          ../papers/.lake/build/bin/oracle < cases.jsonl > expected.jsonl
+          python3 build.py cases.jsonl expected.jsonl | cmp - vectors.json
