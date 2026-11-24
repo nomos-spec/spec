@@ -7,6 +7,17 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Papers: the Lean model as test oracle] — 2026-11-24
+
+The proofs are about a Lean model; until now the implementations were checked against each other and the published vectors, never against the model. A bug both shared would pass.
+
+### Added
+- **`papers/oracle`:** the model's verdict as an executable. The deciding rule is `pick` (proved the decider) and the gate a Boolean function proved equal to `GateFires` (`gateB_iff`, `verdict_is_model`); standard axioms only. JSON reading and the comparison primitives, which the model leaves abstract, are unproved glue outside the core-only proof libraries.
+- **`oracle-vectors/`:** 5,000 random authorities and fact sets with the model's verdict (`generate.py 5000 2026`), the Python reference checked against them, and a generator for any number more. Both references agree on every published case and on 200,000 generated ones; eight faults introduced one at a time into the TypeScript evaluator (gate clauses, authoritative absence, tie position and order, defaults, wrong-kind facts) each fail between 35 and 1,113 published cases (table in `oracle-vectors/README.md`).
+- **CI:** a Lean job builds every proof and the oracle, and regenerates `oracle-vectors/vectors.json` byte for byte; the Python job checks it.
+
+No specification text changes.
+
 ## [NOMOS-SPEC-008 rev. 0.9.0, Draft] — 2026-11-14 (Intake questions in an Act)
 
 A law encoded whole reads hundreds of facts; the DIFC Data Protection Law reads 271. Under 0.8.0 an ordinary act under it was held `INCOMPLETE` on about 200 facts that have nothing to do with it. Its 12 sealed intake questions decide the same act, but only the query path read them.

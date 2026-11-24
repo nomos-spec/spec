@@ -37,3 +37,12 @@ lean_lib Chain where
 @[default_target]
 lean_lib Containment where
   srcDir := "carried-authority/lean"
+
+/-! The oracle: the model's verdict, computed, as an executable that reads cases as JSON.
+    Kept out of the proof libraries above, which stay core-only. -/
+lean_lib OracleCore where
+  srcDir := "oracle"
+
+lean_exe oracle where
+  srcDir := "oracle"
+  root := `Main
