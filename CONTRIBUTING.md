@@ -38,6 +38,15 @@ implementation work begins.
    `node scripts/check-links.mjs` and `node scripts/check-spec-index.mjs`.
 6. Open a PR against `main` — reference the related Issue
 
+## Licensing of contributions
+
+By opening a pull request you agree that your contribution is licensed under the same terms as the part of the repository it changes (inbound = outbound, see [LICENSE](LICENSE)):
+
+- changes to source code under the [Apache License 2.0](LICENSE-CODE);
+- changes to specifications, schemas, vectors and documentation under [CC BY 4.0](LICENSE-SPEC), together with the patent terms in [PATENTS.md](PATENTS.md) for any patent claims of yours that your contribution to a specification would make necessary.
+
+Sign off each commit to certify the [Developer Certificate of Origin](https://developercertificate.org/) (`git commit -s`), which confirms you have the right to submit the work under these terms.
+
 ## How a specification advances
 
 | Status | Meaning |

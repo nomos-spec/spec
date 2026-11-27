@@ -8,11 +8,11 @@ version = "0.2.0"
 description = "NOMOS for Python: the reference verifiers for NOMOS-SPEC-007 (rev. 1.11), -008 and -010, NOMOS-SPEC-014 registrar logs, and accept(), act() and witness() for NOMOS-SPEC-009. Verify an Act, commit it exactly once, carry one, or sign the facts it needs."
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 authors = [{ name = "NOMOS Protocol", email = "hello@nomosprotocol.com" }]
 dependencies = ["cryptography>=43"]   # 43 added deterministic (RFC 6979) ECDSA, which signing relies on
 keywords = ["nomos", "computable-authority", "agents", "authorization", "verifier", "ed25519", "es256", "webauthn"]
-classifiers = ["Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License", "Operating System :: OS Independent", "Topic :: Security :: Cryptography"]
+classifiers = ["Programming Language :: Python :: 3", "License :: OSI Approved :: Apache Software License", "Operating System :: OS Independent", "Topic :: Security :: Cryptography"]
 
 [project.optional-dependencies]
 postgres = ["psycopg[binary]>=3.1", "psycopg-pool>=3.2"]

@@ -7,6 +7,19 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Licensing: specifications CC BY 4.0, code Apache 2.0, a patent commitment, trademarks] — 2026-11-27
+
+### Changed
+- **The repository is licensed in two parts** ([LICENSE](LICENSE)). Specifications, schemas, vectors, examples, papers and documentation stay CC BY 4.0, whose full legal code is now in [LICENSE-SPEC](LICENSE-SPEC). Source code (every `.ts`, `.js`, `.mjs`, `.cjs`, `.py`, `.lean` and `.sh` file: the reference verifiers, CLI, prototypes, scripts, vector generators, conformance runners and Lean proofs) moves to the Apache License 2.0 ([LICENSE-CODE](LICENSE-CODE), [NOTICE](NOTICE)). Code had been under CC BY 4.0, a licence its authors do not recommend for software, and the Python package said MIT. Earlier copies keep the licence they were published under.
+- The `nomosprotocol` Python package, the Claude Code marketplace entry and `CITATION.cff` say Apache-2.0 (with CC-BY-4.0 in the citation).
+
+### Added
+- **[PATENTS.md](PATENTS.md):** SafeHaven LLC's patent commitment for implementations of NOMOS-SPEC-001 to -015 and later specifications, under the Open Web Foundation Agreement 1.0 (Patent Only), verbatim. CC BY 4.0 excludes patents, so implementers writing from the specification text had no patent assurance. Pending signature.
+- **[TRADEMARKS.md](TRADEMARKS.md):** NOMOS and Computable Authority are trademarks of SafeHaven LLC; what anyone may say without asking (that an implementation implements a named specification), and what needs permission.
+- `CONTRIBUTING.md`: contributions are licensed inbound = outbound, with a Developer Certificate of Origin sign-off.
+
+---
+
 ## [Papers: the oracle reads the rules itself; an unevaluable artifact is refused whatever the facts] — 2026-11-24
 
 ### Added
