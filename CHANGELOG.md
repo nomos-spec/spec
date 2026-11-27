@@ -15,7 +15,7 @@ Spec versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 - **[PATENTS.md](PATENTS.md):** SafeHaven LLC's patent commitment for implementations of NOMOS-SPEC-001 to -015 and later specifications, under the Open Web Foundation Agreement 1.0 (Patent Only), verbatim. CC BY 4.0 excludes patents, so implementers writing from the specification text had no patent assurance. Pending signature.
-- **[TRADEMARKS.md](TRADEMARKS.md):** NOMOS and Computable Authority are trademarks of SafeHaven LLC; what anyone may say without asking (that an implementation implements a named specification), and what needs permission.
+- **[TRADEMARKS.md](TRADEMARKS.md):** NOMOS Protocol and Computable Authority are trademarks of SafeHaven LLC; what anyone may say without asking (that an implementation implements a named specification), and what needs permission.
 - `CONTRIBUTING.md`: contributions are licensed inbound = outbound, with a Developer Certificate of Origin sign-off.
 
 ---

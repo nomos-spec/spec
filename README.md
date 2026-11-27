@@ -217,7 +217,7 @@ To propose a change, report an ambiguity or contribute an implementation, see [`
 - **Specifications, schemas, vectors and documentation:** [CC BY 4.0](LICENSE-SPEC).
 - **Source code** (reference verifiers, CLI, prototypes, scripts, generators, Lean proofs): [Apache License 2.0](LICENSE-CODE), with [NOTICE](NOTICE).
 - **Patents:** CC BY 4.0 does not cover patents, so SafeHaven LLC commits not to assert its patents against implementations of the specifications, under the Open Web Foundation Agreement 1.0 ([PATENTS.md](PATENTS.md); in effect once signed).
-- **Trademarks:** NOMOS and Computable Authority are trademarks of SafeHaven LLC ([TRADEMARKS.md](TRADEMARKS.md)).
+- **Trademarks:** NOMOS Protocol and Computable Authority are trademarks of SafeHaven LLC ([TRADEMARKS.md](TRADEMARKS.md)).
 
 Implementations may be under any licence, including proprietary ones. [LICENSE](LICENSE) says which files fall under which licence.
 
