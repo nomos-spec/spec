@@ -10,7 +10,9 @@ authors:
   - name: "NOMOS Protocol Working Group"
 repository-code: "https://github.com/nomos-spec/spec"
 url: "https://nomosprotocol.com/spec"
-license: CC-BY-4.0
+license:
+  - CC-BY-4.0
+  - Apache-2.0
 keywords:
   - computable authority
   - authorization

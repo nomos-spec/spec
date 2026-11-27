@@ -17,7 +17,7 @@
       },
       "description": "Checks each MCP tool call against your sealed NOMOS policy before it runs: blocked calls say which rule refused them, and calls that need a person wait for their approval.",
       "homepage": "https://www.nomosprotocol.com/docs",
-      "license": "MIT"
+      "license": "Apache-2.0"
     }
   ]
 }

@@ -2,7 +2,7 @@
 
 [![Validate](https://github.com/nomos-spec/spec/actions/workflows/validate.yml/badge.svg)](https://github.com/nomos-spec/spec/actions/workflows/validate.yml)
 [![Specifications: 15](https://img.shields.io/badge/specifications-15-blue)](spec/)
-[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![Specs: CC BY 4.0](https://img.shields.io/badge/Specs-CC%20BY%204.0-lightgrey.svg)](LICENSE-SPEC) [![Code: Apache 2.0](https://img.shields.io/badge/Code-Apache%202.0-blue.svg)](LICENSE-CODE)
 [![IANA Media Type](https://img.shields.io/badge/IANA-application%2Fvnd.nomos%2Bjson-brightgreen)](https://www.iana.org/assignments/media-types/application/vnd.nomos+json)
 
 The **NOMOS Protocol** is an open, vendor-neutral specification for **Computable Authority**: making an institution's authority over an action something any system can check, before the action takes effect. Its principle: **authorize the act, not the agent**.
@@ -214,7 +214,12 @@ To propose a change, report an ambiguity or contribute an implementation, see [`
 
 ## License
 
-The NOMOS Protocol specification and schemas are released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Implementations may be proprietary.
+- **Specifications, schemas, vectors and documentation:** [CC BY 4.0](LICENSE-SPEC).
+- **Source code** (reference verifiers, CLI, prototypes, scripts, generators, Lean proofs): [Apache License 2.0](LICENSE-CODE), with [NOTICE](NOTICE).
+- **Patents:** CC BY 4.0 does not cover patents, so SafeHaven LLC commits not to assert its patents against implementations of the specifications, under the Open Web Foundation Agreement 1.0 ([PATENTS.md](PATENTS.md); in effect once signed).
+- **Trademarks:** NOMOS and Computable Authority are trademarks of SafeHaven LLC ([TRADEMARKS.md](TRADEMARKS.md)).
+
+Implementations may be under any licence, including proprietary ones. [LICENSE](LICENSE) says which files fall under which licence.
 
 ---
 
