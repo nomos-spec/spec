@@ -98,4 +98,4 @@ This package is checked against:
 `act()` also interoperates with the JavaScript sandbox, escalation and approval included
 (`python/tests/interop_sandbox.py`).
 
-Licensed under the [Apache License 2.0](LICENSE). NOMOS and Computable Authority are trademarks of SafeHaven LLC ([TRADEMARKS.md](../TRADEMARKS.md)).
+Licensed under the [Apache License 2.0](LICENSE). NOMOS Protocol and Computable Authority are trademarks of SafeHaven LLC ([TRADEMARKS.md](../TRADEMARKS.md)).
